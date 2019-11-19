@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="piecewise",
-    version="0.1",
+    version="0.1.1",
     author="Jordan T. Bishop",
     author_email="jordanbishop26@gmail.com",
     description="Michigan-style Learning Classifier Systems",
