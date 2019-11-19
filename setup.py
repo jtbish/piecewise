@@ -18,5 +18,6 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
+    install_requires=["numpy>=1.17", "pandas>=0.25"],
     python_requires='>=3.6',
 )
