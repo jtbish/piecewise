@@ -27,6 +27,8 @@ class XCS(ReinforcementAlgorithm):
                          hyperparams)
 
         self._env_step_type = self._validate_env_step_type(env_step_type)
+        self._init_prev_step_tracking_attrs()
+        self._init_curr_step_tracking_attrs()
 
     def _validate_env_step_type(self, env_step_type):
         if env_step_type not in EnvironmentStepTypes:
@@ -35,10 +37,12 @@ class XCS(ReinforcementAlgorithm):
         else:
             return env_step_type
 
+    def _init_prev_step_tracking_attrs(self):
         self._prev_action_set = None
         self._prev_reward = None
         self._prev_situation = None
 
+    def _init_curr_step_tracking_attrs(self):
         self._action_set = None
         self._prediction_array = None
         self._situation = None
