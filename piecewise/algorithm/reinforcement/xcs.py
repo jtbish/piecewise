@@ -4,11 +4,8 @@ from piecewise.component import (EpsilonGreedy, FitnessWeightedAvgPrediction,
                                  XCSGeneticAlgorithm, XCSRouletteWheelDeletion,
                                  XCSSubsumption)
 from piecewise.environment import EnvironmentStepTypes
-<<<<<<< HEAD
 from piecewise.error.algorithm_error import InvalidSpecError
 from piecewise.error.core_errors import InternalError
-=======
->>>>>>> 26e64ff77131d7641224521a83cf7a2ffe6dec6d
 from piecewise.util.classifier_set_stats import (calc_summary_stat,
                                                  num_unique_actions)
 
