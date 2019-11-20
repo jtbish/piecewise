@@ -17,15 +17,15 @@ def main():
     rule_repr = CentreSpreadRuleRepr(situation_space)
     num_actions = len(env.action_set)
     xcs_hyperparams = {
-        "N": 400,
+        "N": 800,
         "beta": 0.2,
         "alpha": 0.1,
-        "epsilon_nought": 0.01,
+        "epsilon_nought": 10,
         "nu": 5,
         "gamma": 0.71,
-        "theta_ga": 25,
+        "theta_ga": 12,
         "chi": 0.8,
-        "mu": 0.4,
+        "mu": 0.04,
         "theta_del": 20,
         "delta": 0.1,
         "theta_sub": 20,
@@ -39,9 +39,9 @@ def main():
         "s_nought": 1.0,
         "m": 0.1
     }
-    algorithm = XCS(env.action_set, rule_repr, xcs_hyperparams)
+    algorithm = XCS(env.action_set, env.step_type, rule_repr, xcs_hyperparams)
     lcs = LCS(env, codec, rule_repr, algorithm)
-    lcs.train(num_epochs=100, monitor=True)
+    lcs.train(num_epochs=313, monitor=True)
 
 
 if __name__ == "__main__":
