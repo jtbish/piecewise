@@ -4,8 +4,11 @@ from piecewise.component import (EpsilonGreedy, FitnessWeightedAvgPrediction,
                                  XCSGeneticAlgorithm, XCSRouletteWheelDeletion,
                                  XCSSubsumption)
 from piecewise.environment import EnvironmentStepTypes
+<<<<<<< HEAD
 from piecewise.error.algorithm_error import InvalidSpecError
 from piecewise.error.core_errors import InternalError
+=======
+>>>>>>> 26e64ff77131d7641224521a83cf7a2ffe6dec6d
 from piecewise.util.classifier_set_stats import (calc_summary_stat,
                                                  num_unique_actions)
 
@@ -27,8 +30,6 @@ class XCS(ReinforcementAlgorithm):
                          hyperparams)
 
         self._env_step_type = self._validate_env_step_type(env_step_type)
-        self._init_prev_step_tracking_attrs()
-        self._init_curr_step_tracking_attrs()
 
     def _validate_env_step_type(self, env_step_type):
         if env_step_type not in EnvironmentStepTypes:
@@ -37,7 +38,6 @@ class XCS(ReinforcementAlgorithm):
         else:
             return env_step_type
 
-    def _init_prev_step_tracking_attrs(self):
         self._prev_action_set = None
         self._prev_reward = None
         self._prev_situation = None
