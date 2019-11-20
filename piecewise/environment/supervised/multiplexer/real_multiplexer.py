@@ -13,11 +13,16 @@ class RealMultiplexer(AbstractMultiplexer):
     def __init__(self,
                  num_address_bits=2,
                  shuffle_dataset=True,
-                 num_samples=40000,
+                 num_samples=64,
+                 seed=0,
                  thresholds=None):
         self._num_samples = num_samples
+        self._set_seed(seed)
         self._thresholds = self._gen_thresholds(thresholds, num_address_bits)
         super().__init__(num_address_bits, shuffle_dataset)
+
+    def _set_seed(self, seed):
+        np.random.seed(seed)
 
     def _gen_obs_space(self, data):
         """Need to build obs space for real mux manually because its
