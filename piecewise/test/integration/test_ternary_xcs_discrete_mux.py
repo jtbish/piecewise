@@ -37,7 +37,7 @@ class TestTernaryXCSOnDiscreteMultiplexer:
             "do_ga_subsumption": True,
             "do_as_subsumption": True
         }
-        return XCS(env.action_set, rule_repr, hyperparams)
+        return XCS(env.action_set, env.step_type, rule_repr, hyperparams)
 
     def test_training(self):
         self._setup_lcs()

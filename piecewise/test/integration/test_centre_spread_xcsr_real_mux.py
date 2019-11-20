@@ -48,7 +48,7 @@ class TestCentreSpreadXCSROnRealMultiplexer:
             "s_nought": 1.0,
             "m": 0.1
         }
-        return XCS(env.action_set, rule_repr, hyperparams)
+        return XCS(env.action_set, env.step_type, rule_repr, hyperparams)
 
     def test_training(self):
         self._setup_lcs()

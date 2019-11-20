@@ -3,7 +3,8 @@ import pandas as pd
 
 from piecewise.dtype import DataSpaceBuilder, Dimension
 
-from ..environment import Environment, EnvironmentResponse, check_terminal
+from ..environment import (Environment, EnvironmentResponse,
+                           EnvironmentStepTypes, check_terminal)
 
 REWARD_CORRECT = 1000
 REWARD_INCORRECT = 0
@@ -18,7 +19,8 @@ class SupervisedEnvironment(Environment):
         data, labels = self._split_dataset()
         obs_space = self._gen_obs_space(data)
         action_set = self._gen_action_set(labels)
-        super().__init__(obs_space, action_set)
+        step_type = EnvironmentStepTypes.single_step
+        super().__init__(obs_space, action_set, step_type)
 
     def _try_convert_to_data_frame(self, dataset):
         is_already_data_frame = isinstance(dataset, pd.DataFrame)

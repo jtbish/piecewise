@@ -32,7 +32,7 @@ def main():
         "do_ga_subsumption": True,
         "do_as_subsumption": True
     }
-    algorithm = XCS(env.action_set, rule_repr, xcs_hyperparams)
+    algorithm = XCS(env.action_set, env.step_type, rule_repr, xcs_hyperparams)
     lcs = LCS(env, codec, rule_repr, algorithm)
     lcs.train(num_epochs=150, monitor=True)
 
