@@ -102,7 +102,7 @@ class XCS(ReinforcementAlgorithm):
             covering_classifier = self._gen_covering_classifier(
                 match_set, self._situation, self._time_step)
             self._population.insert(covering_classifier,
-                                    track_as="covering")
+                                    track_label="covering")
             match_set.add(covering_classifier)
 
     def _should_cover(self, match_set):
@@ -199,7 +199,7 @@ class XCS(ReinforcementAlgorithm):
                     self._population.replace(
                         replacee=classifier,
                         replacer=most_general_classifier,
-                        track_as="action_set_subsumption")
+                        track_label="action_set_subsumption")
 
     def _should_do_rule_discovery(self):
         mean_time_stamp_in_pop = calc_summary_stat(self._population, "mean",
