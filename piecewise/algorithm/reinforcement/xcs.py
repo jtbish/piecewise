@@ -3,6 +3,7 @@ from piecewise.component import (EpsilonGreedy, FitnessWeightedAvgPrediction,
                                  XCSAccuracyFitnessUpdate, XCSCreditAssignment,
                                  XCSGeneticAlgorithm, XCSRouletteWheelDeletion,
                                  XCSSubsumption)
+from piecewise.environment import EnvironmentStepTypes
 from piecewise.util.classifier_set_stats import (calc_summary_stat,
                                                  num_unique_actions)
 
@@ -14,7 +15,7 @@ from .reinforcement_algorithm import (ReinforcementAlgorithm,
 class XCS(ReinforcementAlgorithm):
     """Implementation of XCS, based on pseudocode given in 'An Algorithmic
     Description of XCS' (Butz and Wilson, 2002)."""
-    def __init__(self, env_action_set, rule_repr, hyperparams):
+    def __init__(self, env_action_set, env_step_type, rule_repr, hyperparams):
         common_components = self._init_common_components(
             env_action_set, rule_repr, hyperparams)
         reinforcement_components = \
@@ -22,6 +23,15 @@ class XCS(ReinforcementAlgorithm):
 
         super().__init__(common_components, reinforcement_components,
                          hyperparams)
+
+        self._env_step_type = self._validate_env_step_type(env_step_type)
+
+    def _validate_env_step_type(self, env_step_type):
+        if env_step_type not in EnvironmentStepTypes:
+            raise InvalidSpecError("Step type of environment used by XCS is "
+                                   "invalid.")
+        else:
+            return env_step_type
 
         self._prev_action_set = None
         self._prev_reward = None
@@ -99,30 +109,38 @@ class XCS(ReinforcementAlgorithm):
         Only represents a single iteration of the do-while loop in
         RUN EXPERIMENT, as the caller controls termination criteria."""
         reward = env_response.reward
+        if self._env_step_type == EnvironmentStepTypes.multi_step:
+            self._try_update_prev_action_set()
+            if env_is_terminal:
+                self._update_curr_action_set(reward)
+            else:
+                self._prev_action_set = self._action_set
+                self._prev_reward = reward
+                self._prev_situation = self._situation
+        elif self._env_step_type == EnvironmentStepTypes.single_step:
+            self._update_curr_action_set(reward)
+        else:
+            raise InternalError("Should never get into this else clause.")
 
-        # do updates in appropriate action set(s)
+        return self._population
+
+    def _try_update_prev_action_set(self):
         if self._prev_action_set is not None:
+            assert self._prev_situation is not None
             assert self._prev_reward is not None
-            # do updates in [A]-1
             self._update_action_set(self._prev_action_set,
                                     self._prev_situation,
                                     self._prev_reward,
                                     use_discounting=True,
                                     prediction_array=self._prediction_array)
 
-        if env_is_terminal:
-            # do updates in [A]
-            self._update_action_set(self._action_set,
-                                    self._situation,
-                                    reward,
-                                    use_discounting=False,
-                                    prediction_array=None)
-
-        self._prev_action_set = self._action_set
-        self._prev_reward = reward
-        self._prev_situation = self._situation
-
-        return self._population
+    def _update_curr_action_set(self, reward):
+        self._update_action_set(self._action_set,
+                                self._situation,
+                                reward,
+                                use_discounting=False,
+                                prediction_array=None)
+        self._previous_action_set = None
 
     def _update_action_set(self,
                            action_set,

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from piecewise.environment import DiscreteMultiplexer
+from piecewise.environment import DiscreteMultiplexer, EnvironmentStepTypes
 from piecewise.error.environment_error import OutOfDataError
 
 
@@ -28,6 +28,10 @@ class TestSupervisedEnvironmentViaDiscreteMultiplexer:
     def test_action_set_integrity(self):
         mux = DiscreteMultiplexer()
         assert mux.action_set == {0, 1}
+
+    def test_step_type(self):
+        mux = DiscreteMultiplexer()
+        assert mux.step_type == EnvironmentStepTypes.single_step
 
     def test_observe_order_no_shuffle(self):
         mux = DiscreteMultiplexer(num_address_bits=1, shuffle_dataset=False)
