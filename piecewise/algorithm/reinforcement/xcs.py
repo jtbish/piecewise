@@ -27,23 +27,8 @@ class XCS(ReinforcementAlgorithm):
                          hyperparams)
 
         self._env_step_type = self._validate_env_step_type(env_step_type)
-
-    def _validate_env_step_type(self, env_step_type):
-        if env_step_type not in EnvironmentStepTypes:
-            raise InvalidSpecError("Step type of environment used by XCS is "
-                                   "invalid.")
-        else:
-            return env_step_type
-
-        self._prev_action_set = None
-        self._prev_reward = None
-        self._prev_situation = None
-
-    def _init_curr_step_tracking_attrs(self):
-        self._action_set = None
-        self._prediction_array = None
-        self._situation = None
-        self._time_step = None
+        self._init_prev_step_tracking_attrs()
+        self._init_curr_step_tracking_attrs()
 
     def _init_common_components(self, env_action_set, rule_repr, hyperparams):
         matching_strat = RuleReprMatching(rule_repr)
@@ -75,6 +60,24 @@ class XCS(ReinforcementAlgorithm):
 
         return ReinforcementComponents(action_selection_strat,
                                        credit_assignment_strat)
+
+    def _validate_env_step_type(self, env_step_type):
+        if env_step_type not in EnvironmentStepTypes:
+            raise InvalidSpecError("Step type of environment used by XCS is "
+                                   "invalid.")
+        else:
+            return env_step_type
+
+    def _init_prev_step_tracking_attrs(self):
+        self._prev_action_set = None
+        self._prev_reward = None
+        self._prev_situation = None
+
+    def _init_curr_step_tracking_attrs(self):
+        self._action_set = None
+        self._prediction_array = None
+        self._situation = None
+        self._time_step = None
 
     def train_query(self, situation, time_step):
         """First half (until line 7) of RUN EXPERIMENT function from
