@@ -1,7 +1,6 @@
 import functools
 import math
 
-from . import constants
 from piecewise.error.classifier_error import AttrUpdateError
 
 TIME_STAMP_MIN = 0
@@ -35,6 +34,8 @@ class Classifier:
     microclassifier, and if it has a numerosity > 1 it is considered to be a
     macroclassifier. See is_micro and is_macro properties.
     """
+    _FLOAT_REL_TOL = 1e-5
+
     def __init__(self, rule, prediction, error, fitness, time_stamp):
         self._rule = rule
         self._prediction = prediction
@@ -143,15 +144,15 @@ class Classifier:
     def __eq__(self, other):
         return self._rule == other.rule and \
             math.isclose(self._prediction, other.prediction,
-                         rel_tol=constants.FLOAT_REL_TOL) and \
+                         rel_tol=self._FLOAT_REL_TOL) and \
             math.isclose(self._error, other.error,
-                         rel_tol=constants.FLOAT_REL_TOL) and \
+                         rel_tol=self._FLOAT_REL_TOL) and \
             math.isclose(self._fitness, other.fitness,
-                         rel_tol=constants.FLOAT_REL_TOL) and \
+                         rel_tol=self._FLOAT_REL_TOL) and \
             self._time_stamp == other.time_stamp and \
             self._experience == other.experience and \
             math.isclose(self._action_set_size, other.action_set_size,
-                         rel_tol=constants.FLOAT_REL_TOL) and \
+                         rel_tol=self._FLOAT_REL_TOL) and \
             self._numerosity == other.numerosity
 
     def __repr__(self):

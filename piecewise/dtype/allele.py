@@ -2,7 +2,6 @@ import abc
 import functools
 import math
 
-from . import constants
 from piecewise.error.allele_error import ConversionError
 
 
@@ -70,6 +69,7 @@ def convert_input_to_float(method):
 class FloatAllele(Allele):
     """Allele operating in continuous (floating point) space."""
     _STR_DECIMAL_PLACES = 4
+    _FLOAT_REL_TOL = 0.01  # 1% diff allowed
 
     @convert_input_to_float
     def __init__(self, value):
@@ -91,7 +91,7 @@ class FloatAllele(Allele):
     def __eq__(self, other):
         return math.isclose(self._value,
                             other,
-                            rel_tol=constants.FLOAT_REL_TOL)
+                            rel_tol=self._FLOAT_REL_TOL)
 
     @convert_input_to_float
     def __gt__(self, other):
