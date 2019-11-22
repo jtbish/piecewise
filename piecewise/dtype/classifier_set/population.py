@@ -128,3 +128,7 @@ class Population(AbstractClassifierSet):
         else:
             # can't have 0 numerosity, so remove completely
             self._members.remove(existing_classifier)
+
+    @property
+    def state(self):
+        return self._state
