@@ -116,19 +116,19 @@ class XCS(ReinforcementAlgorithm):
         RUN EXPERIMENT, as the caller controls termination criteria."""
         reward = env_response.reward
         if self._env_step_type == EnvironmentStepTypes.single_step:
-            self._single_step_train(reward)
+            self._single_step_train_update(reward)
         elif self._env_step_type == EnvironmentStepTypes.multi_step:
-            self._multi_step_train(reward, env_is_terminal)
+            self._multi_step_train_update(reward, env_is_terminal)
         else:
             raise InternalError("Should never get into this else clause.")
 
         return self._population
 
-    def _single_step_train(self, reward):
+    def _single_step_train_update(self, reward):
         assert self._prev_action_set is None
         self._update_curr_action_set(reward)
 
-    def _multi_step_train(self, reward, env_is_terminal):
+    def _multi_step_train_update(self, reward, env_is_terminal):
         self._try_update_prev_action_set()
         if env_is_terminal:
             self._update_curr_action_set(reward)
