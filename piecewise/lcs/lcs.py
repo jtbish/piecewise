@@ -20,7 +20,7 @@ class LCS:
         while self._epoch_num < num_epochs:
             self._population = self._exec_train_epoch()
             self._monitor.update(self)
-            self._monitor.report()
+            self._monitor.report(self._epoch_num)
             self._epoch_num += 1
         return self._population
 

@@ -26,7 +26,8 @@ class TrainingPerformanceSubMonitor(AbstractSubMonitor):
 
     def report(self):
         last_key = next(reversed(self._training_performance_history))
-        print(self._training_performance_history[last_key])
+        last_performance = self._training_performance_history[last_key]
+        print(f"Training performance: {last_performance}")
 
 
 class PopulationSummarySubMonitor(AbstractSubMonitor):
@@ -96,8 +97,14 @@ class PopulationSummarySubMonitor(AbstractSubMonitor):
         return summary
 
     def report(self):
+        print("Population summary:")
         last_key = next(reversed(self._population_summaries))
-        print(self._population_summaries[last_key])
+        last_summary = self._population_summaries[last_key]
+        for k, v in last_summary.items():
+            if isinstance(v, float):
+                print(f"{k}: {v:.2f}")
+            else:
+                print(f"{k}: {v}")
 
 
 class PopulationOperationsSubMonitor(AbstractSubMonitor):
@@ -111,5 +118,6 @@ class PopulationOperationsSubMonitor(AbstractSubMonitor):
         self._population_operations_history[time_step] = operations_state
 
     def report(self):
+        print("Population operations:")
         last_key = next(reversed(self._population_operations_history))
         print(self._population_operations_history[last_key])

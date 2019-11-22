@@ -32,7 +32,8 @@ class Monitor(AbstractMonitor):
         for sub_monitor in self._sub_monitors:
             sub_monitor.update(lcs)
 
-    def report(self):
+    def report(self, epoch_num):
+        print(f"Epoch {epoch_num}:")
         for sub_monitor in self._sub_monitors:
             sub_monitor.report()
-            print("\n")
+        print("\n")
