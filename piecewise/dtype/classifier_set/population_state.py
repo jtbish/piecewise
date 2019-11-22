@@ -15,3 +15,6 @@ class PopulationState:
     def update(self, track_label, micros_delta):
         if track_label is not None:
             self._state_changes[track_label] += micros_delta
+
+    def as_dict(self):
+        return dict(self._state_changes)

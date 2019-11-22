@@ -52,5 +52,5 @@ class TestCentreSpreadXCSROnRealMultiplexer:
 
     def test_training(self):
         self._setup_lcs()
-        population = self._lcs.train(num_epochs=5, monitor=True)
+        population = self._lcs.train(num_epochs=5)
         assert isinstance(population, Population)

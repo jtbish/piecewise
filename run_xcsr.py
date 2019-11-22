@@ -2,6 +2,9 @@ from piecewise.algorithm import XCS
 from piecewise.codec import NullCodec
 from piecewise.environment import RealMultiplexer
 from piecewise.lcs import LCS
+from piecewise.monitor import (Monitor, PopulationOperationsSubMonitor,
+                               PopulationSummarySubMonitor,
+                               TrainingPerformanceSubMonitor)
 from piecewise.rule_repr import CentreSpreadRuleRepr
 
 
@@ -40,8 +43,11 @@ def main():
         "m": 0.1
     }
     algorithm = XCS(env.action_set, env.step_type, rule_repr, xcs_hyperparams)
-    lcs = LCS(env, codec, rule_repr, algorithm)
-    lcs.train(num_epochs=313, monitor=True)
+    monitor = Monitor.from_sub_monitor_classes(TrainingPerformanceSubMonitor,
+                                               PopulationSummarySubMonitor,
+                                               PopulationOperationsSubMonitor)
+    lcs = LCS(env, codec, rule_repr, algorithm, monitor)
+    lcs.train(num_epochs=313)
 
 
 if __name__ == "__main__":
