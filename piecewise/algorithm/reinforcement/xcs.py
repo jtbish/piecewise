@@ -115,20 +115,35 @@ class XCS(ReinforcementAlgorithm):
         Only represents a single iteration of the do-while loop in
         RUN EXPERIMENT, as the caller controls termination criteria."""
         reward = env_response.reward
-        if self._env_step_type == EnvironmentStepTypes.multi_step:
-            self._try_update_prev_action_set()
-            if env_is_terminal:
-                self._update_curr_action_set(reward)
-            else:
-                self._prev_action_set = self._action_set
-                self._prev_reward = reward
-                self._prev_situation = self._situation
-        elif self._env_step_type == EnvironmentStepTypes.single_step:
-            self._update_curr_action_set(reward)
+        if self._env_step_type == EnvironmentStepTypes.single_step:
+            self._single_step_train(reward)
+        elif self._env_step_type == EnvironmentStepTypes.multi_step:
+            self._multi_step_train(reward, env_is_terminal)
         else:
             raise InternalError("Should never get into this else clause.")
 
         return self._population
+
+    def _single_step_train(self, reward):
+        assert self._prev_action_set is None
+        self._update_curr_action_set(reward)
+
+    def _multi_step_train(self, reward, env_is_terminal):
+        self._try_update_prev_action_set()
+        if env_is_terminal:
+            self._update_curr_action_set(reward)
+        else:
+            self._prev_action_set = self._action_set
+            self._prev_reward = reward
+            self._prev_situation = self._situation
+
+    def _update_curr_action_set(self, reward):
+        self._update_action_set(self._action_set,
+                                self._situation,
+                                reward,
+                                use_discounting=False,
+                                prediction_array=None)
+        self._previous_action_set = None
 
     def _try_update_prev_action_set(self):
         if self._prev_action_set is not None:
@@ -139,14 +154,6 @@ class XCS(ReinforcementAlgorithm):
                                     self._prev_reward,
                                     use_discounting=True,
                                     prediction_array=self._prediction_array)
-
-    def _update_curr_action_set(self, reward):
-        self._update_action_set(self._action_set,
-                                self._situation,
-                                reward,
-                                use_discounting=False,
-                                prediction_array=None)
-        self._previous_action_set = None
 
     def _update_action_set(self,
                            action_set,
