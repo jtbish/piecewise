@@ -41,7 +41,7 @@ class Algorithm(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def train_update(self, env_response, env_is_terminal):
+    def train_update(self, env_response):
         """Updates and returns the population given the environmental
         feedback."""
         raise NotImplementedError

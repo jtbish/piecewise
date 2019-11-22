@@ -21,7 +21,7 @@ class ReinforcementAlgorithm(Algorithm, metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def train_update(self, env_response, env_is_terminal):
+    def train_update(self, env_response):
         raise NotImplementedError
 
     @abc.abstractmethod

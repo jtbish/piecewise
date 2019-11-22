@@ -91,7 +91,9 @@ class SupervisedEnvironment(Environment):
 
         is_correct_label = given_label == actual_label
         reward = self._calc_reward(is_correct_label)
-        return EnvironmentResponse(reward, is_correct_label)
+        return EnvironmentResponse(reward=reward,
+                                   was_correct_action=is_correct_label,
+                                   is_terminal=self.is_terminal())
 
     def _get_dataset_idx(self):
         return self._dataset_idx_order[self._idx_into_dataset_idx_order]

@@ -21,8 +21,8 @@ def check_terminal(public_method):
     return decorator
 
 
-EnvironmentResponse = namedtuple("EnvironmentResponse",
-                                 ["reward", "was_correct_action"])
+EnvironmentResponse = namedtuple(
+    "EnvironmentResponse", ["reward", "was_correct_action", "is_terminal"])
 CorrectActionNotApplicable = "N/A"
 
 EnvironmentStepTypes = Enum("EnivronmentStepTypes",

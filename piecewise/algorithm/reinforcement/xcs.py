@@ -108,13 +108,14 @@ class XCS(ReinforcementAlgorithm):
     def _should_cover(self, match_set):
         return num_unique_actions(match_set) < self._hyperparams["theta_mna"]
 
-    def train_update(self, env_response, env_is_terminal):
+    def train_update(self, env_response):
         """Second half (line 8 onwards) of RUN EXPERIMENT function from
         'An Algorithmic Description of XCS' (Butz and Wilson, 2002).
 
         Only represents a single iteration of the do-while loop in
         RUN EXPERIMENT, as the caller controls termination criteria."""
         reward = env_response.reward
+        env_is_terminal = env_response.is_terminal
         if self._env_step_type == EnvironmentStepTypes.single_step:
             self._single_step_train_update(reward)
         elif self._env_step_type == EnvironmentStepTypes.multi_step:
