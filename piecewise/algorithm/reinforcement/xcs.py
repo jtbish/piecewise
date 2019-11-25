@@ -1,11 +1,11 @@
+import abc
+
 from piecewise.component import (EpsilonGreedy, FitnessWeightedAvgPrediction,
                                  RuleReprCovering, RuleReprMatching,
                                  XCSAccuracyFitnessUpdate, XCSCreditAssignment,
                                  XCSGeneticAlgorithm, XCSRouletteWheelDeletion,
                                  XCSSubsumption)
 from piecewise.environment import EnvironmentStepTypes
-from piecewise.error.algorithm_error import InvalidSpecError
-from piecewise.error.core_errors import InternalError
 from piecewise.util.classifier_set_stats import (calc_summary_stat,
                                                  num_unique_actions)
 
@@ -14,10 +14,22 @@ from .reinforcement_algorithm import (ReinforcementAlgorithm,
                                       ReinforcementComponents)
 
 
-class XCS(ReinforcementAlgorithm):
+def make_xcs(env_step_type, *args, **kwargs):
+    """Factory function to make suitable XCS instance given type of
+    environment."""
+    if env_step_type == EnvironmentStepTypes.single_step:
+        return SingleStepXCS(*args, **kwargs)
+    elif env_step_type == EnvironmentStepTypes.multi_step:
+        return MultiStepXCS(*args, **kwargs)
+    else:
+        # TODO change
+        raise Exception
+
+
+class XCS(ReinforcementAlgorithm, metaclass=abc.ABCMeta):
     """Implementation of XCS, based on pseudocode given in 'An Algorithmic
     Description of XCS' (Butz and Wilson, 2002)."""
-    def __init__(self, env_action_set, env_step_type, rule_repr, hyperparams):
+    def __init__(self, env_action_set, rule_repr, hyperparams):
         common_components = self._init_common_components(
             env_action_set, rule_repr, hyperparams)
         reinforcement_components = \
@@ -26,7 +38,6 @@ class XCS(ReinforcementAlgorithm):
         super().__init__(common_components, reinforcement_components,
                          hyperparams)
 
-        self._env_step_type = self._validate_env_step_type(env_step_type)
         self._init_prev_step_tracking_attrs()
         self._init_curr_step_tracking_attrs()
 
@@ -60,13 +71,6 @@ class XCS(ReinforcementAlgorithm):
 
         return ReinforcementComponents(action_selection_strat,
                                        credit_assignment_strat)
-
-    def _validate_env_step_type(self, env_step_type):
-        if env_step_type not in EnvironmentStepTypes:
-            raise InvalidSpecError("Step type of environment used by XCS is "
-                                   "invalid.")
-        else:
-            return env_step_type
 
     def _init_prev_step_tracking_attrs(self):
         self._prev_action_set = None
@@ -107,35 +111,18 @@ class XCS(ReinforcementAlgorithm):
     def _should_cover(self, match_set):
         return num_unique_actions(match_set) < self._hyperparams["theta_mna"]
 
+    @abc.abstractmethod
     def train_update(self, env_response):
         """Second half (line 8 onwards) of RUN EXPERIMENT function from
         'An Algorithmic Description of XCS' (Butz and Wilson, 2002).
 
         Only represents a single iteration of the do-while loop in
-        RUN EXPERIMENT, as the caller controls termination criteria."""
-        reward = env_response.reward
-        env_is_terminal = env_response.is_terminal
-        if self._env_step_type == EnvironmentStepTypes.single_step:
-            self._single_step_train_update(reward)
-        elif self._env_step_type == EnvironmentStepTypes.multi_step:
-            self._multi_step_train_update(reward, env_is_terminal)
-        else:
-            raise InternalError("Should never get into this else clause.")
+        RUN EXPERIMENT, as the caller controls termination criteria.
 
-        return self._population
-
-    def _single_step_train_update(self, reward):
-        assert self._prev_action_set is None
-        self._update_curr_action_set(reward)
-
-    def _multi_step_train_update(self, reward, env_is_terminal):
-        self._try_update_prev_action_set()
-        if env_is_terminal:
-            self._update_curr_action_set(reward)
-        else:
-            self._prev_action_set = self._action_set
-            self._prev_reward = reward
-            self._prev_situation = self._situation
+        Update steps to follow are different based on whether XCS is being
+        applied to a single-step or multi-step problem, hence this method is
+        abstract."""
+        raise NotImplementedError
 
     def _update_curr_action_set(self, reward):
         self._update_action_set(self._action_set,
@@ -144,16 +131,6 @@ class XCS(ReinforcementAlgorithm):
                                 use_discounting=False,
                                 prediction_array=None)
         self._previous_action_set = None
-
-    def _try_update_prev_action_set(self):
-        if self._prev_action_set is not None:
-            assert self._prev_situation is not None
-            assert self._prev_reward is not None
-            self._update_action_set(self._prev_action_set,
-                                    self._prev_situation,
-                                    self._prev_reward,
-                                    use_discounting=True,
-                                    prediction_array=self._prediction_array)
 
     def _update_action_set(self,
                            action_set,
@@ -221,3 +198,39 @@ class XCS(ReinforcementAlgorithm):
         prediction_array = self._gen_prediction_array(match_set)
         greedy_action = self._greedily_select_action(prediction_array)
         return greedy_action
+
+
+class SingleStepXCS(XCS):
+    """XCS operating on single-step environments, i.e. supervised or unsupervised
+    learning environments."""
+    def train_update(self, env_response):
+        assert self._prev_action_set is None
+        reward = env_response.reward
+        self._update_curr_action_set(reward)
+        return self._population
+
+
+class MultiStepXCS(XCS):
+    """XCS operating on multi-step environments, i.e. reinforcement learning
+    environments."""
+    def train_update(self, env_response):
+        self._try_update_prev_action_set()
+        reward = env_response.reward
+        env_is_terminal = env_response.env_is_terminal
+        if env_is_terminal:
+            self._update_curr_action_set(reward)
+        else:
+            self._prev_action_set = self._action_set
+            self._prev_reward = reward
+            self._prev_situation = self._situation
+        return self._population
+
+    def _try_update_prev_action_set(self):
+        if self._prev_action_set is not None:
+            assert self._prev_situation is not None
+            assert self._prev_reward is not None
+            self._update_action_set(self._prev_action_set,
+                                    self._prev_situation,
+                                    self._prev_reward,
+                                    use_discounting=True,
+                                    prediction_array=self._prediction_array)

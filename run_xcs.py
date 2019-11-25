@@ -1,4 +1,4 @@
-from piecewise.algorithm import XCS
+from piecewise.algorithm import make_xcs
 from piecewise.codec import NullCodec
 from piecewise.environment import DiscreteMultiplexer
 from piecewise.lcs import LCS
@@ -35,7 +35,8 @@ def main():
         "do_ga_subsumption": True,
         "do_as_subsumption": True
     }
-    algorithm = XCS(env.action_set, env.step_type, rule_repr, xcs_hyperparams)
+    algorithm = make_xcs(env.step_type, env.action_set, rule_repr,
+                         xcs_hyperparams)
     monitor = Monitor.from_sub_monitor_classes(TrainingPerformanceSubMonitor,
                                                PopulationSummarySubMonitor,
                                                PopulationOperationsSubMonitor)

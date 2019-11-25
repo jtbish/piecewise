@@ -1,4 +1,4 @@
-from piecewise.algorithm import XCS
+from piecewise.algorithm import make_xcs
 from piecewise.codec import NullCodec
 from piecewise.environment import RealMultiplexer
 from piecewise.lcs import LCS
@@ -42,7 +42,8 @@ def main():
         "s_nought": 1.0,
         "m": 0.1
     }
-    algorithm = XCS(env.action_set, env.step_type, rule_repr, xcs_hyperparams)
+    algorithm = make_xcs(env.step_type, env.action_set, rule_repr,
+                         xcs_hyperparams)
     monitor = Monitor.from_sub_monitor_classes(TrainingPerformanceSubMonitor,
                                                PopulationSummarySubMonitor,
                                                PopulationOperationsSubMonitor)

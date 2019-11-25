@@ -1,4 +1,4 @@
-from piecewise.algorithm import XCS
+from piecewise.algorithm import make_xcs
 from piecewise.codec import NullCodec
 from piecewise.dtype import Population
 from piecewise.environment import RealMultiplexer
@@ -48,7 +48,8 @@ class TestCentreSpreadXCSROnRealMultiplexer:
             "s_nought": 1.0,
             "m": 0.1
         }
-        return XCS(env.action_set, env.step_type, rule_repr, hyperparams)
+        xcs = make_xcs(env.step_type, env.action_set, rule_repr, hyperparams)
+        return xcs
 
     def test_training(self):
         self._setup_lcs()

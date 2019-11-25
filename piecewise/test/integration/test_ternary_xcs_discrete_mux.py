@@ -1,4 +1,4 @@
-from piecewise.algorithm import XCS
+from piecewise.algorithm import make_xcs
 from piecewise.codec import NullCodec
 from piecewise.environment import DiscreteMultiplexer
 from piecewise.lcs import LCS
@@ -37,7 +37,8 @@ class TestTernaryXCSOnDiscreteMultiplexer:
             "do_ga_subsumption": True,
             "do_as_subsumption": True
         }
-        return XCS(env.action_set, env.step_type, rule_repr, hyperparams)
+        xcs = make_xcs(env.step_type, env.action_set, rule_repr, hyperparams)
+        return xcs
 
     def test_training(self):
         self._setup_lcs()
