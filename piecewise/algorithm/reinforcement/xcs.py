@@ -63,9 +63,8 @@ class XCS(ReinforcementAlgorithm, metaclass=abc.ABCMeta):
                                 deletion_strat)
 
     def _init_reinforcement_components(self, hyperparams):
-        balanced_exploit_explore_prob = 0.5
         action_selection_strat = \
-            EpsilonGreedy(balanced_exploit_explore_prob)
+            EpsilonGreedy(hyperparams["p_explore"])
         credit_assignment_strat = \
             XCSCreditAssignment(hyperparams)
 

@@ -33,6 +33,7 @@ class TestTernaryXCSOnDiscreteMultiplexer:
             "prediction_I": 1e-6,
             "epsilon_I": 1e-6,
             "fitness_I": 1e-6,
+            "p_explore": 0.5,
             "theta_mna": num_actions,
             "do_ga_subsumption": True,
             "do_as_subsumption": True
