@@ -19,6 +19,7 @@ class FitnessWeightedAvgPrediction(PredictionStrategy):
         return prediction_array
 
     def _init_arrays(self):
+        # use default dicts so that 'null' predictions don't appear
         prediction_array = defaultdict(lambda: 0.0)
         fitness_sum_array = defaultdict(lambda: 0.0)
         return prediction_array, fitness_sum_array
