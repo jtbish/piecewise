@@ -215,7 +215,7 @@ class MultiStepXCS(XCS):
     def train_update(self, env_response):
         self._try_update_prev_action_set()
         reward = env_response.reward
-        env_is_terminal = env_response.env_is_terminal
+        env_is_terminal = env_response.is_terminal
         if env_is_terminal:
             self._update_curr_action_set(reward)
         else:
