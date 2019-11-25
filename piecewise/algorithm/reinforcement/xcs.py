@@ -101,8 +101,7 @@ class XCS(ReinforcementAlgorithm):
         while self._should_cover(match_set):
             covering_classifier = self._gen_covering_classifier(
                 match_set, self._situation, self._time_step)
-            self._population.insert(covering_classifier,
-                                    track_label="covering")
+            self._population.add(covering_classifier, track_label="covering")
             match_set.add(covering_classifier)
 
     def _should_cover(self, match_set):

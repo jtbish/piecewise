@@ -29,6 +29,14 @@ class TestPopulation:
         with pytest.raises(InvalidSizeError):
             Population(max_micros=-1, deletion_strat=mock_deletion_strat)
 
+    def test_add(self, mock_deletion_strat, make_mock_microclassifier):
+        population = Population(max_micros=1,
+                                deletion_strat=mock_deletion_strat)
+        mock_microclassifier = make_mock_microclassifier()
+        population.add(mock_microclassifier)
+        assert population.num_micros() == 1
+        assert population.num_macros() == 1
+
     def test_insert_no_absorb(self, mock_deletion_strat,
                               make_mock_microclassifier):
         population = Population(max_micros=2,

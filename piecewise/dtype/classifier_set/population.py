@@ -51,12 +51,16 @@ class Population(AbstractClassifierSet):
                                    f"{max_micros}, must be positive integer")
 
     @delete_after
+    def add(self, classifier, track_label=None):
+        self._atomic_add_new(classifier, track_label=track_label)
+
+    @delete_after
     def insert(self, classifier, track_label=None):
         """INSERT IN POPULATION function from 'An Algorithmic Description of
         XCS' (Butz and Wilson, 2002)."""
         was_absorbed = self._try_to_absorb(classifier)
         if not was_absorbed:
-            self._atomic_insert_new(classifier, track_label=track_label)
+            self._atomic_add_new(classifier, track_label=track_label)
 
     def _try_to_absorb(self, classifier):
         for member in self._members:
@@ -104,7 +108,7 @@ class Population(AbstractClassifierSet):
 
     # Atomic operations
     @track_state_change
-    def _atomic_insert_new(self, new_classifier, track_label):
+    def _atomic_add_new(self, new_classifier, track_label):
         self._members.append(new_classifier)
 
     @track_state_change
