@@ -7,7 +7,11 @@ class AbstractMonitor(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def report(self):
+    def report(self, epoch_num):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def plot(self):
         raise NotImplementedError
 
 
@@ -15,7 +19,10 @@ class NullMonitor(AbstractMonitor):
     def update(self, lcs):
         pass
 
-    def report(self):
+    def report(self, epoch_num):
+        pass
+
+    def plot(self):
         pass
 
 
@@ -37,3 +44,7 @@ class Monitor(AbstractMonitor):
         for sub_monitor in self._sub_monitors:
             sub_monitor.report()
         print("\n")
+
+    def plot(self):
+        for sub_monitor in self._sub_monitors:
+            sub_monitor.plot()

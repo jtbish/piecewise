@@ -22,6 +22,7 @@ class LCS:
             self._monitor.update(self)
             self._monitor.report(self._epoch_num)
             self._epoch_num += 1
+        self._monitor.plot()
         return self._population
 
     def _exec_train_epoch(self):

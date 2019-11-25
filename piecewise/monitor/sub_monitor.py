@@ -1,6 +1,8 @@
 import abc
 from collections import OrderedDict
 
+import matplotlib.pyplot as plt
+
 from piecewise.util.classifier_set_stats import calc_summary_stat
 
 
@@ -13,6 +15,10 @@ class AbstractSubMonitor(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def report(self):
         raise NotImplementedError
+
+    @abc.abstractmethod
+    def plot(self):
+        pass
 
 
 class TrainingPerformanceSubMonitor(AbstractSubMonitor):
@@ -28,6 +34,16 @@ class TrainingPerformanceSubMonitor(AbstractSubMonitor):
         last_key = next(reversed(self._training_performance_history))
         last_performance = self._training_performance_history[last_key]
         print(f"Training performance: {last_performance}")
+
+    def plot(self):
+        plt.figure()
+        epoch_nums = list(self._training_performance_history.keys())
+        accuracy_vals = list(self._training_performance_history.values())
+        plt.plot(epoch_nums, accuracy_vals)
+        plt.title("Training performance")
+        plt.xlabel("Epoch num")
+        plt.ylabel("Training set accuracy")
+        plt.savefig("training_performance.png")
 
 
 class PopulationSummarySubMonitor(AbstractSubMonitor):
@@ -106,6 +122,49 @@ class PopulationSummarySubMonitor(AbstractSubMonitor):
             else:
                 print(f"{k}: {v}")
 
+    def plot(self):
+        # what is plottable on the same graph?
+        # mean error/1000, mean prediction/1000
+        # macros/max_micros, micros/max_micros
+        # generality
+        plt.figure()
+        time_steps = list(self._population_summaries.keys())
+        mean_error_vals = [
+            summary["mean_error"] / 1000
+            for summary in self._population_summaries.values()
+        ]
+        mean_prediction_vals = [
+            summary["mean_prediction"] / 1000
+            for summary in self._population_summaries.values()
+        ]
+        micro_vals = [
+            summary["num_micros"] / 400
+            for summary in self._population_summaries.values()
+        ]
+        macro_vals = [
+            summary["num_macros"] / 400
+            for summary in self._population_summaries.values()
+        ]
+        generality_vals = [
+            summary["mean_generality"] / 100
+            for summary in self._population_summaries.values()
+        ]
+        fitness_vals = [
+            summary["mean_fitness"]
+            for summary in self._population_summaries.values()
+        ]
+        plt.plot(time_steps, mean_error_vals, label="mean error")
+        plt.plot(time_steps, mean_prediction_vals, label="mean prediction")
+        plt.plot(time_steps, micro_vals, label="micros")
+        plt.plot(time_steps, macro_vals, label="macros")
+        plt.plot(time_steps, generality_vals, label="generality")
+        plt.plot(time_steps, fitness_vals, label="fitness")
+        plt.xlabel("Time step")
+        plt.ylabel("Normalised value")
+        plt.title("Population summary trends")
+        plt.legend(loc="upper right")
+        plt.savefig("pop_summary.png")
+
 
 class PopulationOperationsSubMonitor(AbstractSubMonitor):
     def __init__(self):
@@ -121,3 +180,23 @@ class PopulationOperationsSubMonitor(AbstractSubMonitor):
         print("Population operations:")
         last_key = next(reversed(self._population_operations_history))
         print(self._population_operations_history[last_key])
+
+    def plot(self):
+        plt.figure()
+        time_steps = list(self._population_operations_history.keys())
+        last_key = next(reversed(self._population_operations_history))
+        recorded_operations = \
+            tuple(self._population_operations_history[last_key].keys())
+        for operation in recorded_operations:
+            operation_vals = []
+            for time_step in time_steps:
+                val = self._population_operations_history[time_step].get(
+                    operation, 0)
+                operation_vals.append(abs(val))
+            plt.plot(time_steps, operation_vals, label=operation)
+        plt.xlabel("Time step")
+        plt.ylabel("Cumulative number of operations")
+        plt.yscale("log")
+        plt.title("Population operations")
+        plt.legend(loc="upper right")
+        plt.savefig("pop_ops.png")
