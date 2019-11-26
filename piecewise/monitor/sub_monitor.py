@@ -1,5 +1,5 @@
 import abc
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 
 import matplotlib.pyplot as plt
 
@@ -8,195 +8,122 @@ from piecewise.util.classifier_set_stats import calc_summary_stat
 
 class AbstractSubMonitor(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def update(self, lcs):
+    def update(self, lcs, epoch_num):
         raise NotImplementedError
 
-    # TODO remove
+    @abc.abstractmethod
+    def query(self):
+        raise NotImplementedError
+
     @abc.abstractmethod
     def report(self):
         raise NotImplementedError
-
-    @abc.abstractmethod
-    def plot(self):
-        pass
 
 
 class TrainingPerformanceSubMonitor(AbstractSubMonitor):
     def __init__(self):
         self._training_performance_history = OrderedDict()
 
-    def update(self, lcs):
-        epoch_num = lcs.epoch_num
+    def update(self, lcs, epoch_num):
         training_performance = lcs.calc_training_performance()
         self._training_performance_history[epoch_num] = training_performance
 
-    def report(self):
-        last_key = next(reversed(self._training_performance_history))
-        last_performance = self._training_performance_history[last_key]
-        print(f"Training performance: {last_performance}")
+    def query(self):
+        return self._training_performance_history
 
-    def plot(self):
+    def report(self):
         plt.figure()
         epoch_nums = list(self._training_performance_history.keys())
-        accuracy_vals = list(self._training_performance_history.values())
-        plt.plot(epoch_nums, accuracy_vals)
-        plt.title("Training performance")
-        plt.xlabel("Epoch num")
-        plt.ylabel("Training set accuracy")
+        training_performance_results = \
+            list(self._training_performance_history.values())
+        plt.plot(epoch_nums, training_performance_results)
+        plt.xlabel("Epoch number")
+        plt.ylabel("Training set performance")
+        plt.title("Training set performance vs. time")
         plt.savefig("training_performance.png")
 
 
-class PopulationSummarySubMonitor(AbstractSubMonitor):
+class PopulationSizeSubMonitor(AbstractSubMonitor):
     def __init__(self):
-        self._population_summaries = OrderedDict()
+        self._population_size_history = OrderedDict()
 
-    def update(self, lcs):
-        time_step = lcs.time_step
-        summary = self._summarise_population(lcs)
-        self._population_summaries[time_step] = summary
+    def update(self, lcs, epoch_num):
+        num_micros = lcs.population.num_micros()
+        num_macros = lcs.population.num_macros()
+        self._population_size_history[epoch_num] = {
+            "num micros": num_micros,
+            "num macros": num_macros
+        }
 
-    def _summarise_population(self, lcs):
-        population = lcs.population
-        rule_repr = lcs.rule_repr
-        summary = {}
-        summary["num_micros"] = population.num_micros()
-        summary["num_macros"] = population.num_macros()
-        summary["min_prediction"] = calc_summary_stat(population, "min",
-                                                      "prediction")
-        summary["mean_prediction"] = calc_summary_stat(population, "mean",
-                                                       "prediction")
-        summary["max_prediction"] = calc_summary_stat(population, "max",
-                                                      "prediction")
-        summary["min_error"] = calc_summary_stat(population, "min", "error")
-        summary["mean_error"] = calc_summary_stat(population, "mean", "error")
-        summary["max_error"] = calc_summary_stat(population, "max", "error")
-        summary["min_fitness"] = calc_summary_stat(population, "min",
-                                                   "fitness")
-        summary["mean_fitness"] = calc_summary_stat(population, "mean",
-                                                    "fitness")
-        summary["max_fitness"] = calc_summary_stat(population, "max",
-                                                   "fitness")
-        summary["min_time_stamp"] = calc_summary_stat(population, "min",
-                                                      "time_stamp")
-        summary["mean_time_stamp"] = calc_summary_stat(population, "mean",
-                                                       "time_stamp")
-        summary["max_time_stamp"] = calc_summary_stat(population, "max",
-                                                      "time_stamp")
-        summary["min_experience"] = calc_summary_stat(population, "min",
-                                                      "experience")
-        summary["mean_experience"] = calc_summary_stat(population, "mean",
-                                                       "experience")
-        summary["max_experience"] = calc_summary_stat(population, "max",
-                                                      "experience")
-        summary["min_action_set_size"] = \
-            calc_summary_stat(population, "min", "action_set_size")
-        summary["mean_action_set_size"] = \
-            calc_summary_stat(population, "mean", "action_set_size")
-        summary["max_action_set_size"] = \
-            calc_summary_stat(population, "max", "action_set_size")
-        summary["min_numerosity"] = \
-            calc_summary_stat(population, "min", "numerosity")
-        summary["max_numerosity"] = \
-            calc_summary_stat(population, "max", "numerosity")
-        summary["min_generality"] = min([
-            classifier.generality_as_percentage(rule_repr)
-            for classifier in population
-        ])
-        summary["mean_generality"] = sum([
-            classifier.generality_as_percentage(rule_repr)
-            for classifier in population
-        ]) / population.num_micros()
-        summary["max_generality"] = max([
-            classifier.generality_as_percentage(rule_repr)
-            for classifier in population
-        ])
-        return summary
+    def query(self):
+        return self._population_size_history
 
     def report(self):
-        print("Population summary:")
-        last_key = next(reversed(self._population_summaries))
-        last_summary = self._population_summaries[last_key]
-        for k, v in last_summary.items():
-            if isinstance(v, float):
-                print(f"{k}: {v:.2f}")
-            else:
-                print(f"{k}: {v}")
-
-    def plot(self):
-        # what is plottable on the same graph?
-        # mean error/1000, mean prediction/1000
-        # macros/max_micros, micros/max_micros
-        # generality
         plt.figure()
-        time_steps = list(self._population_summaries.keys())
-        mean_error_vals = [
-            summary["mean_error"] / 1000
-            for summary in self._population_summaries.values()
+        epoch_nums = list(self._population_size_history.keys())
+        micros_values = [
+            history["num micros"]
+            for history in self._population_size_history.values()
         ]
-        mean_prediction_vals = [
-            summary["mean_prediction"] / 1000
-            for summary in self._population_summaries.values()
+        macros_values = [
+            history["num macros"]
+            for history in self._population_size_history.values()
         ]
-        micro_vals = [
-            summary["num_micros"] / 400
-            for summary in self._population_summaries.values()
-        ]
-        macro_vals = [
-            summary["num_macros"] / 400
-            for summary in self._population_summaries.values()
-        ]
-        generality_vals = [
-            summary["mean_generality"] / 100
-            for summary in self._population_summaries.values()
-        ]
-        fitness_vals = [
-            summary["mean_fitness"]
-            for summary in self._population_summaries.values()
-        ]
-        plt.plot(time_steps, mean_error_vals, label="mean error")
-        plt.plot(time_steps, mean_prediction_vals, label="mean prediction")
-        plt.plot(time_steps, micro_vals, label="micros")
-        plt.plot(time_steps, macro_vals, label="macros")
-        plt.plot(time_steps, generality_vals, label="generality")
-        plt.plot(time_steps, fitness_vals, label="fitness")
-        plt.xlabel("Time step")
-        plt.ylabel("Normalised value")
-        plt.title("Population summary trends")
-        plt.legend(loc="upper right")
-        plt.savefig("pop_summary.png")
+        plt.plot(epoch_nums, micros_values, label="num micros")
+        plt.plot(epoch_nums, macros_values, label="num macros")
+        plt.xlabel("Epoch number")
+        plt.ylabel("Population size")
+        plt.title("Population size vs. time")
+        plt.legend()
+        plt.savefig("pop_size.png")
+
+
+ClassifierSetStat = namedtuple("ClassifierSetStat",
+                               ["stat_type", "classifier_property"])
+
+
+class PopulationStatisticsSubMonitor(AbstractSubMonitor):
+    def __init__(self, stats_to_monitor):
+        self._stats_to_monitor = stats_to_monitor
+        self._stat_summary_history = OrderedDict()
+
+    def update(self, lcs, epoch_num):
+        summary = self._gen_summary(lcs.population)
+        self._stat_summary_history[epoch_num] = summary
+
+    def _gen_summary(self, population):
+        summary = {}
+        for stat_to_monitor in self._stats_to_monitor:
+            result = self._calc_stat(population, stat_to_monitor)
+            stat_name = self._get_stat_name(stat_to_monitor)
+            summary[stat_name] = result
+        return summary
+
+    def _calc_stat(self, population, stat):
+        return calc_summary_stat(population, stat.stat_type,
+                                 stat.classifier_property)
+
+    def _get_stat_name(self, stat):
+        return stat.stat_type + " " + stat.classifier_property
+
+    def query(self):
+        return self._stat_summary_history
+
+    def report(self):
+        pass
 
 
 class PopulationOperationsSubMonitor(AbstractSubMonitor):
     def __init__(self):
         self._population_operations_history = OrderedDict()
 
-    def update(self, lcs):
-        time_step = lcs.time_step
+    def update(self, lcs, epoch_num):
         population = lcs.population
-        operations_state = population.state.as_dict()
-        self._population_operations_history[time_step] = operations_state
+        operations_state = population.get_operations_state()
+        self._population_operations_history[epoch_num] = operations_state
+
+    def query(self):
+        return self._population_operations_history
 
     def report(self):
-        print("Population operations:")
-        last_key = next(reversed(self._population_operations_history))
-        print(self._population_operations_history[last_key])
-
-    def plot(self):
-        plt.figure()
-        time_steps = list(self._population_operations_history.keys())
-        last_key = next(reversed(self._population_operations_history))
-        recorded_operations = \
-            tuple(self._population_operations_history[last_key].keys())
-        for operation in recorded_operations:
-            operation_vals = []
-            for time_step in time_steps:
-                val = self._population_operations_history[time_step].get(
-                    operation, 0)
-                operation_vals.append(abs(val))
-            plt.plot(time_steps, operation_vals, label=operation)
-        plt.xlabel("Time step")
-        plt.ylabel("Cumulative number of operations")
-        plt.yscale("log")
-        plt.title("Population operations")
-        plt.legend(loc="upper right")
-        plt.savefig("pop_ops.png")
+        pass
