@@ -37,11 +37,12 @@ def track_state_change(atomic_method):
 
 
 class Population(AbstractClassifierSet):
-    def __init__(self, max_micros, deletion_strat):
+    def __init__(self, max_micros, deletion_strat, rule_repr):
         self._validate_max_micros(max_micros)
         self._max_micros = max_micros
         self._deletion_strat = deletion_strat
         self._state = PopulationState()
+        self._rule_repr = rule_repr
         super().__init__()
 
     def _validate_max_micros(self, max_micros):
@@ -49,6 +50,10 @@ class Population(AbstractClassifierSet):
         if not max_micros > 0:
             raise InvalidSizeError("Invalid max micros for population size: "
                                    f"{max_micros}, must be positive integer")
+
+    @property
+    def rule_repr(self):
+        return self._rule_repr
 
     @delete_after
     def add(self, classifier, track_label=None):

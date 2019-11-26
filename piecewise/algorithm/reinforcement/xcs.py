@@ -36,7 +36,7 @@ class XCS(ReinforcementAlgorithm, metaclass=abc.ABCMeta):
             self._init_reinforcement_components(hyperparams)
 
         super().__init__(common_components, reinforcement_components,
-                         hyperparams)
+                         rule_repr, hyperparams)
 
         self._init_prev_step_tracking_attrs()
         self._init_curr_step_tracking_attrs()
