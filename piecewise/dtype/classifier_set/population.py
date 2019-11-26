@@ -3,7 +3,7 @@ import functools
 from piecewise.error.population_error import InvalidSizeError
 
 from .abstract_classifier_set import AbstractClassifierSet, verify_membership
-from .population_state import PopulationState
+from .population_operations_state import PopulationOperationsState
 
 
 def delete_after(public_method):
@@ -30,7 +30,7 @@ def track_state_change(atomic_method):
         result = atomic_method(self, *args, track_label)
         micros_after = self.num_micros()
         micros_delta = micros_after - micros_before
-        self._state.update(track_label, micros_delta)
+        self._operations_state.update(track_label, micros_delta)
         return result
 
     return _track_state_change
@@ -41,8 +41,8 @@ class Population(AbstractClassifierSet):
         self._validate_max_micros(max_micros)
         self._max_micros = max_micros
         self._deletion_strat = deletion_strat
-        self._state = PopulationState()
         self._rule_repr = rule_repr
+        self._operations_state = PopulationOperationsState()
         super().__init__()
 
     def _validate_max_micros(self, max_micros):
@@ -50,6 +50,9 @@ class Population(AbstractClassifierSet):
         if not max_micros > 0:
             raise InvalidSizeError("Invalid max micros for population size: "
                                    f"{max_micros}, must be positive integer")
+
+    def get_operations_state(self):
+        return self._operations_state.query()
 
     @property
     def rule_repr(self):
@@ -137,7 +140,3 @@ class Population(AbstractClassifierSet):
         else:
             # can't have 0 numerosity, so remove completely
             self._members.remove(existing_classifier)
-
-    @property
-    def state(self):
-        return self._state
