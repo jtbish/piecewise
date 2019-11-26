@@ -3,7 +3,7 @@ import math
 
 from piecewise.error.classifier_error import AttrUpdateError
 
-TIME_STAMP_MIN = 0
+TIME_STAMP_MIN = 1
 EXPERIENCE_MIN = 0
 ACTION_SET_SIZE_MIN = 1
 NUMEROSITY_MIN = 1
