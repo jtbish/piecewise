@@ -1,9 +1,12 @@
 from piecewise.algorithm import make_xcs
 from piecewise.codec import NullCodec
 from piecewise.environment import DiscreteMultiplexer
-from piecewise.lcs import LCS
-from piecewise.monitor import (Monitor, PopulationOperationsSubMonitor,
-                               PopulationSummarySubMonitor,
+from piecewise.experiment import Experiment
+from piecewise.lcs import SupervisedLCS
+from piecewise.monitor import (ClassifierSetStat, Monitor,
+                               PopulationOperationsSubMonitor,
+                               PopulationSizeSubMonitor,
+                               PopulationStatisticsSubMonitor,
                                TrainingPerformanceSubMonitor)
 from piecewise.rule_repr import TernaryRuleRepr
 
@@ -38,11 +41,18 @@ def main():
     }
     algorithm = make_xcs(env.step_type, env.action_set, rule_repr,
                          xcs_hyperparams)
-    monitor = Monitor.from_sub_monitor_classes(TrainingPerformanceSubMonitor,
-                                               PopulationSummarySubMonitor,
-                                               PopulationOperationsSubMonitor)
-    lcs = LCS(env, codec, rule_repr, algorithm, monitor)
-    lcs.train(num_epochs=150)
+    monitor = Monitor(
+        TrainingPerformanceSubMonitor(), PopulationOperationsSubMonitor(),
+        PopulationSizeSubMonitor(),
+        PopulationStatisticsSubMonitor([
+            ClassifierSetStat("mean", "error"),
+            ClassifierSetStat("max", "fitness")
+        ]))
+    lcs = SupervisedLCS(env, codec, algorithm)
+
+    experiment = Experiment(lcs, monitor, num_epochs=10)
+    population, monitor = experiment.run()
+    monitor.report()
 
 
 if __name__ == "__main__":
