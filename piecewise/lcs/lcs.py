@@ -1,5 +1,7 @@
 import abc
 
+TIME_STEP_MIN = 1
+
 
 class LCS(metaclass=abc.ABCMeta):
     def __init__(self, env, codec, algorithm):
@@ -7,7 +9,7 @@ class LCS(metaclass=abc.ABCMeta):
         self._codec = codec
         self._algorithm = algorithm
 
-        self._time_step = 1
+        self._time_step = TIME_STEP_MIN
         self._population = None
 
     @abc.abstractmethod

@@ -2,8 +2,9 @@ import functools
 import math
 
 from piecewise.error.classifier_error import AttrUpdateError
+from piecewise.lcs.lcs import TIME_STEP_MIN
 
-TIME_STAMP_MIN = 1
+TIME_STAMP_MIN = TIME_STEP_MIN
 EXPERIENCE_MIN = 0
 ACTION_SET_SIZE_MIN = 1
 NUMEROSITY_MIN = 1
