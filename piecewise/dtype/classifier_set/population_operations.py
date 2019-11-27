@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 
-class PopulationOperationsState:
+class PopulationOperations:
     """Stores changes made to the state of a Population instance via
     its tracked operations.
 
