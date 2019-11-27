@@ -7,7 +7,7 @@ class AbstractMonitor(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def report(self):
+    def query(self):
         raise NotImplementedError
 
 
@@ -15,7 +15,7 @@ class NullMonitor(AbstractMonitor):
     def update(self, lcs, epoch_num):
         pass
 
-    def report(self):
+    def query(self):
         pass
 
 
@@ -27,6 +27,9 @@ class Monitor(AbstractMonitor):
         for sub_monitor in self._sub_monitors:
             sub_monitor.update(lcs, epoch_num)
 
-    def report(self):
+    def query(self, sub_monitor_cls):
+        result = {}
         for sub_monitor in self._sub_monitors:
-            sub_monitor.report()
+            sub_monitor_name = sub_monitor.__class__.__name__
+            result[sub_monitor_name] = sub_monitor.query()
+        return result

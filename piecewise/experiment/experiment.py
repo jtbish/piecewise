@@ -12,12 +12,10 @@ class Experiment:
         self._num_epochs = num_epochs
 
     def run(self):
-        epoch_num = 1
-        while epoch_num < self._num_epochs:
+        for epoch_num in range(1, self._num_epochs + 1):
             population = self._lcs.train_single_epoch()
             self._monitor.update(self._lcs, epoch_num)
-            epoch_num += 1
-        return population, self._monitor
+        return population, self._monitor.query()
 
     def archive(self):
         raise NotImplementedError
