@@ -1,4 +1,5 @@
 import gym
+from gym import logger
 
 from piecewise.dtype import DataSpaceBuilder, Dimension
 
@@ -7,10 +8,13 @@ from ..environment import (CorrectActionNotApplicable, EnvironmentResponse,
 from .abstract_reinforcement_environment import \
     AbstractReinforcementEnvironment
 
+# quieten warnings from gym
+gym.logger.set_level(logger.ERROR)
+
 
 class GymEnvironment(AbstractReinforcementEnvironment):
     """Wrapper over an OpenAI Gym environment to conform with Piecewise
-    environment API."""
+    Environment API."""
     def __init__(self, env_name, seed):
         self._wrapped_env = gym.make(env_name)
         obs_space = self._gen_obs_space()
@@ -35,6 +39,7 @@ class GymEnvironment(AbstractReinforcementEnvironment):
         self._wrapped_env.seed(self._seed)
         self._curr_obs = self._wrapped_env.reset()
         self._is_terminal = False
+        self._wrapped_env_was_done_last_step = False
 
     @check_terminal
     def observe(self):
@@ -44,7 +49,8 @@ class GymEnvironment(AbstractReinforcementEnvironment):
     def act(self, action):
         obs, reward, done, _ = self._wrapped_env.step(action)
         self._curr_obs = obs
-        self._is_terminal = done
+        self._is_terminal = self._wrapped_env_was_done_last_step
+        self._wrapped_env_was_done_last_step = done
         return EnvironmentResponse(
             reward=reward,
             was_correct_action=CorrectActionNotApplicable,

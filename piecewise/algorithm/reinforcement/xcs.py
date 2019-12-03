@@ -104,13 +104,13 @@ class XCS(ReinforcementAlgorithm, metaclass=abc.ABCMeta):
         while self._should_cover(match_set):
             covering_classifier = self._gen_covering_classifier(
                 match_set, self._situation, self._time_step)
-            self._population.add(covering_classifier, track_label="covering")
+            self._population.add(covering_classifier,
+                                 operation_label="covering")
             match_set.add(covering_classifier)
 
     def _should_cover(self, match_set):
         return num_unique_actions(match_set) < self._hyperparams["theta_mna"]
 
-    @abc.abstractmethod
     def train_update(self, env_response):
         """Second half (line 8 onwards) of RUN EXPERIMENT function from
         'An Algorithmic Description of XCS' (Butz and Wilson, 2002).
@@ -119,8 +119,13 @@ class XCS(ReinforcementAlgorithm, metaclass=abc.ABCMeta):
         RUN EXPERIMENT, as the caller controls termination criteria.
 
         Update steps to follow are different based on whether XCS is being
-        applied to a single-step or multi-step problem, hence this method is
-        abstract."""
+        applied to a single-step or multi-step problem."""
+        self._step_type_train_update(env_response)
+        self._perform_deletion()
+        return self._population
+
+    @abc.abstractmethod
+    def _step_type_train_update(self, env_response):
         raise NotImplementedError
 
     def _update_curr_action_set(self, reward):
@@ -179,10 +184,9 @@ class XCS(ReinforcementAlgorithm, metaclass=abc.ABCMeta):
                 if self._subsumption_strat.is_more_general(
                         most_general_classifier, classifier):
                     action_set.remove(classifier)
-                    self._population.replace(
-                        replacee=classifier,
-                        replacer=most_general_classifier,
-                        track_label="action_set_subsumption")
+                    self._population.replace(replacee=classifier,
+                                             replacer=most_general_classifier,
+                                             operation_label="as_subsumption")
 
     def _should_do_rule_discovery(self):
         mean_time_stamp_in_pop = calc_summary_stat(self._population, "mean",
@@ -200,19 +204,18 @@ class XCS(ReinforcementAlgorithm, metaclass=abc.ABCMeta):
 
 
 class SingleStepXCS(XCS):
-    """XCS operating on single-step environments, i.e. supervised or unsupervised
-    learning environments."""
-    def train_update(self, env_response):
+    """XCS operating on single-step environments, i.e. supervised learning
+    environments."""
+    def _step_type_train_update(self, env_response):
         assert self._prev_action_set is None
         reward = env_response.reward
         self._update_curr_action_set(reward)
-        return self._population
 
 
 class MultiStepXCS(XCS):
     """XCS operating on multi-step environments, i.e. reinforcement learning
     environments."""
-    def train_update(self, env_response):
+    def _step_type_train_update(self, env_response):
         self._try_update_prev_action_set()
         reward = env_response.reward
         env_is_terminal = env_response.is_terminal
@@ -222,7 +225,6 @@ class MultiStepXCS(XCS):
             self._prev_action_set = self._action_set
             self._prev_reward = reward
             self._prev_situation = self._situation
-        return self._population
 
     def _try_update_prev_action_set(self):
         if self._prev_action_set is not None:

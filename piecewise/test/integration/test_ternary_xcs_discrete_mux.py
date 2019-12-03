@@ -44,5 +44,5 @@ class TestTernaryXCSOnDiscreteMultiplexer:
     def test_training(self):
         self._setup_lcs()
         for _ in range(5):
-            population = self._lcs.train_single_epoch()
-        assert isinstance(population, Population)
+            self._lcs.train_single_epoch()
+        assert isinstance(self._lcs.population, Population)

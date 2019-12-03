@@ -25,7 +25,6 @@ class LCS(metaclass=abc.ABCMeta):
         while not self._env.is_terminal():
             self._population = self._train_single_time_step()
             self._time_step += 1
-        return self._population
 
     def _train_single_time_step(self):
         situation = self._get_situation()

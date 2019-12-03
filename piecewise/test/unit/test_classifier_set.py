@@ -13,7 +13,7 @@ class TestAbstractClassifierSetViaClassifierSet:
     def test_num_micros_single_microclassifier(self, classifier_set,
                                                mock_microclassifier):
         classifier_set.add(mock_microclassifier)
-        assert classifier_set.num_micros() == 1
+        assert classifier_set.num_micros == 1
 
     def test_num_micros_multiple_microclassifiers(self, classifier_set,
                                                   make_mock_microclassifier):
@@ -21,13 +21,13 @@ class TestAbstractClassifierSetViaClassifierSet:
         second_microclassifier = make_mock_microclassifier()
         classifier_set.add(first_microclassifier)
         classifier_set.add(second_microclassifier)
-        assert classifier_set.num_micros() == 2
+        assert classifier_set.num_micros == 2
 
     def test_num_micros_single_macroclassifier(self, classifier_set,
                                                make_mock_macroclassifier):
         mock_macroclassifier = make_mock_macroclassifier(numerosity=2)
         classifier_set.add(mock_macroclassifier)
-        assert classifier_set.num_micros() == 2
+        assert classifier_set.num_micros == 2
 
     def test_num_micros_multiple_macroclassifiers(self, classifier_set,
                                                   make_mock_macroclassifier):
@@ -35,19 +35,19 @@ class TestAbstractClassifierSetViaClassifierSet:
         second_macroclassifier = make_mock_macroclassifier(numerosity=2)
         classifier_set.add(first_macroclassifier)
         classifier_set.add(second_macroclassifier)
-        assert classifier_set.num_micros() == 4
+        assert classifier_set.num_micros == 4
 
     def test_num_micros_mixed(self, classifier_set, mock_microclassifier,
                               make_mock_macroclassifier):
         mock_macroclassifier = make_mock_macroclassifier(numerosity=2)
         classifier_set.add(mock_microclassifier)
         classifier_set.add(mock_macroclassifier)
-        assert classifier_set.num_micros() == 3
+        assert classifier_set.num_micros == 3
 
     def test_num_macros_single_microclassifier(self, classifier_set,
                                                mock_microclassifier):
         classifier_set.add(mock_microclassifier)
-        assert classifier_set.num_macros() == 1
+        assert classifier_set.num_macros == 1
 
     def test_num_macros_multiple_microclassifiers(self, classifier_set,
                                                   make_mock_microclassifier):
@@ -55,13 +55,13 @@ class TestAbstractClassifierSetViaClassifierSet:
         second_microclassifier = make_mock_microclassifier()
         classifier_set.add(first_microclassifier)
         classifier_set.add(second_microclassifier)
-        assert classifier_set.num_macros() == 2
+        assert classifier_set.num_macros == 2
 
     def test_num_macros_single_macroclassifier(self, classifier_set,
                                                make_mock_macroclassifier):
         mock_macroclassifier = make_mock_macroclassifier(numerosity=2)
         classifier_set.add(mock_macroclassifier)
-        assert classifier_set.num_macros() == 1
+        assert classifier_set.num_macros == 1
 
     def test_num_macros_multiple_macroclassifiers(self, classifier_set,
                                                   make_mock_macroclassifier):
@@ -69,14 +69,14 @@ class TestAbstractClassifierSetViaClassifierSet:
         second_macroclassifier = make_mock_macroclassifier(numerosity=2)
         classifier_set.add(first_macroclassifier)
         classifier_set.add(second_macroclassifier)
-        assert classifier_set.num_macros() == 2
+        assert classifier_set.num_macros == 2
 
     def test_num_macros_mixed(self, classifier_set, mock_microclassifier,
                               make_mock_macroclassifier):
         mock_macroclassifier = make_mock_macroclassifier(numerosity=2)
         classifier_set.add(mock_microclassifier)
         classifier_set.add(mock_macroclassifier)
-        assert classifier_set.num_macros() == 2
+        assert classifier_set.num_macros == 2
 
     def test_containment_pos_case(self, classifier_set, mock_microclassifier):
         classifier_set.add(mock_microclassifier)
@@ -113,19 +113,19 @@ class TestClassifierSet:
                                     mock_microclassifier):
         classifier_set.add(mock_microclassifier)
         classifier_set.remove(mock_microclassifier)
-        assert classifier_set.num_micros() == 0
-        assert classifier_set.num_macros() == 0
+        assert classifier_set.num_micros == 0
+        assert classifier_set.num_macros == 0
 
     def test_remove_macroclassifier(self, classifier_set,
                                     make_mock_macroclassifier):
         mock_macroclassifier = make_mock_macroclassifier(numerosity=2)
         classifier_set.add(mock_macroclassifier)
         classifier_set.remove(mock_macroclassifier)
-        assert classifier_set.num_micros() == 0
-        assert classifier_set.num_macros() == 0
+        assert classifier_set.num_micros == 0
+        assert classifier_set.num_macros == 0
 
     def test_remove_non_member(self, classifier_set, mock_microclassifier):
         with pytest.raises(MemberNotFoundError):
             classifier_set.remove(mock_microclassifier)
-        assert classifier_set.num_micros() == 0
-        assert classifier_set.num_macros() == 0
+        assert classifier_set.num_micros == 0
+        assert classifier_set.num_macros == 0

@@ -3,47 +3,34 @@ import functools
 from piecewise.error.population_error import InvalidSizeError
 
 from .abstract_classifier_set import AbstractClassifierSet, verify_membership
-from .population_operations import PopulationOperations
+from .population_operation_recorder import PopulationOperationRecorder
 
 
-def delete_after(public_method):
-    """Decorator to perform deletions after performing an operation on the
-    population, in order to keep the size of the population at or below
-    its upper bound."""
-    @functools.wraps(public_method)
-    def _delete_after(self, *args, **kwargs):
-        result = public_method(self, *args, **kwargs)
-        self._perform_necessary_deletions()
-        assert self._MIN_MICROS <= self.num_micros() <= self._max_micros
-        return result
-
-    return _delete_after
-
-
-def track_state_change(atomic_method):
-    """Decorator to track state changes (in units of number of
+def record_operation(atomic_method):
+    """Decorator to record operations types (in units of number of
     microclassifiers) when performing atomic operations on the population.
     """
     @functools.wraps(atomic_method)
-    def _track_state_change(self, *args, track_label=None):
-        micros_before = self.num_micros()
-        result = atomic_method(self, *args, track_label)
-        micros_after = self.num_micros()
+    def _record_operation(self, *args, operation_label=None):
+        micros_before = self.num_micros
+        result = atomic_method(self, *args, operation_label=operation_label)
+        micros_after = self.num_micros
         micros_delta = micros_after - micros_before
         num_micros_altered = abs(micros_delta)
-        self._operations.update(track_label, num_micros_altered)
+
+        if operation_label is not None:
+            self._operation_recorder[operation_label] += num_micros_altered
         return result
 
-    return _track_state_change
+    return _record_operation
 
 
 class Population(AbstractClassifierSet):
-    def __init__(self, max_micros, deletion_strat, rule_repr):
+    def __init__(self, max_micros):
         self._validate_max_micros(max_micros)
         self._max_micros = max_micros
-        self._deletion_strat = deletion_strat
-        self._rule_repr = rule_repr
-        self._operations = PopulationOperations()
+        self._operation_recorder = \
+            PopulationOperationRecorder()
         super().__init__()
 
     def _validate_max_micros(self, max_micros):
@@ -52,24 +39,23 @@ class Population(AbstractClassifierSet):
             raise InvalidSizeError("Invalid max micros for population size: "
                                    f"{max_micros}, must be positive integer")
 
-    def operations(self):
-        return dict(self._operations)
+    @property
+    def max_micros(self):
+        return self._max_micros
 
     @property
-    def rule_repr(self):
-        return self._rule_repr
+    def operations_record(self):
+        return self._operation_recorder
 
-    @delete_after
-    def add(self, classifier, track_label=None):
-        self._atomic_add_new(classifier, track_label=track_label)
+    def add(self, classifier, *, operation_label=None):
+        self._atomic_add_new(classifier, operation_label=operation_label)
 
-    @delete_after
-    def insert(self, classifier, track_label=None):
+    def insert(self, classifier, *, operation_label=None):
         """INSERT IN POPULATION function from 'An Algorithmic Description of
         XCS' (Butz and Wilson, 2002)."""
         was_absorbed = self._try_to_absorb(classifier)
         if not was_absorbed:
-            self._atomic_add_new(classifier, track_label=track_label)
+            self._atomic_add_new(classifier, operation_label=operation_label)
 
     def _try_to_absorb(self, classifier):
         for member in self._members:
@@ -79,60 +65,52 @@ class Population(AbstractClassifierSet):
         return False
 
     def _absorb(self, absorbee, absorber):
-        num_copies = absorbee.numerosity
+        num_absorber_copies = absorbee.numerosity
         self._atomic_copy_existing(absorber,
-                                   num_copies,
-                                   track_label="absorption")
+                                   num_absorber_copies,
+                                   operation_label="absorption")
 
-    @delete_after
     @verify_membership
-    def duplicate(self, classifier, num_copies=1, track_label=None):
+    def duplicate(self, classifier, num_copies=1, *, operation_label=None):
         self._atomic_copy_existing(classifier,
                                    num_copies,
-                                   track_label=track_label)
+                                   operation_label=operation_label)
 
     @verify_membership
-    def replace(self, replacee, replacer, track_label=None):
+    def replace(self, replacee, replacer, *, operation_label=None):
         self._atomic_remove_whole(replacee)
-        num_copies = replacee.numerosity
+        num_replacer_copies = replacee.numerosity
         self._atomic_copy_existing(replacer,
-                                   num_copies,
-                                   track_label=track_label)
+                                   num_replacer_copies,
+                                   operation_label=operation_label)
 
-    def _perform_necessary_deletions(self):
-        """DELETE FROM POPULATION function from 'An Algorithmic Description of
-        XCS' (Butz and Wilson, 2002).
-
-        Delegates to the deletion strategy for actually selecting a classifier
-        to 'delete', then does the 'deletion' via removing a single copy of the
-        classifier from the population."""
-        deletion_is_required = self.num_micros() >= self._max_micros
-        if deletion_is_required:
-            num_deletions = self.num_micros() - self._max_micros
-            assert num_deletions >= 0
-            for _ in range(num_deletions):
-                classifier_to_delete = self._deletion_strat(self)
-                self._atomic_remove_single_copy(classifier_to_delete,
-                                                track_label="deletion")
+    @verify_membership
+    def delete(self, classifier):
+        self._atomic_remove_single_copy(classifier, operation_label="deletion")
 
     # Atomic operations
-    @track_state_change
-    def _atomic_add_new(self, new_classifier, track_label):
+    @record_operation
+    def _atomic_add_new(self, new_classifier, *, operation_label=None):
         self._members.append(new_classifier)
 
-    @track_state_change
-    def _atomic_copy_existing(self, existing_classifier, num_copies,
-                              track_label):
+    @record_operation
+    def _atomic_copy_existing(self,
+                              existing_classifier,
+                              num_copies,
+                              *,
+                              operation_label=None):
         assert num_copies >= 1
-        for _ in range(num_copies):
-            existing_classifier.numerosity += 1
+        existing_classifier.numerosity += num_copies
 
-    @track_state_change
-    def _atomic_remove_whole(self, classifier, track_label):
+    @record_operation
+    def _atomic_remove_whole(self, classifier, *, operation_label=None):
         self._members.remove(classifier)
 
-    @track_state_change
-    def _atomic_remove_single_copy(self, existing_classifier, track_label):
+    @record_operation
+    def _atomic_remove_single_copy(self,
+                                   existing_classifier,
+                                   *,
+                                   operation_label=None):
         """Lines 11-14 in body of second loop of
         DELETE FROM POPULATION function from 'An Algorithmic Description of
         XCS' (Butz and Wilson, 2002)."""

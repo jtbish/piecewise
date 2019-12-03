@@ -1,9 +1,12 @@
 import abc
+from collections import namedtuple
+
+MonitorItem = namedtuple("MonitorItem", ["name", "callback_func"])
 
 
 class AbstractMonitor(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def update(self, lcs, epoch_num):
+    def update(self, lcs):
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -12,7 +15,7 @@ class AbstractMonitor(metaclass=abc.ABCMeta):
 
 
 class NullMonitor(AbstractMonitor):
-    def update(self, lcs, epoch_num):
+    def update(self, lcs):
         pass
 
     def query(self):
@@ -20,16 +23,17 @@ class NullMonitor(AbstractMonitor):
 
 
 class Monitor(AbstractMonitor):
-    def __init__(self, *sub_monitors):
-        self._sub_monitors = sub_monitors
+    def __init__(self, *items):
+        self._items = items
+        self._items_history = {item.name: [] for item in self._items}
 
-    def update(self, lcs, epoch_num):
-        for sub_monitor in self._sub_monitors:
-            sub_monitor.update(lcs, epoch_num)
+    def update(self, lcs):
+        for item in self._items:
+            self._update_item_history(lcs, item)
 
-    def query(self, sub_monitor_cls):
-        result = {}
-        for sub_monitor in self._sub_monitors:
-            sub_monitor_name = sub_monitor.__class__.__name__
-            result[sub_monitor_name] = sub_monitor.query()
-        return result
+    def _update_item_history(self, lcs, item):
+        item_history = self._items_history[item.name]
+        item_history.append(item.callback_func(lcs))
+
+    def query(self):
+        return self._items_history

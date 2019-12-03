@@ -85,9 +85,9 @@ class XCSGeneticAlgorithm(GeneticAlgorithm):
                 was_subsumed = self._try_subsume_with_parents(
                     child, parents, population)
                 if not was_subsumed:
-                    population.insert(child, track_label="discovery")
+                    population.insert(child, operation_label="discovery")
             else:
-                population.insert(child, track_label="discovery")
+                population.insert(child, operation_label="discovery")
 
     def _try_subsume_with_parents(self, child, parents, population):
         for parent in parents:
@@ -95,6 +95,6 @@ class XCSGeneticAlgorithm(GeneticAlgorithm):
                 assert child.numerosity == 1
                 population.duplicate(parent,
                                      num_copies=1,
-                                     track_label="ga_subsumption")
+                                     operation_label="ga_subsumption")
                 return True
         return False

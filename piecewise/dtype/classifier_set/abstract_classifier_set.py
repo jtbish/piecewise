@@ -28,15 +28,19 @@ class AbstractClassifierSet(metaclass=abc.ABCMeta):
 
     Instead of causing confusion, the two concepts are explicitly separated
     into different methods: see num_micros() and num_macros().
-    """
-    _MIN_MICROS = 0
 
+    Uses a list as the internal data structure to hold Classifier objs, because
+    Classifier objs are mutable and thus not hashable, so not suitable for use
+    in a hash based data structure.
+    """
     def __init__(self):
         self._members = []
 
+    @property
     def num_micros(self):
         return sum([member.numerosity for member in self._members])
 
+    @property
     def num_macros(self):
         return len(self._members)
 

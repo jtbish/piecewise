@@ -25,7 +25,7 @@ def _calc_mean(classifier_set, classifier_property):
     return sum([
         getattr(classifier, classifier_property)
         for classifier in classifier_set
-    ]) / classifier_set.num_micros()
+    ]) / classifier_set.num_micros
 
 
 def _calc_max(classifier_set, classifier_property):

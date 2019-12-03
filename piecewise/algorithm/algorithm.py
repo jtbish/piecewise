@@ -29,12 +29,10 @@ class Algorithm(metaclass=abc.ABCMeta):
     def __init__(self, common_components, rule_repr, hyperparams):
         (self._matching_strat, self._covering_strat, self._prediction_strat,
          self._fitness_update_strat, self._subsumption_strat,
-         self._rule_discovery_strat, deletion_strat) = common_components
+         self._rule_discovery_strat, self._deletion_strat) = common_components
 
         self._hyperparams = hyperparams
-        self._population = Population(max_micros=self._hyperparams["N"],
-                                      deletion_strat=deletion_strat,
-                                      rule_repr=rule_repr)
+        self._population = Population(max_micros=self._hyperparams["N"])
 
     @abc.abstractmethod
     def train_query(self, situation, time_step):
@@ -76,3 +74,8 @@ class Algorithm(metaclass=abc.ABCMeta):
         """
         return self._rule_discovery_strat(operating_set, population, situation,
                                           time_step)
+
+    def _perform_deletion(self):
+        """Performs deletion in the population to keep enforce its capacity
+        restriction."""
+        self._deletion_strat(self._population)

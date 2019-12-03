@@ -58,7 +58,7 @@ class XCSCreditAssignment(CreditAssignmentStrategy):
             classifier.error += self._hyperparams["beta"] * error_diff
 
     def _update_action_set_size(self, classifier, action_set):
-        action_set_size_diff = action_set.num_micros() \
+        action_set_size_diff = action_set.num_micros \
                 - classifier.action_set_size
 
         if classifier.experience < self._num_initial_adjust_steps:
