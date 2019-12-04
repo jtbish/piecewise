@@ -10,7 +10,9 @@ class ClassifierSet(AbstractClassifierSet):
 
     def add(self, classifier):
         self._members.append(classifier)
+        self._inc_num_micros(classifier.numerosity)
 
     @verify_membership
     def remove(self, classifier):
         self._members.remove(classifier)
+        self._dec_num_micros(classifier.numerosity)

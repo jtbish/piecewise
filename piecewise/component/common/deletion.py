@@ -41,8 +41,9 @@ class XCSRouletteWheelDeletion(DeletionStrategy):
         """First loop (selecting classifier to delete) of
         DELETE FROM POPULATION function from 'An Algorithmic Description of
         XCS' (Butz and Wilson, 2002)."""
+        mean_fitness_in_pop = calc_summary_stat(population, "mean", "fitness")
         votes = [
-            self._calc_deletion_vote(classifier, population)
+            self._calc_deletion_vote(classifier, mean_fitness_in_pop)
             for classifier in population
         ]
         vote_sum = sum(votes)
@@ -54,11 +55,10 @@ class XCSRouletteWheelDeletion(DeletionStrategy):
             if vote_sum > choice_point:
                 return classifier
 
-    def _calc_deletion_vote(self, classifier, population):
+    def _calc_deletion_vote(self, classifier, mean_fitness_in_pop):
         """DELETION VOTE function from 'An Algorithmic Description of
         XCS' (Butz and Wilson, 2002)."""
         vote = classifier.action_set_size * classifier.numerosity
-        mean_fitness_in_pop = calc_summary_stat(population, "mean", "fitness")
         fitness_numerosity_ratio = classifier.fitness / classifier.numerosity
 
         has_sufficient_experience = classifier.experience > \

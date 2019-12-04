@@ -92,6 +92,7 @@ class Population(AbstractClassifierSet):
     @record_operation
     def _atomic_add_new(self, new_classifier, *, operation_label=None):
         self._members.append(new_classifier)
+        self._inc_num_micros(new_classifier.numerosity)
 
     @record_operation
     def _atomic_copy_existing(self,
@@ -101,10 +102,12 @@ class Population(AbstractClassifierSet):
                               operation_label=None):
         assert num_copies >= 1
         existing_classifier.numerosity += num_copies
+        self._inc_num_micros(num_copies)
 
     @record_operation
     def _atomic_remove_whole(self, classifier, *, operation_label=None):
         self._members.remove(classifier)
+        self._dec_num_micros(classifier.numerosity)
 
     @record_operation
     def _atomic_remove_single_copy(self,
@@ -119,3 +122,4 @@ class Population(AbstractClassifierSet):
         else:
             # can't have 0 numerosity, so remove completely
             self._members.remove(existing_classifier)
+        self._dec_num_micros(1)

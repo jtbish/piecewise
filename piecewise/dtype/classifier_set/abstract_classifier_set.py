@@ -35,10 +35,26 @@ class AbstractClassifierSet(metaclass=abc.ABCMeta):
     """
     def __init__(self):
         self._members = []
+        self._num_micros = 0
 
     @property
     def num_micros(self):
-        return sum([member.numerosity for member in self._members])
+        """Originally was a listcomp that returned sum of member numerosities.
+        Was quite slow (unsurprisingly) when profiled, so was changed to simple
+        attribute lookup.
+
+        Now subclasses are responsible for incrementing/decrementing the
+        attribute via two methods below.
+
+        This change caused 30% latency reduction in execution time."""
+        return self._num_micros
+
+    def _inc_num_micros(self, added_numerosity):
+        self._num_micros += added_numerosity
+
+    def _dec_num_micros(self, removed_numerosity):
+        self._num_micros -= removed_numerosity
+        assert self._num_micros >= 0
 
     @property
     def num_macros(self):
