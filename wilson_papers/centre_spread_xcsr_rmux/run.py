@@ -14,15 +14,15 @@ from piecewise.monitor import Monitor, MonitorItem
 from piecewise.rule_repr import CentreSpreadRuleRepr
 from piecewise.util.classifier_set_stats import calc_summary_stat
 
-alg_seeds = list(range(1))
+alg_seeds = list(range(10))
 
-total_training_instances_per_experiment = 128
+total_training_instances_per_experiment = 20000
 
 # 6-rmux
 rmux_params = {
     "num_address_bits": 2,
     "shuffle_dataset": True,
-    "num_samples": 64,  # large data sample
+    "num_samples": 500,  # large data sample
     "seed": 0,
     "thresholds": [0.5] * 6,  # balanced thresholds
     "reward_correct": 1000,
@@ -80,7 +80,7 @@ monitor_items = [
                 lambda lcs: lcs.population.operations_record["absorption"])
 ]
 
-piecewise.dtype.constants.FLOAT_ALLELE_EQ_REL_TOL = 0.1
+piecewise.dtype.constants.FLOAT_ALLELE_EQ_REL_TOL = 0.01
 
 
 def main():
