@@ -1,7 +1,7 @@
 from piecewise.algorithm import make_xcs
 from piecewise.codec import NullCodec
 from piecewise.environment import DiscreteMultiplexer
-from piecewise.lcs import SupervisedLCS
+from piecewise.lcs import ClassificationLCS
 from piecewise.rule_repr import TernaryRuleRepr
 from piecewise.dtype import Population
 
@@ -12,7 +12,7 @@ class TestTernaryXCSOnDiscreteMultiplexer:
         codec = NullCodec()
         rule_repr = TernaryRuleRepr()
         algorithm = self._init_algorithm(env, rule_repr)
-        self._lcs = SupervisedLCS(env, codec, algorithm)
+        self._lcs = ClassificationLCS(env, codec, algorithm)
 
     def _init_algorithm(self, env, rule_repr):
         num_actions = len(env.action_set)

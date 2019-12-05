@@ -4,7 +4,7 @@ from piecewise.dtype import Population
 from piecewise.environment import RealMultiplexer
 from piecewise.environment.supervised.multiplexer.abstract_multiplexer import \
     calc_total_bits
-from piecewise.lcs import SupervisedLCS
+from piecewise.lcs import ClassificationLCS
 from piecewise.rule_repr import CentreSpreadRuleRepr
 
 
@@ -21,7 +21,7 @@ class TestCentreSpreadXCSROnRealMultiplexer:
         situation_space = codec.make_situation_space(env.obs_space)
         rule_repr = CentreSpreadRuleRepr(situation_space)
         algorithm = self._init_algorithm(env, rule_repr)
-        self._lcs = SupervisedLCS(env, codec, algorithm)
+        self._lcs = ClassificationLCS(env, codec, algorithm)
 
     def _init_algorithm(self, env, rule_repr):
         num_actions = len(env.action_set)

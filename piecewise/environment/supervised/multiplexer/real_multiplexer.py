@@ -13,13 +13,16 @@ class RealMultiplexer(AbstractMultiplexer):
     def __init__(self,
                  num_address_bits=2,
                  shuffle_dataset=True,
-                 num_samples=64,
+                 num_samples=1000,
                  seed=0,
-                 thresholds=None):
+                 thresholds=None,
+                 reward_correct=1000,
+                 reward_incorrect=0):
         self._num_samples = num_samples
         self._set_seed(seed)
         self._thresholds = self._gen_thresholds(thresholds, num_address_bits)
-        super().__init__(num_address_bits, shuffle_dataset)
+        super().__init__(num_address_bits, shuffle_dataset, reward_correct,
+                         reward_incorrect)
 
     def _set_seed(self, seed):
         np.random.seed(seed)

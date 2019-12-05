@@ -1,25 +1,15 @@
-import random
-
-import numpy as np
+import pickle
+from pathlib import Path
 
 from piecewise.monitor import NullMonitor
 
 
 class Experiment:
-    def __init__(self, lcs, seed, num_epochs=1, monitor=None):
+    def __init__(self, tag, lcs, num_epochs=1, monitor=None):
+        self._tag = tag
         self._lcs = lcs
-        self._seed = seed
-        self._seed_rngs(self._seed)
         self._num_epochs = num_epochs
         self._monitor = self._init_monitor(monitor)
-
-    @property
-    def seed(self):
-        return self._seed
-
-    def _seed_rngs(self, seed):
-        random.seed(seed)
-        np.random.seed(seed)
 
     def _init_monitor(self, monitor):
         if monitor is None:
@@ -27,10 +17,26 @@ class Experiment:
         return monitor
 
     def run(self):
-        for epoch_num in range(1, self._num_epochs + 1):
+        for epoch_num in range(self._num_epochs):
             self._lcs.train_single_epoch()
             self._monitor.update(self._lcs)
-        return self._lcs.population, self._monitor.query()
+        self._monitor_output = self._monitor.query()
+        return self._lcs.population, self._monitor_output
 
     def archive(self):
-        raise NotImplementedError
+        archive_path = self._make_archive_dir()
+        self._pickle_population(archive_path)
+        self._pickle_monitor_output(archive_path)
+
+    def _make_archive_dir(self):
+        archive_path = Path(f"./{self._tag}_archive")
+        archive_path.mkdir(exist_ok=True)
+        return archive_path
+
+    def _pickle_population(self, archive_path):
+        with open(archive_path / "pop.pkl", "wb") as fp:
+            pickle.dump(self._lcs.population, fp)
+
+    def _pickle_monitor_output(self, archive_path):
+        with open(archive_path / "monitor_out.pkl", "wb") as fp:
+            pickle.dump(self._monitor_output, fp)

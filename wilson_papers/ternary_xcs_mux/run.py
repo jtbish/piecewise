@@ -1,4 +1,5 @@
 import math
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,12 +8,49 @@ from piecewise.algorithm import make_xcs
 from piecewise.codec import NullCodec
 from piecewise.environment import DiscreteMultiplexer
 from piecewise.experiment import Experiment
-from piecewise.lcs import SupervisedLCS
+from piecewise.lcs import ClassificationLCS
 from piecewise.monitor import Monitor, MonitorItem
 from piecewise.rule_repr import TernaryRuleRepr
 from piecewise.util.classifier_set_stats import calc_summary_stat
 
-MONITOR_ITEMS = [
+alg_seeds = list(range(10))
+
+total_training_instances_per_experiment = 10000
+
+# 6-mux
+mux_params = {
+    "num_address_bits": 2,
+    "shuffle_dataset": True,
+    "reward_correct": 1000,
+    "reward_incorrect": 0
+}
+
+xcs_hyperparams = {
+    "N": 400,
+    "beta": 0.2,
+    "alpha": 0.1,
+    "epsilon_nought": 0.01,
+    "nu": 5,
+    "gamma": 0.71,
+    "theta_ga": 12,
+    "chi": 0.8,
+    "mu": 0.04,
+    "theta_del": 20,
+    "delta": 0.1,
+    "theta_sub": 20,
+    "p_wildcard": 0.33,
+    "prediction_I": 1e-3,
+    "epsilon_I": 1e-3,
+    "fitness_I": 1e-3,
+    "p_explore": 0.5,
+    "theta_mna": 2,  # binary classification
+    "do_ga_subsumption": True,
+    "do_as_subsumption": True,
+    "m": 0.1,
+    "s_nought": 1.0
+}
+
+monitor_items = [
     MonitorItem("num_micros", lambda lcs: lcs.population.num_micros),
     MonitorItem("num_macros", lambda lcs: lcs.population.num_macros),
     MonitorItem("training_acc", lambda lcs: lcs.calc_training_performance()),
@@ -38,64 +76,49 @@ MONITOR_ITEMS = [
                 lambda lcs: lcs.population.operations_record["absorption"])
 ]
 
-NUM_MUX_ADDRESS_BITS = 2
-
 
 def main():
-    seeds = list(range(10))
-    experiments = [_make_experiment(seed) for seed in seeds]
+    experiments = [_make_experiment(alg_seed) for alg_seed in alg_seeds]
     monitor_outputs = []
-    for experiment in experiments:
-        population, monitor_output = experiment.run()
+    for idx, experiment in enumerate(experiments):
+        print(f"Runnning experiment {idx+1}")
+        _, monitor_output = experiment.run()
         monitor_outputs.append(monitor_output)
+        experiment.archive()
+        print(f"Finished experiment {idx+1}")
     _plot_monitor_outputs(monitor_outputs)
 
 
-def _make_experiment(seed):
-    lcs = _make_lcs()
+def _make_experiment(alg_seed):
+    lcs = _make_lcs(alg_seed)
+    num_mux_address_bits = mux_params["num_address_bits"]
     training_instances_per_epoch = \
-        2**(NUM_MUX_ADDRESS_BITS + 2**NUM_MUX_ADDRESS_BITS)
-    desired_total_training_instances = 10000
-    num_epochs = math.ceil(desired_total_training_instances /
+        2**(num_mux_address_bits + 2**num_mux_address_bits)
+    num_epochs = math.ceil(total_training_instances_per_experiment /
                            training_instances_per_epoch)
-    monitor = Monitor(*MONITOR_ITEMS)
-    return Experiment(lcs, seed, num_epochs, monitor)
+    monitor = Monitor(*monitor_items)
+    tag = f"alg_seed_{alg_seed}"
+    return Experiment(tag, lcs, num_epochs, monitor)
 
 
-def _make_lcs():
-    env = DiscreteMultiplexer(num_address_bits=NUM_MUX_ADDRESS_BITS,
-                              shuffle_dataset=True)
+def _make_lcs(alg_seed):
+    env = DiscreteMultiplexer(**mux_params)
     codec = NullCodec()
     rule_repr = TernaryRuleRepr()
-    hyperparams = {
-        "N": 400,
-        "beta": 0.2,
-        "alpha": 0.1,
-        "epsilon_nought": 0.01,
-        "nu": 5,
-        "gamma": 0.71,
-        "theta_ga": 25,
-        "chi": 0.8,
-        "mu": 0.04,
-        "theta_del": 20,
-        "delta": 0.1,
-        "theta_sub": 20,
-        "p_wildcard": 0.33,
-        "prediction_I": 1e-3,
-        "epsilon_I": 1e-3,
-        "fitness_I": 1e-3,
-        "p_explore": 0.5,
-        "theta_mna": len(env.action_set),
-        "do_ga_subsumption": True,
-        "do_as_subsumption": True
-    }
-    algorithm = make_xcs(env.step_type, env.action_set, rule_repr, hyperparams)
-    return SupervisedLCS(env, codec, algorithm)
+    alg = make_xcs(env.step_type, env.action_set, rule_repr, xcs_hyperparams)
+    alg.set_seed(alg_seed)
+    return ClassificationLCS(env, codec, alg)
 
 
 def _plot_monitor_outputs(monitor_outputs):
+    _make_plot_dir()
     _plot_population_operations(monitor_outputs)
-    _plot_remainder(monitor_outputs)
+    _plot_learning_diagnostics(monitor_outputs)
+
+
+def _make_plot_dir():
+    plot_dir = Path("./plot")
+    plot_dir.mkdir(exist_ok=True)
 
 
 def _plot_population_operations(monitor_outputs):
@@ -113,18 +136,18 @@ def _plot_population_operations(monitor_outputs):
     plt.xlabel("Epoch num")
     plt.title("Population operations during training")
     plt.legend()
-    plt.savefig("pop_ops.png")
+    plt.savefig("plot/xcs_mux_pop_ops.png")
 
 
-def _plot_remainder(monitor_outputs):
+def _plot_learning_diagnostics(monitor_outputs):
     plt.figure()
     _plot_pop_sizes(monitor_outputs)
     _plot_stats(monitor_outputs)
     _plot_training_accuracy(monitor_outputs)
     plt.xlabel("Epoch num")
-    plt.title("Learning diagnostics")
+    plt.title("Learning diagnostics during training")
     plt.legend()
-    plt.savefig("learning_diagnostics.png")
+    plt.savefig("plot/xcs_mux_learn_diag.png")
 
 
 def _plot_pop_sizes(monitor_outputs):
@@ -134,8 +157,10 @@ def _plot_pop_sizes(monitor_outputs):
     mean_macros = \
         np.mean(_aggregate_experiments_for_monitor_item("num_macros",
                 monitor_outputs), axis=0)
-    plt.plot(mean_micros / 400, label="num micros / pop size")
-    plt.plot(mean_macros / 400, label="num macros / pop size")
+    plt.plot(mean_micros / xcs_hyperparams["N"],
+             label="num micros / pop size")
+    plt.plot(mean_macros / xcs_hyperparams["N"],
+             label="num macros / pop size")
 
 
 def _plot_stats(monitor_outputs):
@@ -145,7 +170,8 @@ def _plot_stats(monitor_outputs):
     mean_of_max_fitness = \
         np.mean(_aggregate_experiments_for_monitor_item("max_fitness",
                 monitor_outputs), axis=0)
-    plt.plot(mean_of_mean_error / 1000, label="mean error / max error")
+    max_error = mux_params["reward_correct"]
+    plt.plot(mean_of_mean_error / max_error, label="mean error / max error")
     plt.plot(mean_of_max_fitness, label="max fitness")
 
 

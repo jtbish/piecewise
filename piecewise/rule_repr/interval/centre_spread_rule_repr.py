@@ -1,8 +1,9 @@
 import random
 
 from piecewise.dtype import Condition, FloatAllele
-from .interval_rule_repr import IntervalRuleRepr
+
 from .elem.centre_spread_elem import CentreSpreadElem
+from .interval_rule_repr import IntervalRuleRepr
 
 
 class CentreSpreadRuleRepr(IntervalRuleRepr):

@@ -6,14 +6,17 @@ from piecewise.dtype import DataSpaceBuilder, Dimension
 from ..environment import (Environment, EnvironmentResponse,
                            EnvironmentStepTypes, check_terminal)
 
-REWARD_CORRECT = 1000
-REWARD_INCORRECT = 0
 
-
-class SupervisedEnvironment(Environment):
-    def __init__(self, dataset, shuffle_dataset=True):
+class ClassificationEnvironment(Environment):
+    def __init__(self,
+                 dataset,
+                 shuffle_dataset=True,
+                 correct_reward=1000,
+                 incorrect_reward=0):
         self._dataset = self._try_convert_to_data_frame(dataset)
         self._shuffle_dataset = shuffle_dataset
+        self._correct_reward = correct_reward
+        self._incorrect_reward = incorrect_reward
         self._num_data_points = self._dataset.shape[0]
         self._num_features = self._dataset.shape[1] - 1
         data, labels = self._split_dataset()
@@ -100,9 +103,9 @@ class SupervisedEnvironment(Environment):
 
     def _calc_reward(self, is_correct_label):
         if is_correct_label:
-            return REWARD_CORRECT
+            return self._correct_reward
         else:
-            return REWARD_INCORRECT
+            return self._incorrect_reward
 
     def is_terminal(self):
         return self._idx_into_dataset_idx_order == self._num_data_points

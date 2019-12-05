@@ -2,21 +2,23 @@ import abc
 
 import pandas as pd
 
-from ..supervised_environment import SupervisedEnvironment
+from ..classification_environment import ClassificationEnvironment
 
 
 def calc_total_bits(num_address_bits):
     return num_address_bits + 2**num_address_bits
 
 
-class AbstractMultiplexer(SupervisedEnvironment, metaclass=abc.ABCMeta):
-    def __init__(self, num_address_bits, shuffle_dataset):
+class AbstractMultiplexer(ClassificationEnvironment, metaclass=abc.ABCMeta):
+    def __init__(self, num_address_bits, shuffle_dataset, reward_correct,
+                 reward_incorrect):
         self._num_address_bits = num_address_bits
         self._num_register_bits = 2**num_address_bits
         self._total_bits = calc_total_bits(num_address_bits)
 
         dataset = self._create_dataset()
-        super().__init__(dataset, shuffle_dataset)
+        super().__init__(dataset, shuffle_dataset, reward_correct,
+                         reward_incorrect)
 
     def _multiplexer_func(self, bit_array):
         address_bits = bit_array[0:self._num_address_bits]

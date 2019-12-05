@@ -72,3 +72,9 @@ class AbstractClassifierSet(metaclass=abc.ABCMeta):
     def __str__(self):
         return "{ " + ",\n".join([str(member) for member in self._members]) \
                 + " }"
+
+    def __eq__(self, other):
+        for (my_member, other_member) in zip(self._members, other._members):
+            if my_member != other_member:
+                return False
+        return True

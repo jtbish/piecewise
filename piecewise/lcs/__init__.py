@@ -1,3 +1,3 @@
 from .lcs import LCS
-from .supervised.supervised_lcs import SupervisedLCS
+from .supervised.classification_lcs import ClassificationLCS
 from .reinforcement.reinforcement_lcs import ReinforcementLCS

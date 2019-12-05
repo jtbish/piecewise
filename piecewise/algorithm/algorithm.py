@@ -1,5 +1,8 @@
 import abc
+import random
 from collections import namedtuple
+
+import numpy as np
 
 from piecewise.dtype import Population
 
@@ -33,6 +36,10 @@ class Algorithm(metaclass=abc.ABCMeta):
 
         self._hyperparams = hyperparams
         self._population = Population(max_micros=self._hyperparams["N"])
+
+    def set_seed(self, seed):
+        random.seed(seed)
+        np.random.seed(seed)
 
     @abc.abstractmethod
     def train_query(self, situation, time_step):
