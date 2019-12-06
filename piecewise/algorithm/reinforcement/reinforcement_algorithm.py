@@ -48,7 +48,3 @@ class ReinforcementAlgorithm(Algorithm, metaclass=abc.ABCMeta):
         other params."""
         self._credit_assignment_strat(action_set, reward, use_discounting,
                                       prediction_array)
-
-    def _greedily_select_action(self, prediction_array):
-        """Returns an action to perform during testing."""
-        return max(prediction_array, key=prediction_array.get)

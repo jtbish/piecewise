@@ -45,7 +45,7 @@ class XCS(ReinforcementAlgorithm, metaclass=abc.ABCMeta):
         matching_strat = RuleReprMatching(rule_repr)
         covering_strat = RuleReprCovering(env_action_set, rule_repr,
                                           hyperparams)
-        prediction_strat = FitnessWeightedAvgPrediction()
+        prediction_strat = FitnessWeightedAvgPrediction(env_action_set)
         fitness_update_strat = \
             XCSAccuracyFitnessUpdate(hyperparams)
         subsumption_strat = XCSSubsumption(rule_repr, hyperparams)
@@ -199,8 +199,7 @@ class XCS(ReinforcementAlgorithm, metaclass=abc.ABCMeta):
     def test_query(self, situation):
         match_set = self._gen_match_set(situation)
         prediction_array = self._gen_prediction_array(match_set)
-        greedy_action = self._greedily_select_action(prediction_array)
-        return greedy_action
+        return prediction_array.greedy_action()
 
 
 class SingleStepXCS(XCS):

@@ -21,8 +21,7 @@ class EpsilonGreedy(ActionSelectionStrategy):
         Description of XCS' (Butz and Wilson, 2002)."""
         should_exploit = random.random() > self._prob_explore
         if should_exploit:
-            action = max(prediction_array, key=prediction_array.get)
+            action = prediction_array.greedy_action()
         else:
-            possible_actions = prediction_array.keys()
-            action = random.choice(tuple(possible_actions))
+            action = prediction_array.random_action()
         return action
