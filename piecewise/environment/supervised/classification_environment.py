@@ -3,29 +3,46 @@ import pandas as pd
 
 from piecewise.dtype import DataSpaceBuilder, Dimension
 
-from ..environment import (Environment, EnvironmentResponse,
+from ..environment import (EnvironmentABC, EnvironmentResponse,
                            EnvironmentStepTypes, check_terminal)
 
 
-class ClassificationEnvironment(Environment):
+class ClassificationEnvironment(EnvironmentABC):
+    """Environment that manages interaction with a static labelled dataset."""
     def __init__(self,
                  dataset,
+                 obs_space=None,
+                 action_set=None,
                  shuffle_dataset=True,
-                 correct_reward=1000,
-                 incorrect_reward=0):
-        self._dataset = self._try_convert_to_data_frame(dataset)
-        self._shuffle_dataset = shuffle_dataset
-        self._correct_reward = correct_reward
-        self._incorrect_reward = incorrect_reward
+                 reward_correct=1000,
+                 reward_incorrect=0):
+        self._dataset = self._format_dataset_if_necessary(dataset)
+        self._shuffle_dataset = bool(shuffle_dataset)
+        self._reward_correct = float(reward_correct)
+        self._reward_incorrect = float(reward_incorrect)
         self._num_data_points = self._dataset.shape[0]
         self._num_features = self._dataset.shape[1] - 1
         data, labels = self._split_dataset()
-        obs_space = self._gen_obs_space(data)
-        action_set = self._gen_action_set(labels)
+        obs_space = self._gen_obs_space_if_not_given(data, obs_space)
+        action_set = self._gen_action_set_if_not_given(labels, action_set)
         step_type = EnvironmentStepTypes.single_step
         super().__init__(obs_space, action_set, step_type)
 
-    def _try_convert_to_data_frame(self, dataset):
+    @property
+    def dataset(self):
+        return self._dataset
+
+    @property
+    def data(self):
+        data, _ = self._split_dataset()
+        return np.asarray(data)
+
+    @property
+    def labels(self):
+        _, labels = self._split_dataset()
+        return np.asarray(labels)
+
+    def _format_dataset_if_necessary(self, dataset):
         is_already_data_frame = isinstance(dataset, pd.DataFrame)
         if is_already_data_frame:
             # assume caller set up ok
@@ -46,6 +63,12 @@ class ClassificationEnvironment(Environment):
         generic_column_names.append("label")
         data_frame.columns = generic_column_names
 
+    def _gen_obs_space_if_not_given(self, data, obs_space):
+        if obs_space is None:
+            return self._gen_obs_space(data)
+        else:
+            return obs_space
+
     def _gen_obs_space(self, data):
         obs_space_builder = DataSpaceBuilder()
         for column_idx in range(self._num_features):
@@ -58,8 +81,11 @@ class ClassificationEnvironment(Environment):
         upper = np.max(feature_vec)
         return Dimension(lower, upper)
 
-    def _gen_action_set(self, labels):
-        return set([label for label in labels])
+    def _gen_action_set_if_not_given(self, labels, action_set):
+        if action_set is None:
+            return set([label for label in labels])
+        else:
+            return action_set
 
     def reset(self):
         self._dataset_idx_order = self._choose_dataset_idx_order()
@@ -103,23 +129,9 @@ class ClassificationEnvironment(Environment):
 
     def _calc_reward(self, is_correct_label):
         if is_correct_label:
-            return self._correct_reward
+            return self._reward_correct
         else:
-            return self._incorrect_reward
+            return self._reward_incorrect
 
     def is_terminal(self):
         return self._idx_into_dataset_idx_order == self._num_data_points
-
-    @property
-    def dataset(self):
-        return self._dataset
-
-    @property
-    def data(self):
-        data, _ = self._split_dataset()
-        return np.asarray(data)
-
-    @property
-    def labels(self):
-        _, labels = self._split_dataset()
-        return np.asarray(labels)

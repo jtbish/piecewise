@@ -2,7 +2,7 @@ from collections import UserDict
 
 
 class PopulationOperationRecorder(UserDict):
-    """Records counts for operations performed on the operation.
+    """Records counts for atomic operations performed on a Population instance.
 
     Each operation type recorded acts at the level of abstraction of an
     individual microclassifier. Thus the counts can be interpreted in units of

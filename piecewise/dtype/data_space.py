@@ -1,5 +1,7 @@
 class DataSpaceBuilder:
-    """Convenience class to make syntax of building data space nicer."""
+    """Convenience class to make syntax of building data space nicer.
+
+    A data space is just a tuple of dimensions."""
     def __init__(self):
         self._dims = []
 

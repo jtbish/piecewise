@@ -29,7 +29,8 @@ EnvironmentStepTypes = Enum("EnivronmentStepTypes",
                             ["single_step", "multi_step"])
 
 
-class Environment(metaclass=abc.ABCMeta):
+class EnvironmentABC(metaclass=abc.ABCMeta):
+    """ABC for environments."""
     def __init__(self, obs_space, action_set, step_type):
         self._obs_space = obs_space
         self._action_set = action_set
@@ -50,16 +51,22 @@ class Environment(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def reset(self):
+        """Resets the environment to be ready for the next epoch."""
         raise NotImplementedError
 
     @abc.abstractmethod
     def observe(self):
+        """Returns the most recent observation from the environment."""
         raise NotImplementedError
 
     @abc.abstractmethod
     def act(self, action):
+        """Performs the given action on the environment, returns an
+        EnvironmentResponse named tuple."""
         raise NotImplementedError
 
     @abc.abstractmethod
     def is_terminal(self):
+        """Checks whether the current epoch of the environment is in a terminal
+        state (no more data left to observe)."""
         raise NotImplementedError

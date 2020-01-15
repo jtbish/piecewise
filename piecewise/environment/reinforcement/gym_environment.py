@@ -3,25 +3,25 @@ from gym import logger
 
 from piecewise.dtype import DataSpaceBuilder, Dimension
 
-from ..environment import (CorrectActionNotApplicable, EnvironmentResponse,
+from ..environment import (CorrectActionNotApplicable, EnvironmentABC,
+                           EnvironmentResponse, EnvironmentStepTypes,
                            check_terminal)
-from .abstract_reinforcement_environment import \
-    AbstractReinforcementEnvironment
 
 # quieten warnings from gym
 gym.logger.set_level(logger.ERROR)
 
 
-class GymEnvironment(AbstractReinforcementEnvironment):
+class GymEnvironment(EnvironmentABC):
     """Wrapper over an OpenAI Gym environment to conform with Piecewise
-    Environment API."""
+    environment interface."""
     def __init__(self, env_name, seed):
         self._wrapped_env = gym.make(env_name)
         obs_space = self._gen_obs_space()
         action_set = self._gen_action_set()
         self._seed = seed
         self._curr_obs = None
-        super().__init__(obs_space, action_set)
+        step_type = EnvironmentStepTypes.multi_step
+        super().__init__(obs_space, action_set, step_type)
 
     def _gen_obs_space(self):
         lower_vector = self._wrapped_env.observation_space.low
@@ -36,6 +36,7 @@ class GymEnvironment(AbstractReinforcementEnvironment):
         return set(range(num_actions))
 
     def reset(self):
+        # reset the seed every epoch
         self._wrapped_env.seed(self._seed)
         self._curr_obs = self._wrapped_env.reset()
         self._is_terminal = False
@@ -47,12 +48,13 @@ class GymEnvironment(AbstractReinforcementEnvironment):
 
     @check_terminal
     def act(self, action):
-        obs, reward, done, _ = self._wrapped_env.step(action)
-        self._curr_obs = obs
+        wrapped_obs, wrapped_reward, wrapped_done, _ = self._wrapped_env.step(
+            action)
+        self._curr_obs = wrapped_obs
         self._is_terminal = self._wrapped_env_was_done_last_step
-        self._wrapped_env_was_done_last_step = done
+        self._wrapped_env_was_done_last_step = wrapped_done
         return EnvironmentResponse(
-            reward=reward,
+            reward=wrapped_reward,
             was_correct_action=CorrectActionNotApplicable,
             is_terminal=self._is_terminal)
 

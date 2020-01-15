@@ -1,40 +1,29 @@
 import numpy as np
 import pytest
 
-from piecewise.environment import DiscreteMultiplexer, EnvironmentStepTypes
+from piecewise.environment import EnvironmentStepTypes, make_discrete_mux_env
+from piecewise.environment.supervised.multiplexer.multiplexer_util import \
+    calc_total_bits
 from piecewise.error.environment_error import OutOfDataError
 
 
-class TestSupervisedEnvironmentViaDiscreteMultiplexer:
+class TestClassificationEnvironmentViaDiscreteMultiplexer:
     _DUMMY_ACTION = 0
 
     def _setup_short_epoch(self):
         num_address_bits = 1
-        total_bits = num_address_bits + 2**num_address_bits
+        total_bits = calc_total_bits(num_address_bits)
         num_data_points = 2**total_bits
-        mux = DiscreteMultiplexer(num_address_bits=num_address_bits,
-                                  shuffle_dataset=False)
+        mux = make_discrete_mux_env(num_address_bits=num_address_bits,
+                                    shuffle_dataset=False)
         return mux, num_data_points
 
-    def test_obs_space_integrity(self):
-        num_address_bits = 1
-        mux = DiscreteMultiplexer(num_address_bits=1)
-        total_feature_dims = num_address_bits + 2**num_address_bits
-        assert len(mux.obs_space) == total_feature_dims
-        for dim in mux.obs_space:
-            assert dim.lower == 0
-            assert dim.upper == 1
-
-    def test_action_set_integrity(self):
-        mux = DiscreteMultiplexer()
-        assert mux.action_set == {0, 1}
-
     def test_step_type(self):
-        mux = DiscreteMultiplexer()
+        mux = make_discrete_mux_env()
         assert mux.step_type == EnvironmentStepTypes.single_step
 
     def test_observe_order_no_shuffle(self):
-        mux = DiscreteMultiplexer(num_address_bits=1, shuffle_dataset=False)
+        mux = make_discrete_mux_env(num_address_bits=1, shuffle_dataset=False)
         expected_obs_seq_iter = \
             iter([[0, 0, 0], [0, 0, 1], [0, 1, 0], [0, 1, 1],
                   [1, 0, 0], [1, 0, 1], [1, 1, 0], [1, 1, 1]])
@@ -44,7 +33,7 @@ class TestSupervisedEnvironmentViaDiscreteMultiplexer:
             mux.act(self._DUMMY_ACTION)
 
     def test_act_all_correct(self):
-        mux = DiscreteMultiplexer(num_address_bits=1, shuffle_dataset=False)
+        mux = make_discrete_mux_env(num_address_bits=1, shuffle_dataset=False)
         correct_actions_iter = iter([0, 0, 1, 1, 0, 1, 0, 1])
 
         while not mux.is_terminal():
@@ -52,7 +41,7 @@ class TestSupervisedEnvironmentViaDiscreteMultiplexer:
             assert response.was_correct_action
 
     def test_act_all_incorrect(self):
-        mux = DiscreteMultiplexer(num_address_bits=1, shuffle_dataset=False)
+        mux = make_discrete_mux_env(num_address_bits=1, shuffle_dataset=False)
         incorrect_actions_iter = iter([1, 1, 0, 0, 1, 0, 1, 0])
 
         while not mux.is_terminal():
@@ -114,3 +103,7 @@ class TestSupervisedEnvironmentViaDiscreteMultiplexer:
             mux.act(self._DUMMY_ACTION)
         with pytest.raises(OutOfDataError):
             mux.observe()
+
+    def test_reset_with_two_epochs_no_shuffle(self):
+        # TODO
+        pass

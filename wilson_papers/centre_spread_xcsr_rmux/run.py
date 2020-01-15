@@ -14,7 +14,8 @@ from piecewise.monitor import Monitor, MonitorItem
 from piecewise.rule_repr import CentreSpreadRuleRepr
 from piecewise.util.classifier_set_stats import calc_summary_stat
 
-alg_seeds = list(range(10))
+#alg_seeds = list(range(10))
+alg_seeds = [1]
 
 total_training_instances_per_experiment = 20000
 

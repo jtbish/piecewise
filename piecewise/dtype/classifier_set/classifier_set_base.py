@@ -1,4 +1,3 @@
-import abc
 import functools
 
 from piecewise.error.classifier_set_error import MemberNotFoundError
@@ -17,8 +16,8 @@ def verify_membership(method):
     return _verify_membership
 
 
-class AbstractClassifierSet(metaclass=abc.ABCMeta):
-    """An abstract container for storage of Classifier objects.
+class ClassifierSetBase:
+    """Common functionality for ClassifierSet and Population classes.
 
     Implements __contains__ and __iter__, so is considered to be a both a
     Container and an Iterable. Deliberately does not implement the __len__
@@ -31,7 +30,7 @@ class AbstractClassifierSet(metaclass=abc.ABCMeta):
 
     Uses a list as the internal data structure to hold Classifier objs, because
     Classifier objs are mutable and thus not hashable, so not suitable for use
-    in a hash based data structure.
+    in a hash-based data structure.
     """
     def __init__(self):
         self._members = []
@@ -39,14 +38,6 @@ class AbstractClassifierSet(metaclass=abc.ABCMeta):
 
     @property
     def num_micros(self):
-        """Originally was a listcomp that returned sum of member numerosities.
-        Was quite slow (unsurprisingly) when profiled, so was changed to simple
-        attribute lookup.
-
-        Now subclasses are responsible for incrementing/decrementing the
-        attribute via two methods below.
-
-        This change caused 30% latency reduction in execution time."""
         return self._num_micros
 
     def _inc_num_micros(self, added_numerosity):

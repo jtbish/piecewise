@@ -9,7 +9,7 @@ def classifier_set():
     return ClassifierSet()
 
 
-class TestAbstractClassifierSetViaClassifierSet:
+class TestClassifierSetBaseViaClassifierSet:
     def test_num_micros_single_microclassifier(self, classifier_set,
                                                mock_microclassifier):
         classifier_set.add(mock_microclassifier)
