@@ -9,7 +9,7 @@ from piecewise.environment import EnvironmentStepTypes
 from piecewise.util.classifier_set_stats import (calc_summary_stat,
                                                  num_unique_actions)
 
-from ..algorithm import AlgorithmABC, AlgorithmComponents
+from .algorithm import AlgorithmABC, AlgorithmComponents
 
 
 def make_xcs(env_step_type, *args, **kwargs):
@@ -24,36 +24,18 @@ def make_xcs(env_step_type, *args, **kwargs):
         raise Exception
 
 
-class XCS(AlgorithmABC):
+class XCS(AlgorithmABC, metaclass=abc.ABCMeta):
     """Implementation of XCS, based on pseudocode given in 'An Algorithmic
     Description of XCS' (Butz and Wilson, 2002)."""
     def __init__(self, env_action_set, rule_repr, hyperparams):
-        common_components = self._init_common_components(
-            env_action_set, rule_repr, hyperparams)
-        reinforcement_components = \
-            self._init_reinforcement_components(hyperparams)
-
-        super().__init__(common_components, reinforcement_components,
-                         rule_repr, hyperparams)
+        components = self._init_components(env_action_set, rule_repr,
+                                           hyperparams)
+        super().__init__(components, rule_repr, hyperparams)
 
         self._init_prev_step_tracking_attrs()
         self._init_curr_step_tracking_attrs()
 
-    @classmethod
-    def from_components(cls,
-                        matching=None,
-                        covering=None,
-                        prediction=None,
-                        action_selection=None,
-                        credit_assignment=None,
-                        fitness_update=None,
-                        subsumption=None,
-                        rule_discovery=None,
-                        deletion=None):
-        return cls(
-        pass
-
-    def _init_common_components(self, env_action_set, rule_repr, hyperparams):
+    def _init_components(self, env_action_set, rule_repr, hyperparams):
         matching_strat = RuleReprMatching(rule_repr)
         covering_strat = RuleReprCovering(env_action_set, rule_repr,
                                           hyperparams)
@@ -68,20 +50,16 @@ class XCS(AlgorithmABC):
                                                    ga_subsumption_strat,
                                                    hyperparams)
         deletion_strat = XCSRouletteWheelDeletion(hyperparams)
-
-        return CommonComponents(matching_strat, covering_strat,
-                                prediction_strat, fitness_update_strat,
-                                subsumption_strat, rule_discovery_strat,
-                                deletion_strat)
-
-    def _init_reinforcement_components(self, hyperparams):
         action_selection_strat = \
             EpsilonGreedy(hyperparams["p_explore"])
         credit_assignment_strat = \
             XCSCreditAssignment(hyperparams)
 
-        return ReinforcementComponents(action_selection_strat,
-                                       credit_assignment_strat)
+        return AlgorithmComponents(matching_strat, covering_strat,
+                                   prediction_strat, fitness_update_strat,
+                                   subsumption_strat, rule_discovery_strat,
+                                   deletion_strat, action_selection_strat,
+                                   credit_assignment_strat)
 
     def _init_prev_step_tracking_attrs(self):
         self._prev_action_set = None
@@ -213,23 +191,18 @@ class XCS(AlgorithmABC):
         prediction_array = self._gen_prediction_array(match_set)
         return prediction_array.greedy_action()
 
-class IXCSTrainUpdateStrategy(metaclass=abc.ABCMeta):
-    @abc.abstractmethod
-    def train_update(self, env_response):
-        raise NotImplementedError
 
-
-class SingleStepTrainUpdateStrategy(IXCSTrainUpdateStrategy):
+class SingleStepXCS(XCS):
     """Training update strategy for single-step environments."""
-    def train_update(self, env_response):
+    def _step_type_train_update(self, env_response):
         assert self._prev_action_set is None
         reward = env_response.reward
         self._update_curr_action_set(reward)
 
 
-class MultiStepTrainUpdateStrategy(IXCSTrainUpdateStrategy):
+class MultiStepXCS(XCS):
     """Training update strategy for multi-step environments."""
-    def train_update(self, env_response):
+    def _step_type_train_update(self, env_response):
         self._try_update_prev_action_set()
         reward = env_response.reward
         env_is_terminal = env_response.is_terminal

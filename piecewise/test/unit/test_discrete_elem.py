@@ -34,3 +34,21 @@ class TestDiscreteElem:
         elem = DiscreteElem(IntegerAllele(allele_val))
         wildcard_elem = DiscreteWildcardElem()
         assert elem != wildcard_elem
+
+
+class TestDiscreteWildcardElem:
+    def test_eq_pos_case_against_same_type(self):
+        elem1 = DiscreteWildcardElem()
+        elem2 = DiscreteWildcardElem()
+        assert elem1 == elem2
+
+    def test_ne_pos_case_against_discrete_elem(self):
+        allele_val = 0
+        discrete_elem = DiscreteElem(IntegerAllele(allele_val))
+        wildcard_elem = DiscreteWildcardElem()
+        assert wildcard_elem != discrete_elem
+
+    def test_ne_pos_case_against_other_type(self):
+        wildcard_elem = DiscreteWildcardElem()
+        assert wildcard_elem != "string"
+

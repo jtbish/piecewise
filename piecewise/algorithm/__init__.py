@@ -1,4 +1,1 @@
-from .algorithm import CommonComponents
-from .reinforcement.reinforcement_algorithm import (ReinforcementAlgorithm,
-                                                    ReinforcementComponents)
-from .reinforcement.xcs import make_xcs
+from .xcs import make_xcs

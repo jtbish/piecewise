@@ -1,4 +1,6 @@
+import hypothesis.strategies as st
 import pytest
+from hypothesis import given
 
 from piecewise.dtype import FloatAllele
 from piecewise.rule_repr.interval.elem.centre_spread_elem import \

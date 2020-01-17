@@ -7,7 +7,7 @@ from piecewise.error.allele_error import ConversionError
 from .constants import FLOAT_ALLELE_EQ_REL_TOL
 
 
-class Allele(metaclass=abc.ABCMeta):
+class AlleleABC(metaclass=abc.ABCMeta):
     def __init__(self, value):
         self._value = value
 
@@ -39,7 +39,7 @@ def convert_input_to_int(method):
     return int_converter
 
 
-class IntegerAllele(Allele):
+class IntegerAllele(AlleleABC):
     """Allele operating in discrete (integer) space."""
     @convert_input_to_int
     def __init__(self, value):
@@ -68,8 +68,9 @@ def convert_input_to_float(method):
     return float_converter
 
 
-class FloatAllele(Allele):
+class FloatAllele(AlleleABC):
     """Allele operating in continuous (floating point) space."""
+    # TODO move this into config file
     _STR_DECIMAL_PLACES = 2
 
     @convert_input_to_float

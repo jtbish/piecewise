@@ -1,46 +1,15 @@
 import math
 
+import hypothesis.strategies as st
 import numpy as np
 import pytest
+from hypothesis import given
 
-from piecewise.dtype import FloatAllele, IntegerAllele
+from piecewise.dtype import FloatAllele
 from piecewise.error.allele_error import ConversionError
 
 
-class TestIntegerAllele:
-    @pytest.fixture
-    def cannot_convert_to_int(self):
-        return "string"
-
-    def test_init_non_int_convertable_input(self, cannot_convert_to_int):
-        with pytest.raises(ConversionError):
-            IntegerAllele(cannot_convert_to_int)
-
-    def test_eq_pos_case_against_same_type(self):
-        zero_allele = IntegerAllele(0)
-        another_zero_allele = IntegerAllele(0)
-        assert zero_allele == another_zero_allele
-
-    def test_eq_pos_case_against_int(self):
-        zero_allele = IntegerAllele(0)
-        assert zero_allele == 0
-
-    def test_eq_non_int_convertable_input(self, cannot_convert_to_int):
-        zero_allele = IntegerAllele(0)
-        with pytest.raises(ConversionError):
-            zero_allele == cannot_convert_to_int
-
-    def test_ne_pos_case_against_same_type(self):
-        zero_allele = IntegerAllele(0)
-        one_allele = IntegerAllele(1)
-        assert zero_allele != one_allele
-
-    def test_ne_non_int_convertable_input(self, cannot_convert_to_int):
-        zero_allele = IntegerAllele(0)
-        with pytest.raises(ConversionError):
-            zero_allele != cannot_convert_to_int
-
-
+# TODO change to support variable precision in config
 class TestFloatAllele:
     _LESS_THAN_PI = 3
     _GREATER_THAN_PI = 4
@@ -144,68 +113,84 @@ class TestFloatAllele:
         with pytest.raises(ConversionError):
             pi_allele >= cannot_convert_to_float
 
-    def test_add_with_py_float(self):
-        allele = FloatAllele(0.1)
-        float_to_add = 0.2
+    @given(float1=st.floats(allow_nan=False, allow_infinity=False),
+           float2=st.floats(allow_nan=False, allow_infinity=False))
+    def test_add_with_py_float(self, float1, float2):
+        allele = FloatAllele(float1)
+        float_to_add = float2
         allele = allele + float_to_add
-        assert allele == 0.3
+        assert allele == float1 + float2
 
-    def test_add_with_same_type(self):
-        allele = FloatAllele(0.1)
-        allele_to_add = FloatAllele(0.2)
+    @given(float1=st.floats(allow_nan=False, allow_infinity=False),
+           float2=st.floats(allow_nan=False, allow_infinity=False))
+    def test_add_with_same_type(self, float1, float2):
+        allele = FloatAllele(float1)
+        allele_to_add = FloatAllele(float2)
         allele = allele + allele_to_add
-        assert allele == 0.3
+        assert allele == float1 + float2
 
     def test_add_non_float_convertable_input(self, pi_allele,
                                              cannot_convert_to_float):
         with pytest.raises(ConversionError):
             pi_allele + cannot_convert_to_float
 
-    def test_sub_with_py_float(self):
-        allele = FloatAllele(0.3)
-        float_to_sub = 0.2
+    @given(float1=st.floats(allow_nan=False, allow_infinity=False),
+           float2=st.floats(allow_nan=False, allow_infinity=False))
+    def test_sub_with_py_float(self, float1, float2):
+        allele = FloatAllele(float1)
+        float_to_sub = float2
         allele = allele - float_to_sub
-        assert allele == 0.1
+        assert allele == float1 - float2
 
-    def test_sub_with_same_type(self):
-        allele = FloatAllele(0.3)
-        allele_to_sub = FloatAllele(0.2)
+    @given(float1=st.floats(allow_nan=False, allow_infinity=False),
+           float2=st.floats(allow_nan=False, allow_infinity=False))
+    def test_sub_with_same_type(self, float1, float2):
+        allele = FloatAllele(float1)
+        allele_to_sub = FloatAllele(float2)
         allele = allele - allele_to_sub
-        assert allele == 0.1
+        assert allele == float1 - float2
 
     def test_sub_non_float_convertable_input(self, pi_allele,
                                              cannot_convert_to_float):
         with pytest.raises(ConversionError):
             pi_allele - cannot_convert_to_float
 
-    def test_iadd_with_py_float(self):
-        allele = FloatAllele(0.1)
-        float_to_add = 0.2
+    @given(float1=st.floats(allow_nan=False, allow_infinity=False),
+           float2=st.floats(allow_nan=False, allow_infinity=False))
+    def test_iadd_with_py_float(self, float1, float2):
+        allele = FloatAllele(float1)
+        float_to_add = float2
         allele += float_to_add
-        assert allele == 0.3
+        assert allele == float1 + float2
 
-    def test_iadd_with_same_type(self):
-        allele = FloatAllele(0.1)
-        allele_to_add = FloatAllele(0.2)
+    @given(float1=st.floats(allow_nan=False, allow_infinity=False),
+           float2=st.floats(allow_nan=False, allow_infinity=False))
+    def test_iadd_with_same_type(self, float1, float2):
+        allele = FloatAllele(float1)
+        allele_to_add = FloatAllele(float2)
         allele += allele_to_add
-        assert allele == 0.3
+        assert allele == float1 + float2
 
     def test_iadd_non_float_convertable_input(self, pi_allele,
                                               cannot_convert_to_float):
         with pytest.raises(ConversionError):
             pi_allele += cannot_convert_to_float
 
-    def test_isub_with_py_float(self):
-        allele = FloatAllele(0.3)
-        float_to_sub = 0.2
+    @given(float1=st.floats(allow_nan=False, allow_infinity=False),
+           float2=st.floats(allow_nan=False, allow_infinity=False))
+    def test_isub_with_py_float(self, float1, float2):
+        allele = FloatAllele(float1)
+        float_to_sub = float2
         allele -= float_to_sub
-        assert allele == 0.1
+        assert allele == float1 - float2
 
-    def test_isub_with_same_type(self):
-        allele = FloatAllele(0.3)
-        allele_to_sub = FloatAllele(0.2)
+    @given(float1=st.floats(allow_nan=False, allow_infinity=False),
+           float2=st.floats(allow_nan=False, allow_infinity=False))
+    def test_isub_with_same_type(self, float1, float2):
+        allele = FloatAllele(float1)
+        allele_to_sub = FloatAllele(float2)
         allele -= allele_to_sub
-        assert allele == 0.1
+        assert allele == float1 - float2
 
     def test_isub_non_float_convertable_input(self, pi_allele,
                                               cannot_convert_to_float):

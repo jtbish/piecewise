@@ -1,5 +1,4 @@
 import abc
-import random
 
 
 class PredictionStrategy(metaclass=abc.ABCMeta):
@@ -32,6 +31,7 @@ class FitnessWeightedAvgPrediction(PredictionStrategy):
     def _populate_arrays(self, prediction_array, fitness_sum_array, match_set):
         match_set_is_empty = match_set.num_micros == 0
         if match_set_is_empty:
+            # TODO change to logging call
             print("WARNING: match set is empty when doing prediction.")
 
         for classifier in match_set:
@@ -41,15 +41,19 @@ class FitnessWeightedAvgPrediction(PredictionStrategy):
             fitness_sum_array[action] += classifier.fitness
 
     def _normalise_prediction_array(self, prediction_array, fitness_sum_array):
-        possible_actions = prediction_array.actions()
-        for action in possible_actions:
+        for action in prediction_array.possible_actions_set():
             if fitness_sum_array[action] != 0:
                 prediction_array[action] /= fitness_sum_array[action]
 
 
 class PredictionArray:
-    """Structure to nicely encapsulate null action predictions and selecting
-    actions from caller."""
+    """Data structure to nicely encapsulate null action predictions from
+    client.
+
+    The main idea behind the data structure is to store prediction values as
+    null (None) to begin with, and lazily make them zero as necessary when
+    the client code requests them via key indexing.
+    """
     def __init__(self, env_action_set):
         self._arr = {action: None for action in env_action_set}
 
@@ -57,10 +61,10 @@ class PredictionArray:
         action = key
         prediction = self._arr[action]
         prediction = \
-            self._lazily_make_prediction_non_null(prediction)
+            self._make_prediction_non_null_if_needed(prediction)
         return prediction
 
-    def _lazily_make_prediction_non_null(self, prediction):
+    def _make_prediction_non_null_if_needed(self, prediction):
         if prediction is None:
             prediction = 0.0
         return prediction
@@ -70,21 +74,22 @@ class PredictionArray:
         prediction = value
         self._arr[action] = prediction
 
-    def random_action(self):
-        return random.choice(self._get_possible_actions)
+    def possible_actions_set(self):
+        """Returns the set of actions with non-null predictions.
 
-    def _get_possible_actions(self):
-        return [
-            action for (action, prediction) in self._arr.items()
-            if prediction is not None
-        ]
-
-    def greedy_action(self):
-        possible_sub_arr = self._get_possible_sub_arr()
-        return max(possible_sub_arr, key=possible_sub_arr.get)
-
-    def _get_possible_sub_arr(self):
+        Used with action selection strategy."""
         return {
-            action: prediction for (action, prediction) in self._arr.items()
+            action
+            for (action, prediction) in self._arr.items()
+            if prediction is not None
+        }
+
+    def possible_sub_array(self):
+        """Returns the sub-array with non-null predictions.
+
+        Used with action selection strategy."""
+        return {
+            action: prediction
+            for (action, prediction) in self._arr.items()
             if prediction is not None
         }

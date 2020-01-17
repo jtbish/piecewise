@@ -1,8 +1,8 @@
 from piecewise.algorithm import make_xcs
 from piecewise.codec import NullCodec
 from piecewise.dtype import Population
-from piecewise.environment import RealMultiplexer
-from piecewise.environment.supervised.multiplexer.abstract_multiplexer import \
+from piecewise.environment import make_real_mux_env
+from piecewise.environment.supervised.multiplexer.multiplexer_util import \
     calc_total_bits
 from piecewise.lcs import ClassificationLCS
 from piecewise.rule_repr import CentreSpreadRuleRepr
@@ -13,10 +13,10 @@ class TestCentreSpreadXCSROnRealMultiplexer:
         num_address_bits = 2
         total_bits = calc_total_bits(num_address_bits)
         balanced_thresholds = [0.5] * total_bits
-        env = RealMultiplexer(num_address_bits=2,
-                              num_samples=64,
-                              shuffle_dataset=True,
-                              thresholds=balanced_thresholds)
+        env = make_real_mux_env(num_address_bits=2,
+                                num_samples=64,
+                                shuffle_dataset=True,
+                                thresholds=balanced_thresholds)
         codec = NullCodec()
         situation_space = codec.make_situation_space(env.obs_space)
         rule_repr = CentreSpreadRuleRepr(situation_space)

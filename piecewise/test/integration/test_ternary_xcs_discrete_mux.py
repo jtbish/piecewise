@@ -1,6 +1,6 @@
 from piecewise.algorithm import make_xcs
 from piecewise.codec import NullCodec
-from piecewise.environment import DiscreteMultiplexer
+from piecewise.environment import make_discrete_mux_env
 from piecewise.lcs import ClassificationLCS
 from piecewise.rule_repr import TernaryRuleRepr
 from piecewise.dtype import Population
@@ -8,7 +8,7 @@ from piecewise.dtype import Population
 
 class TestTernaryXCSOnDiscreteMultiplexer:
     def _setup_lcs(self):
-        env = DiscreteMultiplexer(num_address_bits=2, shuffle_dataset=True)
+        env = make_discrete_mux_env(num_address_bits=2, shuffle_dataset=True)
         codec = NullCodec()
         rule_repr = TernaryRuleRepr()
         algorithm = self._init_algorithm(env, rule_repr)

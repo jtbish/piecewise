@@ -29,10 +29,12 @@ class AlgorithmABC(metaclass=abc.ABCMeta):
     via the return value of the Algorithm's train_update method.
     """
     @abc.abstractmethod
-    def __init__(self, common_components, rule_repr, hyperparams):
+    def __init__(self, components, rule_repr, hyperparams):
         (self._matching_strat, self._covering_strat, self._prediction_strat,
          self._fitness_update_strat, self._subsumption_strat,
-         self._rule_discovery_strat, self._deletion_strat) = common_components
+         self._rule_discovery_strat, self._deletion_strat,
+         self._action_selection_strat,
+         self._credit_assignment_strat) = components
 
         self._hyperparams = hyperparams
         self._population = Population(max_micros=self._hyperparams["N"])
