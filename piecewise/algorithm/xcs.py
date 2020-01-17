@@ -1,15 +1,11 @@
 import abc
 
-from piecewise.component import (EpsilonGreedy, FitnessWeightedAvgPrediction,
-                                 RuleReprCovering, RuleReprMatching,
-                                 XCSAccuracyFitnessUpdate, XCSCreditAssignment,
-                                 XCSGeneticAlgorithm, XCSRouletteWheelDeletion,
-                                 XCSSubsumption)
 from piecewise.environment import EnvironmentStepTypes
 from piecewise.util.classifier_set_stats import (calc_summary_stat,
                                                  num_unique_actions)
 
 from .algorithm import AlgorithmABC, AlgorithmComponents
+from piecewise.error.core_errors import InternalError
 
 
 def make_xcs(env_step_type, *args, **kwargs):
@@ -20,46 +16,27 @@ def make_xcs(env_step_type, *args, **kwargs):
     elif env_step_type == EnvironmentStepTypes.multi_step:
         return MultiStepXCS(*args, **kwargs)
     else:
-        # TODO change
-        raise Exception
+        raise InternalError("Should never get here.")
 
 
 class XCS(AlgorithmABC, metaclass=abc.ABCMeta):
     """Implementation of XCS, based on pseudocode given in 'An Algorithmic
     Description of XCS' (Butz and Wilson, 2002)."""
-    def __init__(self, env_action_set, rule_repr, hyperparams):
-        components = self._init_components(env_action_set, rule_repr,
-                                           hyperparams)
-        super().__init__(components, rule_repr, hyperparams)
-
+    def __init__(self, matching, covering, prediction, action_selection,
+                 credit_assignment, fitness_update, subsumption,
+                 rule_discovery, deletion, hyperparams):
+        components = AlgorithmComponents(matching=matching,
+                                         covering=covering,
+                                         prediction=prediction,
+                                         action_selection=action_selection,
+                                         credit_assignment=credit_assignment,
+                                         fitness_update=fitness_update,
+                                         subsumption=subsumption,
+                                         rule_discovery=rule_discovery,
+                                         deletion=deletion)
+        super().__init__(components, hyperparams)
         self._init_prev_step_tracking_attrs()
         self._init_curr_step_tracking_attrs()
-
-    def _init_components(self, env_action_set, rule_repr, hyperparams):
-        matching_strat = RuleReprMatching(rule_repr)
-        covering_strat = RuleReprCovering(env_action_set, rule_repr,
-                                          hyperparams)
-        prediction_strat = FitnessWeightedAvgPrediction(env_action_set)
-        fitness_update_strat = \
-            XCSAccuracyFitnessUpdate(hyperparams)
-        subsumption_strat = XCSSubsumption(rule_repr, hyperparams)
-        ga_subsumption_strat = subsumption_strat if \
-            hyperparams["do_ga_subsumption"] \
-            else None
-        rule_discovery_strat = XCSGeneticAlgorithm(env_action_set, rule_repr,
-                                                   ga_subsumption_strat,
-                                                   hyperparams)
-        deletion_strat = XCSRouletteWheelDeletion(hyperparams)
-        action_selection_strat = \
-            EpsilonGreedy(hyperparams["p_explore"])
-        credit_assignment_strat = \
-            XCSCreditAssignment(hyperparams)
-
-        return AlgorithmComponents(matching_strat, covering_strat,
-                                   prediction_strat, fitness_update_strat,
-                                   subsumption_strat, rule_discovery_strat,
-                                   deletion_strat, action_selection_strat,
-                                   credit_assignment_strat)
 
     def _init_prev_step_tracking_attrs(self):
         self._prev_action_set = None
@@ -193,7 +170,7 @@ class XCS(AlgorithmABC, metaclass=abc.ABCMeta):
 
 
 class SingleStepXCS(XCS):
-    """Training update strategy for single-step environments."""
+    """XCS operating in single-step environments."""
     def _step_type_train_update(self, env_response):
         assert self._prev_action_set is None
         reward = env_response.reward
@@ -201,7 +178,7 @@ class SingleStepXCS(XCS):
 
 
 class MultiStepXCS(XCS):
-    """Training update strategy for multi-step environments."""
+    """XCS operating in multi-step environments."""
     def _step_type_train_update(self, env_response):
         self._try_update_prev_action_set()
         reward = env_response.reward

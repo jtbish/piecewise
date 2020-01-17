@@ -7,8 +7,9 @@ import numpy as np
 from piecewise.dtype import ClassifierSet, Population
 
 AlgorithmComponents = namedtuple("AlgorithmComponents", [
-    "matching", "covering", "prediction", "fitness_update", "subsumption",
-    "rule_discovery", "deletion", "action_selection", "credit_assignment"
+    "matching", "covering", "prediction", "action_selection",
+    "credit_assignment", "fitness_update", "subsumption", "rule_discovery",
+    "deletion"
 ])
 
 
@@ -29,15 +30,21 @@ class AlgorithmABC(metaclass=abc.ABCMeta):
     via the return value of the Algorithm's train_update method.
     """
     @abc.abstractmethod
-    def __init__(self, components, rule_repr, hyperparams):
-        (self._matching_strat, self._covering_strat, self._prediction_strat,
-         self._fitness_update_strat, self._subsumption_strat,
-         self._rule_discovery_strat, self._deletion_strat,
-         self._action_selection_strat,
-         self._credit_assignment_strat) = components
-
+    def __init__(self, components, hyperparams):
+        self._init_component_strats(components)
         self._hyperparams = hyperparams
         self._population = Population(max_micros=self._hyperparams["N"])
+
+    def _init_component_strats(self, components):
+        self._matching_strat = components.matching
+        self._covering_strat = components.covering
+        self._prediction_strat = components.prediction
+        self._action_selection_strat = components.action_selection
+        self._credit_assignment_strat = components.credit_assignment
+        self._fitness_update_strat = components.fitness_update
+        self._subsumption_strat = components.subsumption
+        self._rule_discovery_strat = components.rule_discovery
+        self._deletion_strat = components.deletion
 
     def _set_seeds(self, seed):
         random.seed(seed)

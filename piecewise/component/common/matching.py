@@ -5,11 +5,6 @@ from piecewise.dtype import ClassifierSet
 
 class MatchingStrategy(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def __init__(self, rule_repr=None, hyperparams=None):
-        self._rule_repr = rule_repr
-        self._hyperparams = hyperparams
-
-    @abc.abstractmethod
     def __call__(self, population, situation):
         """Returns a ClassifierSet representing the match set from the
         population for the given situation."""
@@ -21,7 +16,7 @@ class RuleReprMatching(MatchingStrategy):
 
     Such matching may involve taking into account the wildcards of the rule
     representation or the structure of the condition elements, and so the
-    responsibility of determining a match is left to the specific rule
+    responsibility of determining a match is delegated to the specific rule
     representation being used.
     """
     def __init__(self, rule_repr):

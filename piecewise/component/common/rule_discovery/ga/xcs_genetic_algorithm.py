@@ -79,9 +79,9 @@ class XCSGeneticAlgorithm(GeneticAlgorithm):
             self._mutation_strat(child, situation)
 
     def _update_population(self, children, parents, population):
-        try_subsumption = self._subsumption_strat is not None
+        do_subsumption = self._hyperparams["do_ga_subsumption"]
         for child in children:
-            if try_subsumption:
+            if do_subsumption:
                 was_subsumed = self._try_subsume_with_parents(
                     child, parents, population)
                 if not was_subsumed:
