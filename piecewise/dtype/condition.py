@@ -12,9 +12,11 @@ class Condition:
 
     @classmethod
     def from_elem_args(cls, *elems):
+        """Create a condition from an element arguments."""
         return cls(elems)
 
     def append(self, elem):
+        """Append the given element to the end of the condition."""
         self._elems.append(elem)
 
     def __eq__(self, other):

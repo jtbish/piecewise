@@ -4,31 +4,34 @@ from collections import namedtuple
 Interval = namedtuple("Interval", ["lower", "upper"])
 
 
-class IntervalElem(metaclass=abc.ABCMeta):
-    """Element of a condition that represents a 2-tuple."""
-    @abc.abstractmethod
-    def __repr__(self):
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def __str__(self):
-        raise NotImplementedError
-
+class IntervalElemABC(metaclass=abc.ABCMeta):
+    """ABC for an element of a condition that represents an interval
+    predicate."""
     @abc.abstractmethod
     def __eq__(self, other):
         raise NotImplementedError
 
     def interval(self):
+        """Returns the full interval spanned by this interval predicate
+        in the format [upper, lower]."""
         return Interval(self.lower(), self.upper())
 
     @abc.abstractmethod
     def lower(self):
+        """Returns the lower bound that is represented by the interval
+        predicate."""
         raise NotImplementedError
 
     @abc.abstractmethod
     def upper(self):
+        """Returns the upper bound that is represented by the interval
+        predicate."""
         raise NotImplementedError
 
     @abc.abstractmethod
     def mutate(self, hyperparams=None):
+        """Mutates the interval predicate in-place.
+
+        May or may not require hyperparameters, hence the hyperparams argument
+        is None by default."""
         raise NotImplementedError

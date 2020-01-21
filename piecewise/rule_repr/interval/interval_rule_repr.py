@@ -1,9 +1,9 @@
 import abc
 
-from ..rule_repr import RuleRepr
+from ..rule_repr import IRuleRepr
 
 
-class IntervalRuleRepr(RuleRepr, metaclass=abc.ABCMeta):
+class IntervalRuleReprABC(IRuleRepr, metaclass=abc.ABCMeta):
     def __init__(self, situation_space):
         self._situation_space = situation_space
         self._wildcards = self._create_wildcards()
@@ -16,6 +16,11 @@ class IntervalRuleRepr(RuleRepr, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def _create_wildcard_for_dim(self, dimension):
+        """Creates a wildcard element for the given dimension of the situation
+        space.
+
+        Dependent on the specific interval representation, hence is abstract
+        and is up to subclasses to implement."""
         raise NotImplementedError
 
     def does_match(self, condition, situation):

@@ -3,10 +3,11 @@ import random
 from piecewise.dtype import Condition, FloatAllele
 
 from .elem.centre_spread_elem import CentreSpreadElem
-from .interval_rule_repr import IntervalRuleRepr
+from .interval_rule_repr import IntervalRuleReprABC
 
 
-class CentreSpreadRuleRepr(IntervalRuleRepr):
+class CentreSpreadRuleRepr(IntervalRuleReprABC):
+    """Rule representation that works with (centre, spread) tuples."""
     def __init__(self, situation_space):
         super().__init__(situation_space)
 

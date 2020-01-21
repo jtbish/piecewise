@@ -1,16 +1,9 @@
 import abc
 import random
-from collections import namedtuple
 
 import numpy as np
 
 from piecewise.dtype import ClassifierSet, Population
-
-AlgorithmComponents = namedtuple("AlgorithmComponents", [
-    "matching", "covering", "prediction", "action_selection",
-    "credit_assignment", "fitness_update", "subsumption", "rule_discovery",
-    "deletion"
-])
 
 
 class AlgorithmABC(metaclass=abc.ABCMeta):
@@ -30,21 +23,20 @@ class AlgorithmABC(metaclass=abc.ABCMeta):
     via the return value of the Algorithm's train_update method.
     """
     @abc.abstractmethod
-    def __init__(self, components, hyperparams):
-        self._init_component_strats(components)
+    def __init__(self, matching, covering, prediction, action_selection,
+                 credit_assignment, fitness_update, subsumption,
+                 rule_discovery, deletion, hyperparams):
+        self._matching_strat = matching
+        self._covering_strat = covering
+        self._prediction_strat = prediction
+        self._action_selection_strat = action_selection
+        self._credit_assignment_strat = credit_assignment
+        self._fitness_update_strat = fitness_update
+        self._subsumption_strat = subsumption
+        self._rule_discovery_strat = rule_discovery
+        self._deletion_strat = deletion
         self._hyperparams = hyperparams
         self._population = Population(max_micros=self._hyperparams["N"])
-
-    def _init_component_strats(self, components):
-        self._matching_strat = components.matching
-        self._covering_strat = components.covering
-        self._prediction_strat = components.prediction
-        self._action_selection_strat = components.action_selection
-        self._credit_assignment_strat = components.credit_assignment
-        self._fitness_update_strat = components.fitness_update
-        self._subsumption_strat = components.subsumption
-        self._rule_discovery_strat = components.rule_discovery
-        self._deletion_strat = components.deletion
 
     def _set_seeds(self, seed):
         random.seed(seed)

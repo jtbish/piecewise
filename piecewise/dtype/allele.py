@@ -4,23 +4,24 @@ import math
 
 from piecewise.error.allele_error import ConversionError
 
-from .constants import FLOAT_ALLELE_EQ_REL_TOL
+from .config import float_allele_rel_tol
+from .formatting import as_truncated_str
 
 
 class AlleleABC(metaclass=abc.ABCMeta):
+    """ABC for alleles.
+
+    An allele is simply a wrapper for a numerical value."""
     def __init__(self, value):
         self._value = value
 
     @property
     def value(self):
+        """Returns the raw value stored inside the allele."""
         return self._value
 
     def __repr__(self):
         return f"{self.__class__.__name__}(" f"{self._value!r})"
-
-    @abc.abstractmethod
-    def __str__(self):
-        raise NotImplementedError
 
     @abc.abstractmethod
     def __eq__(self, other):
@@ -28,6 +29,8 @@ class AlleleABC(metaclass=abc.ABCMeta):
 
 
 def convert_input_to_int(method):
+    """Decorator that attempts to convert the single input argument of method
+    into an integer."""
     @functools.wraps(method)
     def int_converter(self, input_):
         try:
@@ -40,7 +43,7 @@ def convert_input_to_int(method):
 
 
 class IntegerAllele(AlleleABC):
-    """Allele operating in discrete (integer) space."""
+    """Allele operating in integer space."""
     @convert_input_to_int
     def __init__(self, value):
         super().__init__(value)
@@ -57,6 +60,8 @@ class IntegerAllele(AlleleABC):
 
 
 def convert_input_to_float(method):
+    """Decorator that attempts to convert the single input argument of method
+    to a floating point number."""
     @functools.wraps(method)
     def float_converter(self, input_):
         try:
@@ -69,17 +74,17 @@ def convert_input_to_float(method):
 
 
 class FloatAllele(AlleleABC):
-    """Allele operating in continuous (floating point) space."""
-    # TODO move this into config file
-    _STR_DECIMAL_PLACES = 2
+    """Allele operating in continuous (floating point) space.
 
+    Notably provides an implementation of equality that does a proper floating
+    point tolerance check, meaning the syntax allele1 == allele2 can be used by
+    clients."""
     @convert_input_to_float
     def __init__(self, value):
         super().__init__(value)
 
     def __str__(self):
-        return "{{0:.{0}f}}".format(self._STR_DECIMAL_PLACES).format(
-            self._value)
+        return as_truncated_str(self._value)
 
     @convert_input_to_float
     def __lt__(self, other):
@@ -91,9 +96,7 @@ class FloatAllele(AlleleABC):
 
     @convert_input_to_float
     def __eq__(self, other):
-        return math.isclose(self._value,
-                            other,
-                            rel_tol=FLOAT_ALLELE_EQ_REL_TOL)
+        return math.isclose(self._value, other, rel_tol=float_allele_rel_tol)
 
     @convert_input_to_float
     def __gt__(self, other):

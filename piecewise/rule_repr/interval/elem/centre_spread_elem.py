@@ -1,9 +1,10 @@
 import random
 
-from .interval_elem import IntervalElem
+from .interval_elem import IntervalElemABC
 
 
-class CentreSpreadElem(IntervalElem):
+class CentreSpreadElem(IntervalElemABC):
+    """Represents a (centre, spread) tuple."""
     def __init__(self, centre_allele, spread_allele):
         self._centre_allele = centre_allele
         self._spread_allele = spread_allele

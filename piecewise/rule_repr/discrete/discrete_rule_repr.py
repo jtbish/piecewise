@@ -1,21 +1,19 @@
-import abc
 import random
 
 from piecewise.dtype import Condition, IntegerAllele
 
-from ..rule_repr import RuleRepr
+from ..rule_repr import IRuleRepr
 from .elem.discrete_elem import DiscreteElem, DiscreteWildcardElem
 
 
-class DiscreteRuleRepr(RuleRepr, metaclass=abc.ABCMeta):
+class DiscreteRuleRepr(IRuleRepr):
+    """Rule representation that works with discrete (i.e. integer) inputs,
+    storing a single integer in each element of a condition.
+
+    Uses the DiscreteElem class to encapsulate condition elements, as well as
+    the DiscreteWildcardElem as a sentinel class for representing wildcard
+    elements."""
     _WILDCARD_ELEM = DiscreteWildcardElem()
-
-    def __init__(self, elem_value_set):
-        self._elem_value_set = elem_value_set
-
-    @property
-    def elem_value_set(self):
-        return self._elem_value_set
 
     def does_match(self, condition, situation):
         """DOES MATCH function from 'An Algorithmic Description of XCS'

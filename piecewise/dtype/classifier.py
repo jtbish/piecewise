@@ -4,26 +4,50 @@ import math
 from piecewise.error.classifier_error import AttrUpdateError
 from piecewise.lcs.lcs import TIME_STEP_MIN
 
+from .config import classifier_attr_rel_tol
+from .formatting import as_truncated_str
+
 TIME_STAMP_MIN = TIME_STEP_MIN
 EXPERIENCE_MIN = 0
 ACTION_SET_SIZE_MIN = 1
 NUMEROSITY_MIN = 1
 
 
-def check_attr_value(*, min_val):
+def check_attr_value(*, min_val, expected_type=None):
+    """Decorator to check values given to update classifier attributes.
+
+    Args:
+        min_val: The minimum value of the attribute.
+        expected_type: The expected type of the attribute, used for checking
+            that some attributes are always integers. Default value of None
+            means do not check the type of this attribute.
+        """
     def decorator(method):
         @functools.wraps(method)
         def _check_attr_value(self, value, *args, **kwargs):
-            if value < min_val:
-                attr_name = method.__name__
+            attr_name = method.__name__
+            value_is_large_enough = value >= min_val
+            value_is_correct_type = _value_is_correct_type(
+                value, expected_type)
+            if not (value_is_large_enough and value_is_correct_type):
                 raise AttrUpdateError(
-                    f"Bad update for {attr_name} attr: must be at least "
-                    f"{min_val} but was {value}")
+                    f"Bad update for {attr_name} attr: "
+                    f"value was {value}, expected at least {min_val}, "
+                    f"type was {type(value)}, expected {expected_type}")
+
             return method(self, value, *args, **kwargs)
 
         return _check_attr_value
 
     return decorator
+
+
+def _value_is_correct_type(value, expected_type):
+    if expected_type is None:
+        # don't check if no type is given
+        return True
+    else:
+        return isinstance(value, expected_type)
 
 
 class Classifier:
@@ -35,8 +59,6 @@ class Classifier:
     microclassifier, and if it has a numerosity > 1 it is considered to be a
     macroclassifier. See is_micro and is_macro properties.
     """
-    _FLOAT_REL_TOL = 1e-5
-
     def __init__(self, rule, prediction, error, fitness, time_stamp):
         self._rule = rule
         self._prediction = prediction
@@ -97,7 +119,7 @@ class Classifier:
         return self._time_stamp
 
     @time_stamp.setter
-    @check_attr_value(min_val=TIME_STAMP_MIN)
+    @check_attr_value(min_val=TIME_STAMP_MIN, expected_type=int)
     def time_stamp(self, value):
         self._time_stamp = value
 
@@ -106,7 +128,7 @@ class Classifier:
         return self._experience
 
     @experience.setter
-    @check_attr_value(min_val=EXPERIENCE_MIN)
+    @check_attr_value(min_val=EXPERIENCE_MIN, expected_type=int)
     def experience(self, value):
         self._experience = value
 
@@ -124,7 +146,7 @@ class Classifier:
         return self._numerosity
 
     @numerosity.setter
-    @check_attr_value(min_val=NUMEROSITY_MIN)
+    @check_attr_value(min_val=NUMEROSITY_MIN, expected_type=int)
     def numerosity(self, value):
         self._numerosity = value
 
@@ -145,15 +167,15 @@ class Classifier:
     def __eq__(self, other):
         return self._rule == other.rule and \
             math.isclose(self._prediction, other.prediction,
-                         rel_tol=self._FLOAT_REL_TOL) and \
+                         rel_tol=classifier_attr_rel_tol) and \
             math.isclose(self._error, other.error,
-                         rel_tol=self._FLOAT_REL_TOL) and \
+                         rel_tol=classifier_attr_rel_tol) and \
             math.isclose(self._fitness, other.fitness,
-                         rel_tol=self._FLOAT_REL_TOL) and \
+                         rel_tol=classifier_attr_rel_tol) and \
             self._time_stamp == other.time_stamp and \
             self._experience == other.experience and \
             math.isclose(self._action_set_size, other.action_set_size,
-                         rel_tol=self._FLOAT_REL_TOL) and \
+                         rel_tol=classifier_attr_rel_tol) and \
             self._numerosity == other.numerosity
 
     def __repr__(self):
@@ -163,8 +185,11 @@ class Classifier:
                 f"{self._time_stamp!r})")
 
     def __str__(self):
-        return (f"( rule: {self._rule}, pred: {self._prediction:.4f}, "
-                f"err: {self._error:.4f}, fit: {self._fitness:.4f}, "
-                f"ts: {self._time_stamp}, exp: "
-                f"{self._experience}, ass: "
-                f"{self._action_set_size:.4f}, num: {self._numerosity} )")
+        return (f"( rule: {self._rule}, "
+                f"pred: {as_truncated_str(self._prediction)}, "
+                f"err: {as_truncated_str(self._error)}, "
+                f"fit: {as_truncated_str(self._fitness)}, "
+                f"ts: {self._time_stamp}, "
+                f"exp: {self._experience}, "
+                f"ass: {as_truncated_str(self._action_set_size)}, "
+                f"num: {self._numerosity} )")

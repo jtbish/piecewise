@@ -1,11 +1,32 @@
 import abc
 
+from piecewise.component import (EpsilonGreedy, FitnessWeightedAvgPrediction,
+                                 RuleReprCovering, RuleReprMatching,
+                                 XCSAccuracyFitnessUpdate, XCSCreditAssignment,
+                                 XCSGeneticAlgorithm, XCSRouletteWheelDeletion,
+                                 XCSSubsumption)
 from piecewise.environment import EnvironmentStepTypes
+from piecewise.error.core_errors import InternalError
 from piecewise.util.classifier_set_stats import (calc_summary_stat,
                                                  num_unique_actions)
 
 from .algorithm import AlgorithmABC, AlgorithmComponents
-from piecewise.error.core_errors import InternalError
+
+
+def make_canonical_xcs(rule_repr, env_action_set, env_step_type, alg_hps):
+    matching = RuleReprMatching(rule_repr)
+    covering = RuleReprCovering(env_action_set, rule_repr)
+    prediction = FitnessWeightedAvgPrediction(env_action_set)
+    action_selection = EpsilonGreedy(alg_hps.for_user("action_selection"))
+    credit_assignment = XCSCreditAssignment(
+        alg_hps.for_user("credit_assignment"))
+    fitness_update = XCSAccuracyFitnessUpdate(
+        alg_hps.for_user("fitness_update"))
+    subsumption = XCSSubsumption(rule_repr, alg_hps.for_user("subsumption"))
+    rule_discovery = XCSGeneticAlgorithm(env.action_set, rule_repr,
+                                         subsumption,
+                                         alg_hps.for_user("rule_discovery"))
+    deletion = XCSRouletteWheelDeletion(alg_hps.for_user("deletion"))
 
 
 def make_xcs(env_step_type, *args, **kwargs):
@@ -25,16 +46,9 @@ class XCS(AlgorithmABC, metaclass=abc.ABCMeta):
     def __init__(self, matching, covering, prediction, action_selection,
                  credit_assignment, fitness_update, subsumption,
                  rule_discovery, deletion, hyperparams):
-        components = AlgorithmComponents(matching=matching,
-                                         covering=covering,
-                                         prediction=prediction,
-                                         action_selection=action_selection,
-                                         credit_assignment=credit_assignment,
-                                         fitness_update=fitness_update,
-                                         subsumption=subsumption,
-                                         rule_discovery=rule_discovery,
-                                         deletion=deletion)
-        super().__init__(components, hyperparams)
+        super().__init__(matching, covering, prediction, action_selection,
+                         credit_assignment, fitness_update, subsumption,
+                         rule_discovery, deletion, hyperparams)
         self._init_prev_step_tracking_attrs()
         self._init_curr_step_tracking_attrs()
 

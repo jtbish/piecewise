@@ -2,6 +2,8 @@ WILDCARD_CHAR = "#"
 
 
 class DiscreteElem:
+    """Wrapper over an IntegerAllele used in conditions constructed/modified by
+    a DiscreteRuleRepr."""
     def __init__(self, allele):
         self._allele = allele
 
@@ -24,6 +26,9 @@ class DiscreteElem:
 
 
 class DiscreteWildcardElem:
+    """Sentinel class used to represent a wildcard in a DiscreteRuleRepr.
+
+    Only compares equal to instances of itself."""
     def __eq__(self, other):
         return type(other) == type(self)
 

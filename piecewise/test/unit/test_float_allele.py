@@ -6,10 +6,12 @@ import pytest
 from hypothesis import given
 
 from piecewise.dtype import FloatAllele
+from piecewise.dtype.config import float_allele_rel_tol
 from piecewise.error.allele_error import ConversionError
 
+EQ_TESTING_DIFF = float_allele_rel_tol*2
 
-# TODO change to support variable precision in config
+
 class TestFloatAllele:
     _LESS_THAN_PI = 3
     _GREATER_THAN_PI = 4
@@ -20,7 +22,7 @@ class TestFloatAllele:
 
     @pytest.fixture
     def approx_pi_allele(self):
-        truncated_pi = 3.14159
+        truncated_pi = math.pi - EQ_TESTING_DIFF
         return FloatAllele(truncated_pi)
 
     @pytest.fixture

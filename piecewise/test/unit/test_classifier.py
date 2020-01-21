@@ -31,21 +31,33 @@ def classifier(make_classifier):
 
 
 class TestClassifier:
-    def test_set_bad_time_stamp(self, classifier):
+    def test_set_bad_time_stamp_below_min_val(self, classifier):
         with pytest.raises(AttrUpdateError):
             classifier.time_stamp = (TIME_STAMP_MIN - 1)
 
-    def test_set_bad_experience(self, classifier):
+    def test_set_bad_time_stamp_non_integer(self, classifier):
+        with pytest.raises(AttrUpdateError):
+            classifier.time_stamp = float(TIME_STAMP_MIN)
+
+    def test_set_bad_experience_below_min_val(self, classifier):
         with pytest.raises(AttrUpdateError):
             classifier.experience = (EXPERIENCE_MIN - 1)
+
+    def test_set_bad_experience_non_integer(self, classifier):
+        with pytest.raises(AttrUpdateError):
+            classifier.experience = float(EXPERIENCE_MIN)
 
     def test_set_bad_action_set_size(self, classifier):
         with pytest.raises(AttrUpdateError):
             classifier.action_set_size = (ACTION_SET_SIZE_MIN - 1)
 
-    def test_set_bad_numerosity(self, classifier):
+    def test_set_bad_numerosity_below_min_val(self, classifier):
         with pytest.raises(AttrUpdateError):
             classifier.numerosity = (NUMEROSITY_MIN - 1)
+
+    def test_set_bad_numerosity_non_integer(self, classifier):
+        with pytest.raises(AttrUpdateError):
+            classifier.numerosity = float(NUMEROSITY_MIN)
 
     def test_is_microclassifier_pos_case(self, classifier):
         setattr(classifier, "numerosity", NUMEROSITY_MIN)
