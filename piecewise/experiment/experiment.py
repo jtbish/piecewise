@@ -1,62 +1,33 @@
-import pickle
-from pathlib import Path
-
-from piecewise.monitor import NullMonitor
+TIME_STEP_MIN = 0
 
 
 class Experiment:
-    def __init__(self, env, alg, num_training_samples, logging="verbose",
-            archive_path=None):
-        self._runner = ExperimentRunner()
-        self._logger = ExperimentLogger()
-        self._archiver = ExperimentArchiver()
-
-    def __init__(self, tag, lcs, num_epochs=1, monitor=None):
-        self._tag = tag
-        self._lcs = lcs
-        self._num_epochs = num_epochs
-        self._monitor = self._init_monitor(monitor)
-
-    def _init_monitor(self, monitor):
-        if monitor is None:
-            monitor = NullMonitor()
-        return monitor
+    def __init__(self, env, alg, num_training_samples, logging="verbose"):
+        self._env = env
+        self._alg = alg
+        self._num_training_samples = num_training_samples
+        self._time_step = TIME_STEP_MIN
+        self._population = None
 
     def run(self):
-        self._runner.run()
-#        for epoch_num in range(self._num_epochs):
-#            self._lcs.train_single_epoch()
-#            self._monitor.update(self._lcs)
-#        self._monitor_output = self._monitor.query()
-#        return self._lcs.population, self._monitor_output
+        trained = False
+        while not trained:
+            self._env.reset()
+            while not self._env.is_terminal():
+                self._train_single_time_step()
+                self._time_step += 1
+                if self._time_step == self._num_training_samples:
+                    trained = True
+                    break
+
+    def _train_single_time_step(self):
+        situation = self._get_situation()
+        action = self._alg.train_query(situation, self._time_step)
+        env_response = self._env.act(action)
+        self._population = self._alg.train_update(env_response)
+
+    def _get_situation(self):
+        return self._env.observe()
 
     def archive(self):
-        self._archiver.archive()
-#        archive_path = self._make_archive_dir()
-#        self._pickle_population(archive_path)
-#        self._pickle_monitor_output(archive_path)
-
-    def _make_archive_dir(self):
-        archive_path = Path(f"./{self._tag}_archive")
-        archive_path.mkdir(exist_ok=True)
-        return archive_path
-
-    def _pickle_population(self, archive_path):
-        with open(archive_path / "pop.pkl", "wb") as fp:
-            pickle.dump(self._lcs.population, fp)
-
-    def _pickle_monitor_output(self, archive_path):
-        with open(archive_path / "monitor_out.pkl", "wb") as fp:
-            pickle.dump(self._monitor_output, fp)
-
-def ExperimentRunner:
-    def __init__(self):
-        pass
-
-def ExperimentLogger:
-    def __init__(self):
-        pass
-
-def ExperimentArchiver:
-    def __init__(self):
-        pass
+        raise NotImplementedError

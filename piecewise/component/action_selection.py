@@ -2,8 +2,8 @@ import random
 
 
 class EpsilonGreedy:
-    def __init__(self, prob_explore):
-        self._prob_explore = prob_explore
+    def __init__(self, hyperparams):
+        self._prob_explore = hyperparams["p_explore"]
 
     def __call__(self, prediction_array):
         """SELECT ACTION function from 'An Algorithmic

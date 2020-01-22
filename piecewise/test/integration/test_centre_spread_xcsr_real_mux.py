@@ -1,59 +1,48 @@
-from piecewise.algorithm import make_xcs
-from piecewise.codec import NullCodec
-from piecewise.dtype import Population
+from piecewise.algorithm import make_canonical_xcs
 from piecewise.environment import make_real_mux_env
-from piecewise.environment.supervised.multiplexer.multiplexer_util import \
-    calc_total_bits
-from piecewise.lcs import ClassificationLCS
+from piecewise.experiment import Experiment
 from piecewise.rule_repr import CentreSpreadRuleRepr
 
 
 class TestCentreSpreadXCSROnRealMultiplexer:
-    def _setup_lcs(self):
-        num_address_bits = 2
-        total_bits = calc_total_bits(num_address_bits)
-        balanced_thresholds = [0.5] * total_bits
-        env = make_real_mux_env(num_address_bits=2,
-                                num_samples=64,
+    def test_sample_training_run(self):
+        # 6-mux
+        env = make_real_mux_env(thresholds=[0.5] * 6,
+                                num_address_bits=2,
                                 shuffle_dataset=True,
-                                thresholds=balanced_thresholds)
-        codec = NullCodec()
-        situation_space = codec.make_situation_space(env.obs_space)
-        rule_repr = CentreSpreadRuleRepr(situation_space)
-        algorithm = self._init_algorithm(env, rule_repr)
-        self._lcs = ClassificationLCS(env, codec, algorithm)
+                                reward_correct=1000,
+                                reward_incorrect=0,
+                                num_samples=100)
 
-    def _init_algorithm(self, env, rule_repr):
-        num_actions = len(env.action_set)
-        hyperparams = {
-            "N": 100,
-            "beta": 0.1,
+        rule_repr = CentreSpreadRuleRepr(env.obs_space)
+
+        alg_hyperparams = {
+            "N": 400,
+            "beta": 0.2,
             "alpha": 0.1,
             "epsilon_nought": 0.01,
             "nu": 5,
             "gamma": 0.71,
-            "theta_ga": 25,
+            "theta_ga": 12,
             "chi": 0.8,
             "mu": 0.04,
             "theta_del": 20,
             "delta": 0.1,
             "theta_sub": 20,
             "p_wildcard": 0.33,
-            "prediction_I": 1e-6,
-            "epsilon_I": 1e-6,
-            "fitness_I": 1e-6,
+            "prediction_I": 1e-3,
+            "epsilon_I": 1e-3,
+            "fitness_I": 1e-3,
             "p_explore": 0.5,
-            "theta_mna": num_actions,
+            "theta_mna": len(env.action_set),
             "do_ga_subsumption": True,
             "do_as_subsumption": True,
-            "s_nought": 1.0,
-            "m": 0.1
+            "m": 0.1,
+            "s_nought": 1.0
         }
-        xcs = make_xcs(env.step_type, env.action_set, rule_repr, hyperparams)
-        return xcs
 
-    def test_training(self):
-        self._setup_lcs()
-        for _ in range(5):
-            self._lcs.train_single_epoch()
-        assert isinstance(self._lcs.population, Population)
+        alg = make_canonical_xcs(env, rule_repr, alg_hyperparams)
+
+        experiment_config = {"num_training_samples": 500}
+        experiment = Experiment(env, alg, **experiment_config)
+        experiment.run()

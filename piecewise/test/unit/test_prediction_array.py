@@ -1,6 +1,6 @@
 import math
 
-from piecewise.component.common.prediction import PredictionArray
+from piecewise.component.prediction import PredictionArray
 
 
 class TestPredictionArray:

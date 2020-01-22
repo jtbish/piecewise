@@ -14,37 +14,33 @@ from piecewise.util.classifier_set_stats import (calc_summary_stat,
 from .algorithm import AlgorithmABC, AlgorithmComponents
 
 
-def make_canonical_xcs(env, rule_repr, alg_hps):
+def make_canonical_xcs(env, rule_repr, hyperparams):
     matching = RuleReprMatching(rule_repr)
-    covering = RuleReprCovering(env.action_set, rule_repr)
+    covering = RuleReprCovering(env.action_set, rule_repr, hyperparams)
     prediction = FitnessWeightedAvgPrediction(env.action_set)
-    action_selection = EpsilonGreedy(alg_hps.for_user("action_selection"))
-    credit_assignment = XCSCreditAssignment(
-        alg_hps.for_user("credit_assignment"))
-    fitness_update = XCSAccuracyFitnessUpdate(
-        alg_hps.for_user("fitness_update"))
-    subsumption = XCSSubsumption(rule_repr, alg_hps.for_user("subsumption"))
+    action_selection = EpsilonGreedy(hyperparams)
+    credit_assignment = XCSCreditAssignment(hyperparams)
+    fitness_update = XCSAccuracyFitnessUpdate(hyperparams)
+    subsumption = XCSSubsumption(rule_repr, hyperparams)
     rule_discovery = make_canonical_xcs_ga(env.action_set, rule_repr,
-                                           subsumption,
-                                           alg_hps.for_user("rule_discovery"))
-    deletion = XCSRouletteWheelDeletion(alg_hps.for_user("deletion"))
+                                           subsumption, hyperparams)
+    deletion = XCSRouletteWheelDeletion(hyperparams)
 
     components = AlgorithmComponents(matching, covering, prediction,
                                      action_selection, credit_assignment,
                                      fitness_update, subsumption,
                                      rule_discovery, deletion)
-    xcs_root_hps = alg_hps.for_user("xcs_root")
-    return _make_xcs(env.step_type, components, xcs_root_hps)
+    return _make_xcs(env.step_type, components, hyperparams)
 
 
 def make_custom_xcs(env, matching, covering, prediction, action_selection,
                     credit_assignment, fitness_update, subsumption,
-                    rule_discovery, deletion, xcs_root_hps):
+                    rule_discovery, deletion, hyperparams):
     components = AlgorithmComponents(matching, covering, prediction,
                                      action_selection, credit_assignment,
                                      fitness_update, subsumption,
                                      rule_discovery, deletion)
-    return _make_xcs(env.step_type, components, xcs_root_hps)
+    return _make_xcs(env.step_type, components, hyperparams)
 
 
 def _make_xcs(env_step_type, *args, **kwargs):

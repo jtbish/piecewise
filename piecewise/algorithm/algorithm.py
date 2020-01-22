@@ -46,7 +46,7 @@ class AlgorithmABC(metaclass=abc.ABCMeta):
         self._rule_discovery_strat = components.rule_discovery
         self._deletion_strat = components.deletion
 
-    def _set_seeds(self, seed):
+    def _seed_rng(self, seed):
         random.seed(seed)
         np.random.seed(seed)
 
