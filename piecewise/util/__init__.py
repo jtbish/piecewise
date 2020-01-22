@@ -1,1 +1,1 @@
-from .hyperparams import Hyperparams
+from .param_registry import ParamRegistry

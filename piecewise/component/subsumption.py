@@ -1,11 +1,7 @@
 import abc
 
 
-class SubsumptionStrategy(metaclass=abc.ABCMeta):
-    @abc.abstractmethod
-    def __init__(self, hyperparams=None):
-        self._hyperparams = hyperparams
-
+class ISubsumptionStrategy(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def does_subsume(self, subsumer_classifier, subsumee_classifier):
         """Determines if the subsumer classifier subsumes the subsumee
@@ -24,10 +20,10 @@ class SubsumptionStrategy(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
 
-class XCSSubsumption(SubsumptionStrategy):
+class XCSSubsumption(ISubsumptionStrategy):
     def __init__(self, rule_repr, hyperparams):
         self._rule_repr = rule_repr
-        super().__init__(hyperparams)
+        self._hyperparams = hyperparams
 
     def does_subsume(self, subsumer_classifier, subsumee_classifier):
         """DOES SUBSUME function from 'An Algorithmic Description of XCS'

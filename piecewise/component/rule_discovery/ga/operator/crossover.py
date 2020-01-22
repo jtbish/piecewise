@@ -1,23 +1,7 @@
-import abc
 import random
 
 
-class CrossoverStrategy(metaclass=abc.ABCMeta):
-    @abc.abstractmethod
-    def __init__(self, hyperparams=None):
-        self._hyperparams = hyperparams
-
-    @abc.abstractmethod
-    def __call__(self, child_one, child_two):
-        """Performs crossover on the specified children, modifying them
-        in-place."""
-        raise NotImplementedError
-
-
-class TwoPointCrossover(CrossoverStrategy):
-    def __init__(self):
-        super().__init__()
-
+class TwoPointCrossover:
     def __call__(self, child_one, child_two):
         """Based on APPLY CROSSOVER function from 'An Algorithmic Description
         of XCS' (Butz and Wilson, 2002)."""

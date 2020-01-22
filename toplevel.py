@@ -4,6 +4,7 @@ from piecewise.environment import make_discrete_mux_env
 from piecewise.rule_repr import DiscreteRuleRepr
 from piecewise.util import ParamRegistry
 
+# 6-mux
 env = make_discrete_mux_env(num_address_bits=2,
                             shuffle_dataset=True,
                             reward_correct=1000,
@@ -34,11 +35,13 @@ alg_hps.register("p_explore", 0.5, used_by=("action_selection"))
 alg_hps.register("theta_mna", len(env.action_set), used_by=("xcs_root"))
 alg_hps.register("do_ga_subsumption", True, used_by=("rule_discovery"))
 alg_hps.register("do_as_subsumption", True, used_by=("xcs_root"))
-alg_hps.register("m", 0.1, used_by=("rule_discovery"))
-alg_hps.register("s_nought", 1.0, used_by=("covering"))
 
-alg = make_canonical_xcs(alg_hps)
+alg = make_canonical_xcs(env, rule_repr, alg_hps)
 
-experiment = Experiment()
+experiment_config = {
+    "num_training_samples": 10000,
+    "logging": "verbose"
+}
+experiment = Experiment(env, alg, **experiment_config)
 experiment.run()
 experiment.archive()

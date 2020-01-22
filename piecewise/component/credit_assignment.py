@@ -1,21 +1,6 @@
-import abc
-
-
-class CreditAssignmentStrategy(metaclass=abc.ABCMeta):
-    @abc.abstractmethod
-    def __init__(self, hyperparams=None):
-        self._hyperparams = hyperparams
-
-    @abc.abstractmethod
-    def __call__(self, action_set, reward, use_discounting, prediction_array):
-        """Assigns credit to classifiers in the action set, using information
-        from the other parameters."""
-        raise NotImplementedError
-
-
-class XCSCreditAssignment(CreditAssignmentStrategy):
+class XCSCreditAssignment:
     def __init__(self, hyperparams):
-        super().__init__(hyperparams)
+        self._hyperparams = hyperparams
         self._num_initial_adjust_steps = 1 / self._hyperparams["beta"]
 
     def __call__(self, action_set, reward, use_discounting, prediction_array):

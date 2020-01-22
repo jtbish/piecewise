@@ -3,8 +3,9 @@ import abc
 from piecewise.component import (EpsilonGreedy, FitnessWeightedAvgPrediction,
                                  RuleReprCovering, RuleReprMatching,
                                  XCSAccuracyFitnessUpdate, XCSCreditAssignment,
-                                 XCSGeneticAlgorithm, XCSRouletteWheelDeletion,
-                                 XCSSubsumption)
+                                 XCSRouletteWheelDeletion, XCSSubsumption,
+                                 make_canonical_xcs_ga)
+from piecewise.component.action_selection import select_greedy_action
 from piecewise.environment import EnvironmentStepTypes
 from piecewise.error.core_errors import InternalError
 from piecewise.util.classifier_set_stats import (calc_summary_stat,
@@ -13,42 +14,55 @@ from piecewise.util.classifier_set_stats import (calc_summary_stat,
 from .algorithm import AlgorithmABC, AlgorithmComponents
 
 
-def make_canonical_xcs(rule_repr, env_action_set, env_step_type, alg_hps):
+def make_canonical_xcs(env, rule_repr, alg_hps):
     matching = RuleReprMatching(rule_repr)
-    covering = RuleReprCovering(env_action_set, rule_repr)
-    prediction = FitnessWeightedAvgPrediction(env_action_set)
+    covering = RuleReprCovering(env.action_set, rule_repr)
+    prediction = FitnessWeightedAvgPrediction(env.action_set)
     action_selection = EpsilonGreedy(alg_hps.for_user("action_selection"))
     credit_assignment = XCSCreditAssignment(
         alg_hps.for_user("credit_assignment"))
     fitness_update = XCSAccuracyFitnessUpdate(
         alg_hps.for_user("fitness_update"))
     subsumption = XCSSubsumption(rule_repr, alg_hps.for_user("subsumption"))
-    rule_discovery = XCSGeneticAlgorithm(env.action_set, rule_repr,
-                                         subsumption,
-                                         alg_hps.for_user("rule_discovery"))
+    rule_discovery = make_canonical_xcs_ga(env.action_set, rule_repr,
+                                           subsumption,
+                                           alg_hps.for_user("rule_discovery"))
     deletion = XCSRouletteWheelDeletion(alg_hps.for_user("deletion"))
 
+    components = AlgorithmComponents(matching, covering, prediction,
+                                     action_selection, credit_assignment,
+                                     fitness_update, subsumption,
+                                     rule_discovery, deletion)
+    xcs_root_hps = alg_hps.for_user("xcs_root")
+    return _make_xcs(env.step_type, components, xcs_root_hps)
 
-def make_xcs(env_step_type, *args, **kwargs):
-    """Factory function to make suitable XCS instance given type of
+
+def make_custom_xcs(env, matching, covering, prediction, action_selection,
+                    credit_assignment, fitness_update, subsumption,
+                    rule_discovery, deletion, xcs_root_hps):
+    components = AlgorithmComponents(matching, covering, prediction,
+                                     action_selection, credit_assignment,
+                                     fitness_update, subsumption,
+                                     rule_discovery, deletion)
+    return _make_xcs(env.step_type, components, xcs_root_hps)
+
+
+def _make_xcs(env_step_type, *args, **kwargs):
+    """Private factory function to make suitable XCS instance given type of
     environment."""
     if env_step_type == EnvironmentStepTypes.single_step:
         return SingleStepXCS(*args, **kwargs)
     elif env_step_type == EnvironmentStepTypes.multi_step:
         return MultiStepXCS(*args, **kwargs)
     else:
-        raise InternalError("Should never get here.")
+        raise InternalError(f"Invalid environment step type: {env_step_type}")
 
 
-class XCS(AlgorithmABC, metaclass=abc.ABCMeta):
+class XCSABC(AlgorithmABC, metaclass=abc.ABCMeta):
     """Implementation of XCS, based on pseudocode given in 'An Algorithmic
     Description of XCS' (Butz and Wilson, 2002)."""
-    def __init__(self, matching, covering, prediction, action_selection,
-                 credit_assignment, fitness_update, subsumption,
-                 rule_discovery, deletion, hyperparams):
-        super().__init__(matching, covering, prediction, action_selection,
-                         credit_assignment, fitness_update, subsumption,
-                         rule_discovery, deletion, hyperparams)
+    def __init__(self, components, hyperparams):
+        super().__init__(components, hyperparams)
         self._init_prev_step_tracking_attrs()
         self._init_curr_step_tracking_attrs()
 
@@ -107,6 +121,8 @@ class XCS(AlgorithmABC, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def _step_type_train_update(self, env_response):
+        """Update specific for single/multi step environment - implemented in
+        XCSABC subclasses."""
         raise NotImplementedError
 
     def _update_curr_action_set(self, reward):
@@ -180,10 +196,10 @@ class XCS(AlgorithmABC, metaclass=abc.ABCMeta):
     def test_query(self, situation):
         match_set = self._gen_match_set(situation)
         prediction_array = self._gen_prediction_array(match_set)
-        return prediction_array.greedy_action()
+        return select_greedy_action(prediction_array)
 
 
-class SingleStepXCS(XCS):
+class SingleStepXCS(XCSABC):
     """XCS operating in single-step environments."""
     def _step_type_train_update(self, env_response):
         assert self._prev_action_set is None
@@ -191,7 +207,7 @@ class SingleStepXCS(XCS):
         self._update_curr_action_set(reward)
 
 
-class MultiStepXCS(XCS):
+class MultiStepXCS(XCSABC):
     """XCS operating in multi-step environments."""
     def _step_type_train_update(self, env_response):
         self._try_update_prev_action_set()

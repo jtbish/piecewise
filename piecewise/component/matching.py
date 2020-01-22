@@ -1,17 +1,7 @@
-import abc
-
 from piecewise.dtype import ClassifierSet
 
 
-class MatchingStrategy(metaclass=abc.ABCMeta):
-    @abc.abstractmethod
-    def __call__(self, population, situation):
-        """Returns a ClassifierSet representing the match set from the
-        population for the given situation."""
-        return NotImplementedError
-
-
-class RuleReprMatching(MatchingStrategy):
+class RuleReprMatching:
     """Provides an implementation of rule representation dependent matching.
 
     Such matching may involve taking into account the wildcards of the rule
@@ -20,7 +10,7 @@ class RuleReprMatching(MatchingStrategy):
     representation being used.
     """
     def __init__(self, rule_repr):
-        super().__init__(rule_repr)
+        self._rule_repr = rule_repr
 
     def __call__(self, population, situation):
         """First loop of GENERATE MATCH SET function from

@@ -1,4 +1,3 @@
-from .environment import EnvironmentStepTypes
 from .reinforcement.gym_environment import GymEnvironment
 from .supervised.classification_environment import ClassificationEnvironment
 from .supervised.multiplexer.multiplexer_factories import (

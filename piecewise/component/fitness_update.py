@@ -1,22 +1,8 @@
-import abc
-
-
-class FitnessUpdateStrategy(metaclass=abc.ABCMeta):
-    @abc.abstractmethod
-    def __init__(self, hyperparams=None):
-        self._hyperparams = hyperparams
-
-    @abc.abstractmethod
-    def __call__(self, operating_set):
-        """Updates the fitness of each classifier in the operating set."""
-        raise NotImplementedError
-
-
-class XCSAccuracyFitnessUpdate(FitnessUpdateStrategy):
+class XCSAccuracyFitnessUpdate:
     _MAX_ACCURACY = 1
 
     def __init__(self, hyperparams):
-        super().__init__(hyperparams)
+        self._hyperparams = hyperparams
 
     def __call__(self, operating_set):
         """UPDATE FITNESS function from 'An Algorithmic Description of XCS'

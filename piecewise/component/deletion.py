@@ -4,11 +4,7 @@ import random
 from piecewise.util.classifier_set_stats import calc_summary_stat
 
 
-class DeletionStrategy(metaclass=abc.ABCMeta):
-    @abc.abstractmethod
-    def __init__(self, hyperparams=None):
-        self._hyperparams = hyperparams
-
+class DeletionStrategyABC(metaclass=abc.ABCMeta):
     def __call__(self, population):
         """DELETE FROM POPULATION function from 'An Algorithmic Description of
         XCS' (Butz and Wilson, 2002)."""
@@ -33,9 +29,9 @@ class DeletionStrategy(metaclass=abc.ABCMeta):
         return NotImplementedError
 
 
-class XCSRouletteWheelDeletion(DeletionStrategy):
+class XCSRouletteWheelDeletion(DeletionStrategyABC):
     def __init__(self, hyperparams):
-        super().__init__(hyperparams)
+        self._hyperparams = hyperparams
 
     def _select_for_deletion(self, population):
         """First loop (selecting classifier to delete) of

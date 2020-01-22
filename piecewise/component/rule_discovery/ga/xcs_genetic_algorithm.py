@@ -2,32 +2,43 @@ import copy
 import random
 from collections import namedtuple
 
-from .genetic_algorithm import GAOperators, GeneticAlgorithm
 from .operator.crossover import TwoPointCrossover
 from .operator.mutation import RuleReprMutation
-from .operator.selection import RouletteWheelSelection
+from .operator.selection import roulette_wheel_selection
 
+GAOperators = namedtuple("GAOperators", ["selection", "crossover", "mutation"])
 ClassifierPair = namedtuple("ClassifierPair", ["first", "second"])
 
 
-class XCSGeneticAlgorithm(GeneticAlgorithm):
-    def __init__(self, env_action_set, rule_repr, subsumption_strat,
-                 hyperparams):
-        ga_operators = self._init_ga_operators(env_action_set, rule_repr,
-                                               hyperparams)
-        super().__init__(env_action_set, subsumption_strat, hyperparams,
-                         ga_operators)
+def make_canonical_xcs_ga(env_action_set, rule_repr, subsumption, hyperparams):
+    selection = roulette_wheel_selection
+    crossover = TwoPointCrossover()
+    mutation = RuleReprMutation(env_action_set, rule_repr, hyperparams)
+    ga_operators = GAOperators(selection, crossover, mutation)
+    return XCSGeneticAlgorithm(env_action_set, rule_repr, subsumption,
+                               ga_operators, hyperparams)
 
-    def _init_ga_operators(self, env_action_set, rule_repr, hyperparams):
-        selection_strat = RouletteWheelSelection()
-        crossover_strat = TwoPointCrossover()
-        mutation_strat = RuleReprMutation(rule_repr, env_action_set,
-                                          hyperparams)
-        return GAOperators(selection_strat, crossover_strat, mutation_strat)
+
+def make_custom_xcs_ga(env_action_set, rule_repr, subsumption, selection,
+                       crossover, mutation, hyperparams):
+    ga_operators = GAOperators(selection, crossover, mutation)
+    return XCSGeneticAlgorithm(env_action_set, rule_repr, subsumption,
+                               ga_operators, hyperparams)
+
+
+class XCSGeneticAlgorithm:
+    def __init__(self, env_action_set, rule_repr, subsumption, ga_operators,
+                 hyperparams):
+        self._env_action_set = env_action_set
+        self._rule_repr = rule_repr
+        self._subsumption_strat = subsumption
+        (self._selection_strat, self._crossover_strat,
+         self._mutation_strat) = ga_operators
+        self._hyperparams = hyperparams
 
     def __call__(self, operating_set, population, situation, time_step):
         """RUN GA function from 'An Algorithmic Description of
-        XCS' (Butz and Wilson, 2002), without initial time check as this is
+        XCS' (Butz and Wilson, 2002), without initial time check - which is
         factored into the caller.
         """
         action_set = operating_set
@@ -56,8 +67,8 @@ class XCSGeneticAlgorithm(GeneticAlgorithm):
         return parents, children
 
     def _perform_crossover(self, children, parents):
-        do_crossover = random.random() < self._hyperparams["chi"]
-        if do_crossover:
+        should_do_crossover = random.random() < self._hyperparams["chi"]
+        if should_do_crossover:
             self._crossover_strat(*children)
             self._update_children_params(children, parents)
 
@@ -79,9 +90,9 @@ class XCSGeneticAlgorithm(GeneticAlgorithm):
             self._mutation_strat(child, situation)
 
     def _update_population(self, children, parents, population):
-        do_subsumption = self._hyperparams["do_ga_subsumption"]
+        should_do_subsumption = self._hyperparams["do_ga_subsumption"]
         for child in children:
-            if do_subsumption:
+            if should_do_subsumption:
                 was_subsumed = self._try_subsume_with_parents(
                     child, parents, population)
                 if not was_subsumed:
