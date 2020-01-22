@@ -1,10 +1,10 @@
 # Piecewise
 
 ## What is Piecewise?
-A Michigan-style Learning Classifier System (LCS) library, written in Python.
+A Michigan-style Learning Classifier System (LCS) library for Reinforcement Learning, written in Python.
 
 It makes heavy use of object-oriented language features to provide a modular,
-extensible framework on which to build LCS algorithms.
+extensible framework on which to build and test RL LCS algorithms.
 
 The currently implemented algorithms are:
 1. XCS (ternary rule representation)
