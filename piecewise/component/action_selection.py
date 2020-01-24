@@ -16,9 +16,13 @@ class EpsilonGreedy:
 
     def _select_random_action(self, prediction_array):
         possible_actions_set = prediction_array.possible_actions_set()
+        assert len(possible_actions_set) > 0
+
         return random.choice(list(possible_actions_set))
 
 
 def select_greedy_action(prediction_array):
     possible_sub_array = prediction_array.possible_sub_array()
+    assert len(possible_sub_array) > 0
+
     return max(possible_sub_array, key=possible_sub_array.get)

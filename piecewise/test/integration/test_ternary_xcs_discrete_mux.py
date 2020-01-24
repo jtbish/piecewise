@@ -36,7 +36,8 @@ class TestTernaryXCSOnDiscreteMultiplexer:
             "p_explore": 0.5,
             "theta_mna": len(env.action_set),
             "do_ga_subsumption": True,
-            "do_as_subsumption": True
+            "do_as_subsumption": True,
+            "seed": 0
         }
 
         alg = make_canonical_xcs(env, rule_repr, alg_hyperparams)
@@ -77,7 +78,7 @@ class TestTernaryXCSOnDiscreteMultiplexer:
 
         experiment = Experiment(env,
                                 alg,
-                                num_training_epochs=100,
+                                num_training_epochs=10,
                                 monitor_items=monitor_items)
         experiment.run()
         print(experiment._monitor.query())

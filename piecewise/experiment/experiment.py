@@ -1,3 +1,4 @@
+from piecewise.encoding import null_encoding
 from piecewise.monitor import Monitor
 
 TIME_STEP_MIN = 0
@@ -8,14 +9,21 @@ class Experiment:
                  env,
                  alg,
                  num_training_epochs,
+                 encoding=None,
                  monitor_items=None,
                  logging="verbose"):
         self._env = env
         self._alg = alg
         self._num_training_epochs = num_training_epochs
+        self._encoding = self._init_encoding(encoding)
+        self._monitor = self._init_monitor(monitor_items)
         self._time_step = TIME_STEP_MIN
         self._population = None
-        self._monitor = self._init_monitor(monitor_items)
+
+    def _init_encoding(self, encoding):
+        if encoding is None:
+            encoding = null_encoding
+        return encoding
 
     def _init_monitor(self, monitor_items):
         if monitor_items is None:
@@ -44,7 +52,8 @@ class Experiment:
         self._population = self._alg.train_update(env_response)
 
     def _get_situation(self):
-        return self._env.observe()
+        obs = self._env.observe()
+        return self._encoding(obs)
 
     def calc_performance(self, strat):
         if strat == "accuracy":

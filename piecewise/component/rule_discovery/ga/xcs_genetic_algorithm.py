@@ -36,12 +36,11 @@ class XCSGeneticAlgorithm:
          self._mutation_strat) = ga_operators
         self._hyperparams = hyperparams
 
-    def __call__(self, operating_set, population, situation, time_step):
+    def __call__(self, action_set, population, situation, time_step):
         """RUN GA function from 'An Algorithmic Description of
         XCS' (Butz and Wilson, 2002), without initial time check - which is
         factored into the caller.
         """
-        action_set = operating_set
         self._update_participant_time_stamps(action_set, time_step)
         parents, children = self._select_parents_and_init_children(action_set)
         self._perform_crossover(children, parents)

@@ -26,7 +26,10 @@ class FitnessWeightedAvgPrediction:
             fitness_sum_array[action] += classifier.fitness
 
     def _normalise_prediction_array(self, prediction_array, fitness_sum_array):
-        for action in prediction_array.possible_actions_set():
+        possible_actions_set = prediction_array.possible_actions_set()
+        assert len(possible_actions_set) > 0
+
+        for action in possible_actions_set:
             if fitness_sum_array[action] != 0:
                 prediction_array[action] /= fitness_sum_array[action]
 
