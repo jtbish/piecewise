@@ -1,7 +1,9 @@
 from piecewise.algorithm import make_canonical_xcs
 from piecewise.environment import make_discrete_mux_env
 from piecewise.experiment import Experiment
+from piecewise.monitor import MonitorItem
 from piecewise.rule_repr import DiscreteRuleRepr
+from piecewise.util.classifier_set_stats import calc_summary_stat
 
 
 class TestTernaryXCSOnDiscreteMultiplexer:
@@ -39,6 +41,43 @@ class TestTernaryXCSOnDiscreteMultiplexer:
 
         alg = make_canonical_xcs(env, rule_repr, alg_hyperparams)
 
-        experiment_config = {"num_training_epochs": 10}
-        experiment = Experiment(env, alg, **experiment_config)
+        monitor_items = [
+            MonitorItem("num_micros",
+                        lambda experiment: experiment.population.num_micros),
+            MonitorItem("num_macros",
+                        lambda experiment: experiment.population.num_macros),
+            MonitorItem(
+                "performance", lambda experiment: experiment.calc_performance(
+                    strat="accuracy")),
+            MonitorItem(
+                "mean_error", lambda experiment: calc_summary_stat(
+                    experiment.population, "mean", "error")),
+            MonitorItem(
+                "max_fitness", lambda experiment: calc_summary_stat(
+                    experiment.population, "max", "fitness")),
+            MonitorItem(
+                "deletion", lambda experiment: experiment.population.
+                operations_record["deletion"]),
+            MonitorItem(
+                "covering", lambda experiment: experiment.population.
+                operations_record["covering"]),
+            MonitorItem(
+                "as_subsumption", lambda experiment: experiment.population.
+                operations_record["as_subsumption"]),
+            MonitorItem(
+                "ga_subsumption", lambda experiment: experiment.population.
+                operations_record["ga_subsumption"]),
+            MonitorItem(
+                "discovery", lambda experiment: experiment.population.
+                operations_record["discovery"]),
+            MonitorItem(
+                "absorption", lambda experiment: experiment.population.
+                operations_record["absorption"])
+        ]
+
+        experiment = Experiment(env,
+                                alg,
+                                num_training_epochs=100,
+                                monitor_items=monitor_items)
         experiment.run()
+        print(experiment._monitor.query())

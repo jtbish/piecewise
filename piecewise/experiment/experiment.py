@@ -1,18 +1,35 @@
+from piecewise.monitor import Monitor
+
 TIME_STEP_MIN = 0
 
 
 class Experiment:
-    def __init__(self, env, alg, num_training_epochs, logging="verbose"):
+    def __init__(self,
+                 env,
+                 alg,
+                 num_training_epochs,
+                 monitor_items=None,
+                 logging="verbose"):
         self._env = env
         self._alg = alg
         self._num_training_epochs = num_training_epochs
         self._time_step = TIME_STEP_MIN
         self._population = None
+        self._monitor = self._init_monitor(monitor_items)
+
+    def _init_monitor(self, monitor_items):
+        if monitor_items is None:
+            monitor_items = []
+        return Monitor(monitor_items)
+
+    @property
+    def population(self):
+        return self._population
 
     def run(self):
         for epoch_num in range(self._num_training_epochs):
             self._train_single_epoch()
-            self._exec_monitor_callbacks()
+            self._monitor.update(self)
 
     def _train_single_epoch(self):
         self._env.reset()
@@ -29,8 +46,33 @@ class Experiment:
     def _get_situation(self):
         return self._env.observe()
 
-    def _exec_monitor_callbacks(self):
-        pass
+    def calc_performance(self, strat):
+        if strat == "accuracy":
+            return self._calc_accuracy()
+        elif strat == "return":
+            return self._calc_return()
+        else:
+            # TODO change
+            raise Exception
 
-    def archive(self):
-        raise NotImplementedError
+    def _calc_accuracy(self):
+        self._env.reset()
+        prediction_results = []
+        while not self._env.is_terminal():
+            situation = self._get_situation()
+            action = self._alg.test_query(situation)
+            env_response = self._env.act(action)
+            prediction_results.append(env_response.was_correct_action)
+        accuracy = \
+            (prediction_results.count(True) / len(prediction_results)) * 100
+        return accuracy
+
+    def _calc_return(self):
+        self._env.reset()
+        rewards = []
+        while not self._env.is_terminal():
+            situation = self._get_situation()
+            action = self._alg.test_query(situation)
+            env_response = self._env.act(action)
+            rewards.append(env_response.reward)
+        return sum(rewards)
