@@ -15,6 +15,9 @@ from .algorithm import AlgorithmABC, AlgorithmComponents
 
 
 def make_canonical_xcs(env, rule_repr, hyperparams):
+    """Public factory function to make instance of 'Canonical XCS' for the
+    given environment and rule repr, i.e. XCS with components as described in
+    'An Algorithmic Description of XCS' (Butz and Wilson, 2002)'."""
     matching = RuleReprMatching(rule_repr)
     covering = RuleReprCovering(env.action_set, rule_repr, hyperparams)
     prediction = FitnessWeightedAvgPrediction(env.action_set)
@@ -36,6 +39,8 @@ def make_canonical_xcs(env, rule_repr, hyperparams):
 def make_custom_xcs(env, matching, covering, prediction, action_selection,
                     credit_assignment, fitness_update, subsumption,
                     rule_discovery, deletion, hyperparams):
+    """Public factory function to make instance of XCS with custom
+    components."""
     components = AlgorithmComponents(matching, covering, prediction,
                                      action_selection, credit_assignment,
                                      fitness_update, subsumption,

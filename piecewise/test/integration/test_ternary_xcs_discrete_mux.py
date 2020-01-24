@@ -39,6 +39,6 @@ class TestTernaryXCSOnDiscreteMultiplexer:
 
         alg = make_canonical_xcs(env, rule_repr, alg_hyperparams)
 
-        experiment_config = {"num_training_samples": 500}
+        experiment_config = {"num_training_epochs": 10}
         experiment = Experiment(env, alg, **experiment_config)
         experiment.run()
