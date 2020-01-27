@@ -248,6 +248,7 @@ class SingleStepXCS(XCSABC):
     """XCS operating in single-step environments."""
     def _step_type_train_update(self, env_response):
         self._assert_prev_step_tracking_attrs_are_null()
+        # perform updates only in [A] using immediate reward as payoff
         payoff = env_response.reward
         self._update_action_set(self._action_set, self._situation, payoff)
 

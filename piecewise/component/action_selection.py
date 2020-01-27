@@ -1,3 +1,4 @@
+import logging
 import random
 
 
@@ -12,17 +13,28 @@ class EpsilonGreedy:
         if should_exploit:
             return select_greedy_action(prediction_array)
         else:
-            return self._select_random_action(prediction_array)
-
-    def _select_random_action(self, prediction_array):
-        possible_actions_set = prediction_array.possible_actions_set()
-        assert len(possible_actions_set) > 0
-
-        return random.choice(list(possible_actions_set))
+            return _select_random_action_with_valid_prediction(
+                prediction_array)
 
 
 def select_greedy_action(prediction_array):
-    possible_sub_array = prediction_array.possible_sub_array()
-    assert len(possible_sub_array) > 0
+    if len(prediction_array) != 0:
+        return max(prediction_array, key=prediction_array.get)
+    else:
+        return _fallback_to_random_selection_from_action_set(
+            prediction_array.env_action_set)
 
-    return max(possible_sub_array, key=possible_sub_array.get)
+
+def _select_random_action_with_valid_prediction(prediction_array):
+    if len(prediction_array) != 0:
+        possible_actions = prediction_array.keys()
+        return random.choice(list(possible_actions))
+    else:
+        return _fallback_to_random_selection_from_action_set(
+            prediction_array.env_action_set)
+
+
+def _fallback_to_random_selection_from_action_set(env_action_set):
+    logging.warning("Falling back to random action selection due to empty "
+                    "prediction array.")
+    return random.choice(list(env_action_set))

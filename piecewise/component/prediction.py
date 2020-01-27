@@ -1,3 +1,6 @@
+from collections import UserDict
+
+
 class FitnessWeightedAvgPrediction:
     def __init__(self, env_action_set):
         self._env_action_set = env_action_set
@@ -16,6 +19,7 @@ class FitnessWeightedAvgPrediction:
         return prediction_array, fitness_sum_array
 
     def _populate_arrays(self, prediction_array, fitness_sum_array, match_set):
+        # TODO change to logging warning
         match_set_is_empty = match_set.num_micros == 0
         assert not match_set_is_empty
 
@@ -26,54 +30,30 @@ class FitnessWeightedAvgPrediction:
             fitness_sum_array[action] += classifier.fitness
 
     def _normalise_prediction_array(self, prediction_array, fitness_sum_array):
-        possible_actions_set = prediction_array.possible_actions_set()
-        assert len(possible_actions_set) > 0
-
-        for action in possible_actions_set:
+        possible_actions = prediction_array.keys()
+        for action in possible_actions:
             if fitness_sum_array[action] != 0:
                 prediction_array[action] /= fitness_sum_array[action]
 
 
-class PredictionArray:
-    """Data structure to nicely encapsulate null action predictions from
-    client.
-
-    The main idea behind the data structure is to store prediction values as
-    null (None) to begin with, and lazily make them zero as necessary when
-    the client code requests them via key indexing.
-    """
+class PredictionArray(UserDict):
+    """Lazy dictionary structure to store predictions."""
     def __init__(self, env_action_set):
-        self._arr = {action: None for action in env_action_set}
+        self._env_action_set = env_action_set
+        super().__init__()
+
+    @property
+    def env_action_set(self):
+        return self._env_action_set
 
     def __getitem__(self, key):
         action = key
-        prediction = self._arr[action]
-        prediction = \
-            self._lazily_make_prediction_zero_if_needed(prediction)
-        return prediction
-
-    def _lazily_make_prediction_zero_if_needed(self, prediction):
-        if prediction is None:
-            prediction = 0.0
-        return prediction
+        try:
+            return self.data[action]
+        except KeyError:
+            return 0.0
 
     def __setitem__(self, key, value):
         action = key
         prediction = value
-        self._arr[action] = prediction
-
-    def possible_actions_set(self):
-        """Returns the set of actions with non-null predictions."""
-        return {
-            action
-            for (action, prediction) in self._arr.items()
-            if prediction is not None
-        }
-
-    def possible_sub_array(self):
-        """Returns the sub-array with non-null predictions."""
-        return {
-            action: prediction
-            for (action, prediction) in self._arr.items()
-            if prediction is not None
-        }
+        self.data[action] = prediction
