@@ -1,3 +1,4 @@
+import logging
 from collections import UserDict
 
 
@@ -8,10 +9,17 @@ class FitnessWeightedAvgPrediction:
     def __call__(self, match_set):
         """GENERATE PREDICTION ARRAY function from 'An Algorithmic
         Description of XCS' (Butz and Wilson, 2002)."""
+        self._warn_if_match_set_is_empty(match_set)
         prediction_array, fitness_sum_array = self._init_arrays()
         self._populate_arrays(prediction_array, fitness_sum_array, match_set)
         self._normalise_prediction_array(prediction_array, fitness_sum_array)
         return prediction_array
+
+    def _warn_if_match_set_is_empty(self, match_set):
+        match_set_is_empty = match_set.num_micros == 0
+        if match_set_is_empty:
+            logging.warning("Match set is empty when performing "
+                            "prediction.")
 
     def _init_arrays(self):
         prediction_array = PredictionArray(self._env_action_set)
@@ -19,10 +27,6 @@ class FitnessWeightedAvgPrediction:
         return prediction_array, fitness_sum_array
 
     def _populate_arrays(self, prediction_array, fitness_sum_array, match_set):
-        # TODO change to logging warning
-        match_set_is_empty = match_set.num_micros == 0
-        assert not match_set_is_empty
-
         for classifier in match_set:
             action = classifier.action
             prediction_array[action] += \
