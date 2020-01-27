@@ -273,8 +273,7 @@ class MultiStepXCS(XCSABC):
                                     self._prev_situation, payoff)
 
     def _calc_discounted_payoff(self):
-        possible_sub_array = self._prediction_array.possible_sub_array()
-        max_prediction = max(possible_sub_array.values())
+        max_prediction = max(self._prediction_array.values())
         payoff = self._prev_reward + (self._hyperparams["gamma"] *
                                       max_prediction)
         return payoff
