@@ -105,5 +105,23 @@ class TestClassificationEnvironmentViaDiscreteMultiplexer:
             mux.observe()
 
     def test_reset_with_two_epochs_no_shuffle(self):
-        # TODO
-        pass
+        mux = make_discrete_mux_env(num_address_bits=1,
+                                    shuffle_dataset=False)
+
+        first_epoch_obs_seq = []
+        first_epoch_reward_seq = []
+        while not mux.is_terminal():
+            first_epoch_obs_seq.append(mux.observe())
+            response = mux.act(self._DUMMY_ACTION)
+            first_epoch_reward_seq.append(response.reward)
+
+        mux.reset()
+        second_epoch_obs_seq = []
+        second_epoch_reward_seq = []
+        while not mux.is_terminal():
+            second_epoch_obs_seq.append(mux.observe())
+            response = mux.act(self._DUMMY_ACTION)
+            second_epoch_reward_seq.append(response.reward)
+
+        assert np.array_equal(first_epoch_obs_seq, second_epoch_obs_seq)
+        assert np.array_equal(first_epoch_reward_seq, second_epoch_reward_seq)

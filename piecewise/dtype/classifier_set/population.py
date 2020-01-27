@@ -53,7 +53,7 @@ class Population(ClassifierSetBase):
 
     @property
     def operations_record(self):
-        return dict(self._operation_recorder)
+        return self._operation_recorder
 
     def add(self, classifier, *, operation_label=None):
         """Adds the given classifier to the population.

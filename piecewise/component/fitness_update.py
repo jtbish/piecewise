@@ -4,11 +4,10 @@ class XCSAccuracyFitnessUpdate:
     def __init__(self, hyperparams):
         self._hyperparams = hyperparams
 
-    def __call__(self, operating_set):
+    def __call__(self, action_set):
         """UPDATE FITNESS function from 'An Algorithmic Description of XCS'
         (Butz and Wilson, 2002).
         """
-        action_set = operating_set
         accuracy_vec, accuracy_sum = \
             self._calc_accuracy_vec_and_accuracy_sum(action_set)
         self._update_fitness_values(action_set, accuracy_vec, accuracy_sum)

@@ -23,12 +23,16 @@ class RuleReprCovering:
         rule representation."""
         covering_condition = self._rule_repr.gen_covering_condition(
             situation, self._hyperparams)
-        possible_covering_actions = \
-            self._env_action_set - get_unique_actions_set(match_set)
-        covering_action = random.choice(tuple(possible_covering_actions))
+        covering_action = self._gen_covering_action(match_set)
 
         rule = Rule(covering_condition, covering_action)
         classifier = Classifier(rule, self._hyperparams["prediction_I"],
                                 self._hyperparams["epsilon_I"],
                                 self._hyperparams["fitness_I"], time_step)
         return classifier
+
+    def _gen_covering_action(self, match_set):
+        possible_covering_actions = \
+            tuple(self._env_action_set - get_unique_actions_set(match_set))
+        assert len(possible_covering_actions) > 0
+        return random.choice(possible_covering_actions)

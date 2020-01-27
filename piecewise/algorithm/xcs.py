@@ -1,4 +1,5 @@
 import abc
+from collections import namedtuple
 
 from piecewise.component import (EpsilonGreedy, FitnessWeightedAvgPrediction,
                                  RuleReprCovering, RuleReprMatching,
@@ -6,15 +7,25 @@ from piecewise.component import (EpsilonGreedy, FitnessWeightedAvgPrediction,
                                  XCSRouletteWheelDeletion, XCSSubsumption,
                                  make_canonical_xcs_ga)
 from piecewise.component.action_selection import select_greedy_action
+from piecewise.dtype import ClassifierSet
 from piecewise.environment import EnvironmentStepTypes
 from piecewise.error.core_errors import InternalError
 from piecewise.util.classifier_set_stats import (calc_summary_stat,
                                                  num_unique_actions)
 
-from .algorithm import AlgorithmABC, AlgorithmComponents
+from .algorithm import IAlgorithm, init_population, seed_rng
+
+XCSComponents = namedtuple("XCSComponents", [
+    "matching", "covering", "prediction", "action_selection",
+    "credit_assignment", "fitness_update", "subsumption", "rule_discovery",
+    "deletion"
+])
 
 
 def make_canonical_xcs(env, rule_repr, hyperparams):
+    """Public factory function to make instance of 'Canonical XCS' for the
+    given environment and rule repr, i.e. XCS with components as described in
+    'An Algorithmic Description of XCS' (Butz and Wilson, 2002)'."""
     matching = RuleReprMatching(rule_repr)
     covering = RuleReprCovering(env.action_set, rule_repr, hyperparams)
     prediction = FitnessWeightedAvgPrediction(env.action_set)
@@ -26,20 +37,22 @@ def make_canonical_xcs(env, rule_repr, hyperparams):
                                            subsumption, hyperparams)
     deletion = XCSRouletteWheelDeletion(hyperparams)
 
-    components = AlgorithmComponents(matching, covering, prediction,
-                                     action_selection, credit_assignment,
-                                     fitness_update, subsumption,
-                                     rule_discovery, deletion)
+    components = XCSComponents(matching, covering, prediction,
+                               action_selection, credit_assignment,
+                               fitness_update, subsumption, rule_discovery,
+                               deletion)
     return _make_xcs(env.step_type, components, hyperparams)
 
 
 def make_custom_xcs(env, matching, covering, prediction, action_selection,
                     credit_assignment, fitness_update, subsumption,
                     rule_discovery, deletion, hyperparams):
-    components = AlgorithmComponents(matching, covering, prediction,
-                                     action_selection, credit_assignment,
-                                     fitness_update, subsumption,
-                                     rule_discovery, deletion)
+    """Public factory function to make instance of XCS with custom
+    components."""
+    components = XCSComponents(matching, covering, prediction,
+                               action_selection, credit_assignment,
+                               fitness_update, subsumption, rule_discovery,
+                               deletion)
     return _make_xcs(env.step_type, components, hyperparams)
 
 
@@ -54,13 +67,27 @@ def _make_xcs(env_step_type, *args, **kwargs):
         raise InternalError(f"Invalid environment step type: {env_step_type}")
 
 
-class XCSABC(AlgorithmABC, metaclass=abc.ABCMeta):
+class XCSABC(IAlgorithm):
     """Implementation of XCS, based on pseudocode given in 'An Algorithmic
     Description of XCS' (Butz and Wilson, 2002)."""
     def __init__(self, components, hyperparams):
-        super().__init__(components, hyperparams)
+        self._init_component_strats(components)
+        self._hyperparams = hyperparams
+        self._population = init_population(max_micros=self._hyperparams["N"])
+        seed_rng(self._hyperparams["seed"])
         self._init_prev_step_tracking_attrs()
         self._init_curr_step_tracking_attrs()
+
+    def _init_component_strats(self, components):
+        self._matching_strat = components.matching
+        self._covering_strat = components.covering
+        self._prediction_strat = components.prediction
+        self._action_selection_strat = components.action_selection
+        self._credit_assignment_strat = components.credit_assignment
+        self._fitness_update_strat = components.fitness_update
+        self._subsumption_strat = components.subsumption
+        self._rule_discovery_strat = components.rule_discovery
+        self._deletion_strat = components.deletion
 
     def _init_prev_step_tracking_attrs(self):
         self._prev_action_set = None
@@ -68,6 +95,7 @@ class XCSABC(AlgorithmABC, metaclass=abc.ABCMeta):
         self._prev_situation = None
 
     def _init_curr_step_tracking_attrs(self):
+        self._match_set = None
         self._action_set = None
         self._prediction_array = None
         self._situation = None
@@ -81,11 +109,11 @@ class XCSABC(AlgorithmABC, metaclass=abc.ABCMeta):
         RUN EXPERIMENT, as the caller controls termination criteria."""
         self._situation = situation
         self._time_step = time_step
-        match_set = self._gen_match_set(self._situation)
-        self._perform_covering(match_set)
-        self._prediction_array = self._gen_prediction_array(match_set)
+        self._match_set = self._gen_match_set(self._situation)
+        self._perform_covering(self._match_set)
+        self._prediction_array = self._gen_prediction_array(self._match_set)
         action = self._select_action(self._prediction_array)
-        self._action_set = self._gen_action_set(match_set, action)
+        self._action_set = self._gen_action_set(self._match_set, action)
 
         return action
 
@@ -101,6 +129,15 @@ class XCSABC(AlgorithmABC, metaclass=abc.ABCMeta):
 
     def _should_cover(self, match_set):
         return num_unique_actions(match_set) < self._hyperparams["theta_mna"]
+
+    def _gen_action_set(self, match_set, action):
+        """GENERATE ACTION SET function from 'An Algorithmic
+        Description of XCS' (Butz and Wilson, 2002)."""
+        action_set = ClassifierSet()
+        for classifier in match_set:
+            if classifier.action == action:
+                action_set.add(classifier)
+        return action_set
 
     def train_update(self, env_response):
         """Second half (line 8 onwards) of RUN EXPERIMENT function from
@@ -121,21 +158,7 @@ class XCSABC(AlgorithmABC, metaclass=abc.ABCMeta):
         XCSABC subclasses."""
         raise NotImplementedError
 
-    def _update_curr_action_set(self, reward):
-        self._update_action_set(self._action_set,
-                                self._situation,
-                                reward,
-                                use_discounting=False,
-                                prediction_array=None)
-        self._previous_action_set = None
-
-    def _update_action_set(self,
-                           action_set,
-                           situation,
-                           reward,
-                           *,
-                           use_discounting=False,
-                           prediction_array=None):
+    def _update_action_set(self, action_set, situation, payoff):
         """Performs updates in the given action set (either the previous action
         set or the current action set).
 
@@ -144,14 +167,13 @@ class XCSABC(AlgorithmABC, metaclass=abc.ABCMeta):
         resembles the UPDATE SET function from 'An Algorithmic Description of
         XCS' (Butz and Wilson, 2002), with the addition of running the rule
         discovery step last."""
-        self._do_credit_assignment(action_set, reward, use_discounting,
-                                   prediction_array)
+        self._do_credit_assignment(action_set, payoff)
         self._update_fitness(action_set)
         if self._hyperparams["do_as_subsumption"]:
             self._do_action_set_subsumption(action_set)
         if self._should_do_rule_discovery():
-            self._discover_classifiers(action_set, self._population,
-                                       self._situation, self._time_step)
+            self._discover_classifiers(action_set, self._population, situation,
+                                       self._time_step)
 
     def _do_action_set_subsumption(self, action_set):
         """DO ACTION SET SUBSUMPTION function from 'An Algorithmic Description
@@ -194,34 +216,78 @@ class XCSABC(AlgorithmABC, metaclass=abc.ABCMeta):
         prediction_array = self._gen_prediction_array(match_set)
         return select_greedy_action(prediction_array)
 
+    # TODO: remove these forwarding functions or keep them?
+    def _gen_match_set(self, situation):
+        return self._matching_strat(self._population, situation)
+
+    def _gen_covering_classifier(self, match_set, situation, time_step):
+        return self._covering_strat(match_set, situation, time_step)
+
+    def _gen_prediction_array(self, match_set):
+        return self._prediction_strat(match_set)
+
+    def _update_fitness(self, operating_set):
+        self._fitness_update_strat(operating_set)
+
+    def _discover_classifiers(self, operating_set, population, situation,
+                              time_step):
+        return self._rule_discovery_strat(operating_set, population, situation,
+                                          time_step)
+
+    def _perform_deletion(self):
+        self._deletion_strat(self._population)
+
+    def _select_action(self, prediction_array):
+        return self._action_selection_strat(prediction_array)
+
+    def _do_credit_assignment(self, action_set, payoff):
+        self._credit_assignment_strat(action_set, payoff)
+
 
 class SingleStepXCS(XCSABC):
     """XCS operating in single-step environments."""
     def _step_type_train_update(self, env_response):
+        self._assert_prev_step_tracking_attrs_are_null()
+        # perform updates only in [A] using immediate reward as payoff
+        payoff = env_response.reward
+        self._update_action_set(self._action_set, self._situation, payoff)
+
+    def _assert_prev_step_tracking_attrs_are_null(self):
         assert self._prev_action_set is None
-        reward = env_response.reward
-        self._update_curr_action_set(reward)
+        assert self._prev_reward is None
+        assert self._prev_situation is None
 
 
 class MultiStepXCS(XCSABC):
     """XCS operating in multi-step environments."""
     def _step_type_train_update(self, env_response):
         self._try_update_prev_action_set()
-        reward = env_response.reward
-        env_is_terminal = env_response.is_terminal
-        if env_is_terminal:
-            self._update_curr_action_set(reward)
-        else:
-            self._prev_action_set = self._action_set
-            self._prev_reward = reward
-            self._prev_situation = self._situation
+        self._try_update_curr_action_set(env_response)
 
     def _try_update_prev_action_set(self):
         if self._prev_action_set is not None:
             assert self._prev_situation is not None
             assert self._prev_reward is not None
+            payoff = self._calc_discounted_payoff()
             self._update_action_set(self._prev_action_set,
-                                    self._prev_situation,
-                                    self._prev_reward,
-                                    use_discounting=True,
-                                    prediction_array=self._prediction_array)
+                                    self._prev_situation, payoff)
+
+    def _calc_discounted_payoff(self):
+        possible_sub_array = self._prediction_array.possible_sub_array()
+        max_prediction = max(possible_sub_array.values())
+        payoff = self._prev_reward + (self._hyperparams["gamma"] *
+                                      max_prediction)
+        return payoff
+
+    def _try_update_curr_action_set(self, env_response):
+        reward = env_response.reward
+        if env_response.is_terminal:
+            payoff = reward
+            self._update_action_set(self._action_set, self._situation, payoff)
+        else:
+            self._update_prev_step_tracking_attrs(reward)
+
+    def _update_prev_step_tracking_attrs(self, reward):
+        self._prev_action_set = self._action_set
+        self._prev_reward = reward
+        self._prev_situation = self._situation
