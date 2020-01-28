@@ -1,4 +1,5 @@
-import random
+from piecewise.algorithm.rng import np_random
+from piecewise.algorithm.hyperparams import hyperparams_registry as hps_reg
 
 from .interval_elem import IntervalElemABC
 
@@ -27,16 +28,16 @@ class CentreSpreadElem(IntervalElemABC):
     def upper(self):
         return self._centre_allele + self._spread_allele
 
-    def mutate(self, hyperparams):
+    def mutate(self):
         for allele in (self._centre_allele, self._spread_allele):
-            self._mutate_allele(allele, hyperparams)
+            self._mutate_allele(allele)
 
-    def _mutate_allele(self, allele, hyperparams):
+    def _mutate_allele(self, allele):
         """Implementation of mutation for XCSR as described in 'Get Real! XCS
         With Continuous-Valued Inputs' (Wilson, 2000)."""
-        should_mutate = random.random() < hyperparams["mu"]
+        should_mutate = np_random.rand() < hps_reg["mu"]
         if should_mutate:
-            adjustment_magnitude = random.uniform(0, hyperparams["m"])
-            adjustment_sign = random.choice([1, -1])
+            adjustment_magnitude = np_random.uniform(0, hps_reg["m"])
+            adjustment_sign = np_random.choice([1, -1])
             adjustment_amount = adjustment_magnitude * adjustment_sign
             allele += adjustment_amount

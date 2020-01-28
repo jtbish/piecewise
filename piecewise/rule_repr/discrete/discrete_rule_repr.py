@@ -1,6 +1,6 @@
-import random
-
+from piecewise.algorithm.rng import np_random
 from piecewise.dtype import Condition, IntegerAllele
+from piecewise.algorithm.hyperparams import hyperparams_registry as hps_reg
 
 from ..rule_repr import IRuleRepr
 from .elem.discrete_elem import DiscreteElem, DiscreteWildcardElem
@@ -26,27 +26,27 @@ class DiscreteRuleRepr(IRuleRepr):
                 return False
         return True
 
-    def gen_covering_condition(self, situation, hyperparams):
+    def gen_covering_condition(self, situation):
         """First part (condition generation) of
         GENERATE COVERING CLASSIFIER function from
         'An Algorithmic Description of XCS' (Butz and Wilson, 2002).
         """
         condition = Condition()
         for situation_elem in situation:
-            should_use_wildcard = random.random() < hyperparams["p_wildcard"]
+            should_use_wildcard = np_random.rand() < hps_reg["p_wildcard"]
             if should_use_wildcard:
                 condition.append(self._make_wildcard_elem())
             else:
                 condition.append(self._copy_situation_elem(situation_elem))
         return condition
 
-    def mutate_condition(self, condition, hyperparams, situation):
+    def mutate_condition(self, condition, situation):
         """First part (condition mutation) of APPLY MUTATION function from 'An
         Algorithmic Description of XCS' (Butz and Wilson, 2002)."""
         for elem_idx, (condition_elem,
                        situation_elem) in enumerate(zip(condition, situation)):
 
-            should_mutate_elem = random.random() < hyperparams["mu"]
+            should_mutate_elem = np_random.rand() < hps_reg["mu"]
             if should_mutate_elem:
                 if self.is_wildcard(condition_elem):
                     condition[elem_idx] = \

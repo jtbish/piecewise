@@ -1,4 +1,5 @@
 import abc
+from piecewise.algorithm.hyperparams import hyperparams_registry as hps_reg
 
 
 class ISubsumptionStrategy(metaclass=abc.ABCMeta):
@@ -21,9 +22,8 @@ class ISubsumptionStrategy(metaclass=abc.ABCMeta):
 
 
 class XCSSubsumption(ISubsumptionStrategy):
-    def __init__(self, rule_repr, hyperparams):
+    def __init__(self, rule_repr):
         self._rule_repr = rule_repr
-        self._hyperparams = hyperparams
 
     def does_subsume(self, subsumer_classifier, subsumee_classifier):
         """DOES SUBSUME function from 'An Algorithmic Description of XCS'
@@ -35,8 +35,8 @@ class XCSSubsumption(ISubsumptionStrategy):
     def could_subsume(self, classifier):
         """COULD SUBSUME function from 'An Algorithmic Description of XCS'
         (Butz and Wilson, 2002)."""
-        return classifier.experience > self._hyperparams["theta_sub"] and \
-            classifier.error < self._hyperparams["epsilon_nought"]
+        return classifier.experience > hps_reg["theta_sub"] and \
+            classifier.error < hps_reg["epsilon_nought"]
 
     def is_more_general(self, general_classifier, specific_classifier):
         """IS MORE GENERAL function from 'An Algorithmic Description of XCS'

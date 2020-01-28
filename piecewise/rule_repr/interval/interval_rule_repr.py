@@ -31,15 +31,15 @@ class IntervalRuleReprABC(IRuleRepr, metaclass=abc.ABCMeta):
         return True
 
     @abc.abstractmethod
-    def gen_covering_condition(self, situation, hyperparams):
+    def gen_covering_condition(self, situation):
         raise NotImplementedError
 
-    def mutate_condition(self, condition, hyperparams, situation=None):
+    def mutate_condition(self, condition, situation=None):
         for condition_elem in condition:
-            self._mutate_condition_elem(condition_elem, hyperparams)
+            self._mutate_condition_elem(condition_elem)
 
-    def _mutate_condition_elem(self, condition_elem, hyperparams):
-        condition_elem.mutate(hyperparams)
+    def _mutate_condition_elem(self, condition_elem):
+        condition_elem.mutate()
 
     def is_wildcard(self, condition_elem, elem_idx):
         return self._is_equiv_to_wildcard(condition_elem,

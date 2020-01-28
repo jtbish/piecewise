@@ -5,7 +5,7 @@ from piecewise.algorithm import make_canonical_xcs
 from piecewise.environment import make_real_mux_env
 from piecewise.experiment import Experiment
 from piecewise.monitor import MonitorItem
-from piecewise.rule_repr import CentreSpreadRuleRepr
+from piecewise.rule_repr import make_centre_spread_rule_repr
 from piecewise.util.classifier_set_stats import calc_summary_stat
 
 
@@ -14,11 +14,12 @@ def main():
     env = make_real_mux_env(thresholds=[0.5] * 6,
                             num_address_bits=2,
                             shuffle_dataset=True,
+                            num_samples=100,
+                            seed=0,
                             reward_correct=1000,
-                            reward_incorrect=0,
-                            num_samples=100)
+                            reward_incorrect=0)
 
-    rule_repr = CentreSpreadRuleRepr(env.obs_space)
+    rule_repr = make_centre_spread_rule_repr(env)
 
     alg_hyperparams = {
         "N": 800,
@@ -41,12 +42,10 @@ def main():
         "theta_mna": len(env.action_set),
         "do_ga_subsumption": True,
         "do_as_subsumption": True,
-        "seed": 0,
         "m": 0.1,
         "s_nought": 1.0
     }
-
-    alg = make_canonical_xcs(env, rule_repr, alg_hyperparams)
+    alg = make_canonical_xcs(env, rule_repr, alg_hyperparams, alg_seed=0)
 
     monitor_items = [
         MonitorItem("num_micros",
@@ -82,9 +81,9 @@ def main():
             operations_record["absorption"])
     ]
 
-    experiment = Experiment("wilson_xcsr_rmux",
-                            env,
-                            alg,
+    experiment = Experiment(save_dir="wilson_xcsr_rmux",
+                            env=env,
+                            alg=alg,
                             num_training_epochs=1,
                             monitor_items=monitor_items,
                             logging_level=logging.INFO)

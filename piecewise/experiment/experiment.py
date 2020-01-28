@@ -4,10 +4,9 @@ import shutil
 from pathlib import Path
 
 import __main__
+from piecewise.constants import TIME_STEP_MIN
 from piecewise.error.experiment_error import ExperimentError
 from piecewise.monitor import Monitor
-
-TIME_STEP_MIN = 0
 
 
 class Experiment:
@@ -62,6 +61,7 @@ class Experiment:
         obs = self._env.observe()
         return obs
 
+    # TODO move performance calc into own class
     def calc_performance(self, strat):
         valid_strats = ("accuracy", "return")
         if strat == "accuracy":

@@ -1,5 +1,6 @@
 import pytest
 
+from piecewise.algorithm.hyperparams import hyperparams_registry as hps_reg
 from piecewise.rule_repr import DiscreteRuleRepr
 from piecewise.rule_repr.discrete.elem.discrete_elem import \
     DiscreteWildcardElem
@@ -29,18 +30,16 @@ class TestDiscreteRuleRepr:
     def test_gen_covering_condition_force_create_wildcard(
             self, discrete_rule_repr):
         situation = [0]
-        hyperparams = {"p_wildcard": 1.0}
-        condition = discrete_rule_repr.gen_covering_condition(
-            situation, hyperparams)
+        hps_reg.register({"p_wildcard": 1.0})
+        condition = discrete_rule_repr.gen_covering_condition(situation)
         assert len(condition) == 1
         assert condition[0] == DiscreteWildcardElem()
 
     def test_gen_covering_condition_force_copy_situation(
             self, discrete_rule_repr):
         situation = [0]
-        hyperparams = {"p_wildcard": 0.0}
-        condition = discrete_rule_repr.gen_covering_condition(
-            situation, hyperparams)
+        hps_reg.register({"p_wildcard": 0.0})
+        condition = discrete_rule_repr.gen_covering_condition(situation)
         assert len(condition) == 1
         assert condition[0] == 0
 
@@ -61,8 +60,8 @@ class TestDiscreteRuleRepr:
         condition = [0]
         # situation does not matter in this context
         situation = [1]
-        hyperparams = {"mu": 1.0}
-        discrete_rule_repr.mutate_condition(condition, hyperparams, situation)
+        hps_reg.register({"mu": 1.0})
+        discrete_rule_repr.mutate_condition(condition, situation)
         assert len(condition) == 1
         assert condition[0] == DiscreteWildcardElem()
 
@@ -70,8 +69,8 @@ class TestDiscreteRuleRepr:
             self, discrete_rule_repr):
         condition = [DiscreteWildcardElem()]
         situation = [0]
-        hyperparams = {"mu": 1.0}
-        discrete_rule_repr.mutate_condition(condition, hyperparams, situation)
+        hps_reg.register({"mu": 1.0})
+        discrete_rule_repr.mutate_condition(condition, situation)
         assert len(condition) == 1
         assert condition[0] == 0
 
@@ -79,15 +78,15 @@ class TestDiscreteRuleRepr:
                                                       discrete_rule_repr):
         condition = [0]
         situation = [1]
-        hyperparams = {"mu": 0.0}
-        discrete_rule_repr.mutate_condition(condition, hyperparams, situation)
+        hps_reg.register({"mu": 0.0})
+        discrete_rule_repr.mutate_condition(condition, situation)
         assert len(condition) == 1
         assert condition[0] == 0
 
     def test_mutate_condition_force_stay_wildcard(self, discrete_rule_repr):
         condition = [DiscreteWildcardElem()]
         situation = [1]
-        hyperparams = {"mu": 0.0}
-        discrete_rule_repr.mutate_condition(condition, hyperparams, situation)
+        hps_reg.register({"mu": 0.0})
+        discrete_rule_repr.mutate_condition(condition, situation)
         assert len(condition) == 1
         assert condition[0] == DiscreteWildcardElem()

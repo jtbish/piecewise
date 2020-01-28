@@ -113,7 +113,7 @@ class RealMultiplexerBuilder(IMultiplexerBuilder):
     def __init__(self, num_address_bits, num_samples, seed, thresholds):
         self._num_address_bits = num_address_bits
         self._num_samples = num_samples
-        self._set_data_creation_seed(seed)
+        self._np_random = self._init_rng(seed)
         self._total_bits = calc_total_bits(self._num_address_bits)
         self._thresholds = self._convert_and_validate_thresholds(
             thresholds, self._total_bits)
@@ -143,11 +143,11 @@ class RealMultiplexerBuilder(IMultiplexerBuilder):
         return np.all(self.THRESHOLD_MIN <= thresholds) and \
             np.all(thresholds <= self.THRESHOLD_MAX)
 
-    def _set_data_creation_seed(self, seed):
-        np.random.seed(seed)
+    def _init_rng(self, seed):
+        return np.random.RandomState(seed)
 
     def create_data(self):
-        return np.random.random(size=(self._num_samples, self._total_bits))
+        return self._np_random.rand(self._num_samples, self._total_bits)
 
     def create_labels(self, data):
         labels = []

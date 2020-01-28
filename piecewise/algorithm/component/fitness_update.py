@@ -1,8 +1,8 @@
+from piecewise.algorithm.hyperparams import hyperparams_registry as hps_reg
+
+
 class XCSAccuracyFitnessUpdate:
     _MAX_ACCURACY = 1
-
-    def __init__(self, hyperparams):
-        self._hyperparams = hyperparams
 
     def __call__(self, action_set):
         """UPDATE FITNESS function from 'An Algorithmic Description of XCS'
@@ -17,7 +17,7 @@ class XCSAccuracyFitnessUpdate:
         accuracy_vec = []
         for classifier in action_set:
             is_below_error_threshold = classifier.error < \
-                self._hyperparams["epsilon_nought"]
+                hps_reg["epsilon_nought"]
             if is_below_error_threshold:
                 accuracy = self._MAX_ACCURACY
             else:
@@ -27,13 +27,13 @@ class XCSAccuracyFitnessUpdate:
         return accuracy_vec, accuracy_sum
 
     def _calc_accuracy(self, classifier):
-        return self._hyperparams["alpha"] * \
-                (classifier.error / self._hyperparams["epsilon_nought"])\
-                ** (-self._hyperparams["nu"])
+        return hps_reg["alpha"] * \
+                (classifier.error / hps_reg["epsilon_nought"])\
+                ** (-1 * hps_reg["nu"])
 
     def _update_fitness_values(self, action_set, accuracy_vec, accuracy_sum):
         for (classifier, accuracy) in zip(action_set, accuracy_vec):
             adjustment = \
                 ((accuracy*classifier.numerosity/accuracy_sum) -
                  classifier.fitness)
-            classifier.fitness += self._hyperparams["beta"] * adjustment
+            classifier.fitness += hps_reg["beta"] * adjustment

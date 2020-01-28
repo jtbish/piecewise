@@ -1,2 +1,2 @@
 from .discrete.discrete_rule_repr import DiscreteRuleRepr
-from .interval.centre_spread_rule_repr import CentreSpreadRuleRepr
+from .interval.centre_spread_rule_repr import make_centre_spread_rule_repr

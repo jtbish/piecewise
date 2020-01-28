@@ -1,7 +1,8 @@
 import abc
-import random
+from piecewise.algorithm.rng import np_random
 
 from piecewise.util.classifier_set_stats import calc_summary_stat
+from piecewise.algorithm.hyperparams import hyperparams_registry as hps_reg
 
 
 class DeletionStrategyABC(metaclass=abc.ABCMeta):
@@ -30,9 +31,6 @@ class DeletionStrategyABC(metaclass=abc.ABCMeta):
 
 
 class XCSRouletteWheelDeletion(DeletionStrategyABC):
-    def __init__(self, hyperparams):
-        self._hyperparams = hyperparams
-
     def _select_for_deletion(self, population):
         """First loop (selecting classifier to delete) of
         DELETE FROM POPULATION function from 'An Algorithmic Description of
@@ -43,7 +41,7 @@ class XCSRouletteWheelDeletion(DeletionStrategyABC):
             for classifier in population
         ]
         vote_sum = sum(votes)
-        choice_point = random.random() * vote_sum
+        choice_point = np_random.rand() * vote_sum
 
         vote_sum = 0
         for (classifier, vote) in zip(population, votes):
@@ -58,9 +56,9 @@ class XCSRouletteWheelDeletion(DeletionStrategyABC):
         fitness_numerosity_ratio = classifier.fitness / classifier.numerosity
 
         has_sufficient_experience = classifier.experience > \
-            self._hyperparams["theta_del"]
+            hps_reg["theta_del"]
         has_low_fitness = fitness_numerosity_ratio < \
-            (self._hyperparams["delta"] * mean_fitness_in_pop)
+            (hps_reg["delta"] * mean_fitness_in_pop)
         if has_sufficient_experience and has_low_fitness:
             vote *= mean_fitness_in_pop / fitness_numerosity_ratio
 

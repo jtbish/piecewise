@@ -1,9 +1,13 @@
-import random
-
+from piecewise.algorithm.rng import np_random
+from piecewise.algorithm.hyperparams import hyperparams_registry as hps_reg
 from piecewise.dtype import Condition, FloatAllele
 
 from .elem.centre_spread_elem import CentreSpreadElem
 from .interval_rule_repr import IntervalRuleReprABC
+
+
+def make_centre_spread_rule_repr(env):
+    return CentreSpreadRuleRepr(situation_space=env.obs_space)
 
 
 class CentreSpreadRuleRepr(IntervalRuleReprABC):
@@ -16,13 +20,13 @@ class CentreSpreadRuleRepr(IntervalRuleReprABC):
         spread = dimension.upper - centre
         return self._make_elem(centre, spread)
 
-    def gen_covering_condition(self, situation, hyperparams):
+    def gen_covering_condition(self, situation):
         """Implementation of covering for XCSR as described in 'Get Real! XCS
         With Continuous-Valued Inputs' (Wilson, 2000)."""
         condition = Condition()
         for situation_elem in situation:
             centre = situation_elem
-            spread = random.uniform(0, hyperparams["s_nought"])
+            spread = np_random.uniform(0, hps_reg["s_nought"])
             condition.append(self._make_elem(centre, spread))
 
         return condition

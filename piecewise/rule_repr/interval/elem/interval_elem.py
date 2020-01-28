@@ -29,9 +29,6 @@ class IntervalElemABC(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def mutate(self, hyperparams=None):
-        """Mutates the interval predicate in-place.
-
-        May or may not require hyperparameters, hence the hyperparams argument
-        is None by default."""
+    def mutate(self):
+        """Mutates the interval predicate in-place."""
         raise NotImplementedError

@@ -2,7 +2,7 @@ import functools
 import math
 
 from piecewise.error.classifier_error import AttrUpdateError
-from piecewise.experiment.experiment import TIME_STEP_MIN
+from piecewise.constants import TIME_STEP_MIN
 
 from .config import classifier_attr_rel_tol
 from .formatting import as_truncated_str

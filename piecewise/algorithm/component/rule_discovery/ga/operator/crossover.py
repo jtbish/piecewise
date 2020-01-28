@@ -1,4 +1,4 @@
-import random
+from piecewise.algorithm.rng import np_random
 
 
 class TwoPointCrossover:
@@ -16,7 +16,7 @@ class TwoPointCrossover:
     def _choose_random_crossover_idxs(self, condition_len):
         num_idxs = 2
         return tuple(
-            [random.randint(0, condition_len - 1) for _ in range(num_idxs)])
+            [np_random.randint(0, condition_len) for _ in range(num_idxs)])
 
     def _order_crossover_idxs(self, first_idx, second_idx):
         return (min(first_idx, second_idx), max(first_idx, second_idx))

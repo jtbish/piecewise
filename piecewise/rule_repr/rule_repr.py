@@ -9,7 +9,7 @@ class IRuleRepr(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def gen_covering_condition(self, situation, hyperparams=None):
+    def gen_covering_condition(self, situation):
         """Generates and returns a covering condition for the given
         situation.
 
@@ -18,7 +18,7 @@ class IRuleRepr(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def mutate_condition(self, condition, hyperparams=None, situation=None):
+    def mutate_condition(self, condition, situation=None):
         """Mutates the given condition in-place.
 
         May or may not require hyperparameters or an environmental situation,
