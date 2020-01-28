@@ -36,8 +36,6 @@ class GymEnvironment(EnvironmentABC):
         return set(range(num_actions))
 
     def reset(self):
-        # reset the seed every epoch
-        self._wrapped_env.seed(self._seed)
         self._curr_obs = self._wrapped_env.reset()
         self._is_terminal = False
         self._wrapped_env_was_done_last_step = False
