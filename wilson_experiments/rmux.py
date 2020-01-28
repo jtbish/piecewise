@@ -45,7 +45,7 @@ def main():
         "m": 0.1,
         "s_nought": 1.0
     }
-    alg = make_canonical_xcs(env, rule_repr, alg_hyperparams, alg_seed=0)
+    alg = make_canonical_xcs(env, rule_repr, alg_hyperparams, seed=0)
 
     monitor_items = [
         MonitorItem("num_micros",
