@@ -17,6 +17,7 @@ class IMonitor(metaclass=abc.ABCMeta):
 
 class Monitor(IMonitor):
     def __init__(self, items, update_freq):
+        """Update freq in units of 'number of epochs'."""
         self._items = items
         self._items_history = {item.name: [] for item in self._items}
         self._update_freq = update_freq
@@ -27,8 +28,8 @@ class Monitor(IMonitor):
             logging.debug("Updating monitor.")
             self._update(experiment)
 
-    def _should_update(self, time_step):
-        return time_step % self._update_freq == 0
+    def _should_update(self, epoch_num):
+        return epoch_num % self._update_freq == 0
 
     def _update(self, experiment):
         for item in self._items:

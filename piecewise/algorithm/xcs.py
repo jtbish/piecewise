@@ -15,7 +15,8 @@ from .component import (EpsilonGreedy, FitnessWeightedAvgPrediction,
                         XCSRouletteWheelDeletion, XCSSubsumption,
                         make_canonical_xcs_ga)
 from .component.action_selection import select_greedy_action
-from .hyperparams import get_hyperparam
+from .hyperparams import get_hyperparam, register_hyperparams
+from .rng import seed_rng
 
 XCSComponents = namedtuple("XCSComponents", [
     "matching", "covering", "prediction", "action_selection",
@@ -24,10 +25,14 @@ XCSComponents = namedtuple("XCSComponents", [
 ])
 
 
+# TODO change the two xcs factories to builders to enforce the duped
+# register_hyperparams, seed_rng calls
 def make_canonical_xcs(env, rule_repr, hyperparams, seed):
     """Public factory function to make instance of 'Canonical XCS' for the
     given environment and rule repr, i.e. XCS with components as described in
     'An Algorithmic Description of XCS' (Butz and Wilson, 2002)'."""
+    register_hyperparams(hyperparams)
+    seed_rng(seed)
     matching = RuleReprMatching(rule_repr)
     covering = RuleReprCovering(env.action_set, rule_repr)
     prediction = FitnessWeightedAvgPrediction(env.action_set)
@@ -51,6 +56,8 @@ def make_custom_xcs(env, matching, covering, prediction, action_selection,
                     rule_discovery, deletion, hyperparams, seed):
     """Public factory function to make instance of XCS with custom
     components."""
+    register_hyperparams(hyperparams)
+    seed_rng(seed)
     components = XCSComponents(matching, covering, prediction,
                                action_selection, credit_assignment,
                                fitness_update, subsumption, rule_discovery,
@@ -73,7 +80,7 @@ class XCS(AlgorithmABC):
     """Implementation of XCS, based on pseudocode given in 'An Algorithmic
     Description of XCS' (Butz and Wilson, 2002)."""
     def __init__(self, components, hyperparams, seed):
-        super().__init__(hyperparams, seed)
+        super().__init__()
         self._init_component_strats(components)
         self._init_prev_step_tracking_attrs()
         self._init_curr_step_tracking_attrs()
@@ -121,7 +128,6 @@ class XCS(AlgorithmABC):
         """Second loop of GENERATE MATCH SET function from
         'An Algorithmic Description of XCS' (Butz and Wilson, 2002)."""
         while self._should_cover(match_set):
-            logging.info("Generating covering classifier.")
             covering_classifier = self._gen_covering_classifier(
                 match_set, self._situation, self._time_step)
             self._population.add(covering_classifier,
@@ -138,6 +144,8 @@ class XCS(AlgorithmABC):
         for classifier in match_set:
             if classifier.action == action:
                 action_set.add(classifier)
+        logging.debug("Action set")
+        logging.debug(f"{action_set}")
         return action_set
 
     def train_update(self, env_response):
@@ -217,14 +225,22 @@ class XCS(AlgorithmABC):
         prediction_array = self._gen_prediction_array(match_set)
         return select_greedy_action(prediction_array)
 
-    # TODO: remove these forwarding functions or keep them?
+    # Forwarding functions that do logging calls if needed
     def _gen_match_set(self, situation):
-        return self._matching_strat(self._population, situation)
+        match_set = self._matching_strat(self._population, situation)
+        logging.debug("Match set")
+        logging.debug(f"{match_set}")
+        return match_set
 
     def _gen_covering_classifier(self, match_set, situation, time_step):
-        return self._covering_strat(match_set, situation, time_step)
+        logging.info("Generating covering classifier.")
+        classifier = self._covering_strat(match_set, situation, time_step)
+        logging.debug(f"{classifier}")
+        return classifier
 
     def _gen_prediction_array(self, match_set):
+        prediction_array = self._prediction_strat(match_set)
+        logging.debug(f"Prediction array: {prediction_array}")
         return self._prediction_strat(match_set)
 
     def _update_fitness(self, operating_set):

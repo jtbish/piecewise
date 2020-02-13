@@ -41,6 +41,7 @@ class Experiment:
         self._epoch_num = EPOCH_NUM_MIN
         self._population = None
         self._finished_training = None
+        self._latest_return = None
 
     def _init_monitor(self, monitor):
         if monitor is None:
@@ -60,6 +61,10 @@ class Experiment:
     def time_step(self):
         return self._time_step
 
+    @property
+    def latest_return(self):
+        return self._latest_return
+
     def run(self):
         self._perform_training()
 
@@ -71,20 +76,25 @@ class Experiment:
             self._epoch_num += 1
         logging.info("Finished training")
 
+    @try_update_monitor
     def _train_single_epoch(self):
         logging.info(f"Epoch {self._epoch_num}")
+        self._latest_return = 0
         self._env.reset()
         while not self._env.is_terminal() and not self._finished_training:
             self._train_single_time_step()
             self._time_step += 1
             self._finished_training = self._is_finished_training()
 
-    @try_update_monitor
     def _train_single_time_step(self):
-        logging.info(f"Time step {self._time_step}")
+        logging.info(f"\nTime step {self._time_step}")
         situation = self._get_situation()
+        logging.info(f"Situation: {situation}")
         action = self._alg.train_query(situation, self._time_step)
+        logging.info(f"Action: {action}")
         env_response = self._env.act(action)
+        logging.info(f"Response: {env_response}")
+        self._latest_return += env_response.reward
         self._population = self._alg.train_update(env_response)
 
     def _get_situation(self):
@@ -93,40 +103,6 @@ class Experiment:
 
     def _is_finished_training(self):
         return self._time_step == self._num_training_samples
-
-    # TODO move performance calc into own class
-    def calc_performance(self, strat):
-        valid_strats = ("accuracy", "return")
-        if strat == "accuracy":
-            return self._calc_accuracy()
-        elif strat == "return":
-            return self._calc_return()
-        else:
-            raise ExperimentError(
-                "Invalid performance calculation strategy: "
-                f"{strat}. Valid strategies are: {valid_strats}")
-
-    def _calc_accuracy(self):
-        self._env.reset()
-        prediction_results = []
-        while not self._env.is_terminal():
-            situation = self._get_situation()
-            action = self._alg.test_query(situation)
-            env_response = self._env.act(action)
-            prediction_results.append(env_response.was_correct_action)
-        accuracy = \
-            (prediction_results.count(True) / len(prediction_results)) * 100
-        return accuracy
-
-    def _calc_return(self):
-        self._env.reset()
-        rewards = []
-        while not self._env.is_terminal():
-            situation = self._get_situation()
-            action = self._alg.test_query(situation)
-            env_response = self._env.act(action)
-            rewards.append(env_response.reward)
-        return sum(rewards)
 
     def save(self):
         monitor_results = self._monitor.query()

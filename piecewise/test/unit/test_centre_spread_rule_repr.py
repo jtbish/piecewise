@@ -6,7 +6,7 @@ from piecewise.rule_repr.interval.centre_spread_rule_repr import \
 from piecewise.rule_repr.interval.elem.centre_spread_elem import \
     CentreSpreadElem
 from piecewise.rule_repr.interval.elem.interval_elem import Interval
-from piecewise.algorithm.hyperparams import hyperparams_registry as hps_reg
+from piecewise.algorithm.hyperparams import register_hyperparams
 
 TESTING_DIMS = [(-1.0, 1.0), (-1.0, 0.0), (0.0, 1.0), (-10.0, 10.0),
                 (-50.0, 10.0), (-10.0, 50.0), (-100.0, 0.0), (0.0, 100.0),
@@ -120,7 +120,7 @@ class TestCentreSpreadRuleRepr:
     def test_gen_covering_condition(self, mock_situation_space,
                                     make_centre_spread_rule_repr):
         rule_repr = make_centre_spread_rule_repr(mock_situation_space)
-        hps_reg.register({"s_nought": 1.0})
+        register_hyperparams({"s_nought": 1.0})
         situation_elem = 0.0
         situation = [situation_elem]
         condition = rule_repr.gen_covering_condition(situation)

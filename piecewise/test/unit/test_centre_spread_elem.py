@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 from hypothesis import given
 
-from piecewise.algorithm.hyperparams import hyperparams_registry as hps_reg
+from piecewise.algorithm.hyperparams import register_hyperparams
 from piecewise.dtype import FloatAllele
 from piecewise.dtype.config import float_allele_rel_tol
 from piecewise.rule_repr.interval.elem.centre_spread_elem import \
@@ -85,7 +85,7 @@ class TestCentreSpreadElem:
         orig_centre_value = centre_allele.value
         orig_spread_value = spread_allele.value
         elem = CentreSpreadElem(centre_allele, spread_allele)
-        hps_reg.register({"mu": 1.0, "m": mutation_magnitude})
+        register_hyperparams({"mu": 1.0, "m": mutation_magnitude})
         elem.mutate()
         centre_value_valid = \
             (orig_centre_value - mutation_magnitude) <= elem._centre_allele \
@@ -101,7 +101,7 @@ class TestCentreSpreadElem:
     def test_mutate_force_disable(self, centre_allele, spread_allele,
                                   mutation_magnitude):
         elem = CentreSpreadElem(centre_allele, spread_allele)
-        hps_reg.register({"mu": 0.0, "m": mutation_magnitude})
+        register_hyperparams({"mu": 0.0, "m": mutation_magnitude})
         elem.mutate()
         centre_value_same = elem._centre_allele == centre_allele
         spread_value_same = elem._spread_allele == spread_allele

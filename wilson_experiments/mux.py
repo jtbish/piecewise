@@ -2,25 +2,22 @@
 import logging
 
 from piecewise.algorithm import make_canonical_xcs
-from piecewise.environment import make_real_mux_env
+from piecewise.environment import make_discrete_mux_env
 from piecewise.experiment import Experiment
 from piecewise.monitor import Monitor, MonitorItem
-from piecewise.rule_repr import make_centre_spread_rule_repr
+from piecewise.rule_repr import DiscreteRuleRepr
 from piecewise.util.classifier_set_stats import calc_summary_stat
 
 
 def main():
     # 6-mux
-    env = make_real_mux_env(thresholds=[0.5] * 6,
-                            num_address_bits=2,
-                            shuffle_dataset=True,
-                            shuffle_seed=0,
-                            num_samples=100,
-                            data_gen_seed=0,
-                            reward_correct=1000,
-                            reward_incorrect=0)
+    env = make_discrete_mux_env(num_address_bits=2,
+                                shuffle_dataset=True,
+                                shuffle_seed=0,
+                                reward_correct=1000,
+                                reward_incorrect=0)
 
-    rule_repr = make_centre_spread_rule_repr(env)
+    rule_repr = DiscreteRuleRepr()
 
     alg_hyperparams = {
         "N": 800,
@@ -43,8 +40,6 @@ def main():
         "theta_mna": len(env.action_set),
         "do_ga_subsumption": True,
         "do_as_subsumption": True,
-        "m": 0.1,
-        "s_nought": 1.0
     }
     alg = make_canonical_xcs(env, rule_repr, alg_hyperparams, seed=0)
 
@@ -53,9 +48,8 @@ def main():
                     lambda experiment: experiment.population.num_micros),
         MonitorItem("num_macros",
                     lambda experiment: experiment.population.num_macros),
-        MonitorItem(
-            "performance",
-            lambda experiment: experiment.calc_performance(strat="accuracy")),
+        MonitorItem("performance",
+                    lambda experiment: experiment.latest_return),
         MonitorItem(
             "mean_error", lambda experiment: calc_summary_stat(
                 experiment.population, "mean", "error")),
@@ -81,9 +75,9 @@ def main():
             "absorption", lambda experiment: experiment.population.
             operations_record["absorption"])
     ]
-    monitor = Monitor(monitor_items, update_freq=100)
+    monitor = Monitor(monitor_items, update_freq=1)
 
-    experiment = Experiment(save_dir="rmux",
+    experiment = Experiment(save_dir="mux",
                             env=env,
                             alg=alg,
                             num_training_samples=1000,

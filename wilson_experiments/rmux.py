@@ -55,7 +55,7 @@ def main():
                     lambda experiment: experiment.population.num_macros),
         MonitorItem(
             "performance",
-            lambda experiment: experiment.calc_performance(strat="accuracy")),
+            lambda experiment: experiment.latest_return),
         MonitorItem(
             "mean_error", lambda experiment: calc_summary_stat(
                 experiment.population, "mean", "error")),
@@ -81,7 +81,7 @@ def main():
             "absorption", lambda experiment: experiment.population.
             operations_record["absorption"])
     ]
-    monitor = Monitor(monitor_items, update_freq=100)
+    monitor = Monitor(monitor_items, update_freq=1)
 
     experiment = Experiment(save_dir="rmux",
                             env=env,

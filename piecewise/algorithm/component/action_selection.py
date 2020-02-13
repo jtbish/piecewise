@@ -10,10 +10,12 @@ class EpsilonGreedy:
         Description of XCS' (Butz and Wilson, 2002)."""
         should_exploit = get_rng().rand() > get_hyperparam("p_explore")
         if should_exploit:
+            logging.debug("Action selection - exploited")
             return select_greedy_action(prediction_array)
         else:
-            return _select_random_action_with_valid_prediction(
-                prediction_array)
+            logging.debug("Action selection - explored")
+            return \
+                _select_random_action_with_valid_prediction(prediction_array)
 
 
 def select_greedy_action(prediction_array):

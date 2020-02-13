@@ -2,19 +2,13 @@ import abc
 
 from piecewise.dtype import Population
 
-from .hyperparams import get_hyperparam, register_hyperparams
-from .rng import seed_rng
+from .hyperparams import get_hyperparam
 
 
 class AlgorithmABC(metaclass=abc.ABCMeta):
     """ABC for an algorithm."""
-    def __init__(self, hyperparams, seed):
-        register_hyperparams(hyperparams)
-        seed_rng(seed)
-        self._population = self._init_population()
-
-    def _init_population(self):
-        return Population(get_hyperparam("N"))
+    def __init__(self):
+        self._population = Population(get_hyperparam("N"))
 
     @abc.abstractmethod
     def train_query(self, situation, time_step):
