@@ -1,4 +1,4 @@
-from piecewise.algorithm.hyperparams import hyperparams_registry as hps_reg
+from piecewise.algorithm.hyperparams import get_hyperparam 
 
 
 class XCSCreditAssignment:
@@ -17,7 +17,7 @@ class XCSCreditAssignment:
             classifier.prediction += \
                 payoff_diff/classifier.experience
         else:
-            classifier.prediction += hps_reg["beta"] * \
+            classifier.prediction += get_hyperparam("beta") * \
                 payoff_diff
 
     def _update_prediction_error(self, classifier, payoff_diff):
@@ -26,7 +26,7 @@ class XCSCreditAssignment:
         if classifier.experience < self._num_initial_adjust_steps():
             classifier.error += error_diff / classifier.experience
         else:
-            classifier.error += hps_reg["beta"] * error_diff
+            classifier.error += get_hyperparam("beta") * error_diff
 
     def _update_action_set_size(self, classifier, action_set):
         action_set_size_diff = action_set.num_micros \
@@ -37,7 +37,7 @@ class XCSCreditAssignment:
                 classifier.experience
         else:
             classifier.action_set_size += \
-                hps_reg["beta"] * action_set_size_diff
+                get_hyperparam("beta") * action_set_size_diff
 
     def _num_initial_adjust_steps(self):
-        return 1 / hps_reg["beta"]
+        return 1 / get_hyperparam("beta")

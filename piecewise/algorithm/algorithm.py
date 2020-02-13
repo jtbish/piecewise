@@ -2,25 +2,19 @@ import abc
 
 from piecewise.dtype import Population
 
-from .hyperparams import hyperparams_registry as hps_reg
-from .rng import np_random
+from .hyperparams import get_hyperparam, register_hyperparams
+from .rng import seed_rng
 
 
 class AlgorithmABC(metaclass=abc.ABCMeta):
     """ABC for an algorithm."""
     def __init__(self, hyperparams, seed):
-        self._register_hyperparams(hyperparams)
-        self._seed_np_random_state(seed)
+        register_hyperparams(hyperparams)
+        seed_rng(seed)
         self._population = self._init_population()
 
-    def _register_hyperparams(self, hyperparams):
-        hps_reg.register(hyperparams)
-
-    def _seed_np_random_state(self, seed):
-        np_random.seed(seed)
-
     def _init_population(self):
-        return Population(hps_reg["N"])
+        return Population(get_hyperparam("N"))
 
     @abc.abstractmethod
     def train_query(self, situation, time_step):

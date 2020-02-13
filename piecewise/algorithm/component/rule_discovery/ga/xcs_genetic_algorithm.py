@@ -1,8 +1,8 @@
 import copy
 from collections import namedtuple
 
-from piecewise.algorithm.hyperparams import hyperparams_registry as hps_reg
-from piecewise.algorithm.rng import np_random
+from piecewise.algorithm.hyperparams import get_hyperparam
+from piecewise.algorithm.rng import get_rng
 
 from .operator.crossover import TwoPointCrossover
 from .operator.mutation import RuleReprMutation
@@ -66,7 +66,7 @@ class XCSGeneticAlgorithm:
         return parents, children
 
     def _perform_crossover(self, children, parents):
-        should_do_crossover = np_random.rand() < hps_reg["chi"]
+        should_do_crossover = get_rng().rand() < get_hyperparam("chi")
         if should_do_crossover:
             self._crossover_strat(*children)
             self._update_children_params(children, parents)
@@ -89,7 +89,7 @@ class XCSGeneticAlgorithm:
             self._mutation_strat(child, situation)
 
     def _update_population(self, children, parents, population):
-        should_do_subsumption = hps_reg["do_ga_subsumption"]
+        should_do_subsumption = get_hyperparam("do_ga_subsumption")
         for child in children:
             if should_do_subsumption:
                 was_subsumed = self._try_subsume_with_parents(

@@ -8,6 +8,7 @@ import pandas as pd
 from piecewise.dtype import DataSpaceBuilder, Dimension
 from piecewise.environment import ClassificationEnvironment
 from piecewise.error.environment_error import InvalidSpecError
+from piecewise.util.rng import init_np_random_state
 
 from .multiplexer_util import (calc_num_register_bits, calc_total_bits,
                                multiplexer_func)
@@ -16,12 +17,13 @@ from .multiplexer_util import (calc_num_register_bits, calc_total_bits,
 class MultiplexerDirector:
     """Director for multiplexer builder classes."""
     def __init__(self, mux_builder, num_address_bits, shuffle_dataset,
-                 reward_correct, reward_incorrect):
+                 shuffle_seed, reward_correct, reward_incorrect):
         self._mux_builder = mux_builder
         self._num_address_bits = num_address_bits
         self._num_register_bits = \
             calc_num_register_bits(self._num_address_bits)
         self._shuffle_dataset = shuffle_dataset
+        self._shuffle_seed = shuffle_seed
         self._reward_correct = reward_correct
         self._reward_incorrect = reward_incorrect
 
@@ -37,6 +39,7 @@ class MultiplexerDirector:
             obs_space=obs_space,
             action_set=None,
             shuffle_dataset=self._shuffle_dataset,
+            shuffle_seed=self._shuffle_seed,
             reward_correct=self._reward_correct,
             reward_incorrect=self._reward_incorrect)
         return env
@@ -110,10 +113,11 @@ class RealMultiplexerBuilder(IMultiplexerBuilder):
     THRESHOLD_MIN = 0.0
     THRESHOLD_MAX = 1.0
 
-    def __init__(self, num_address_bits, num_samples, seed, thresholds):
+    def __init__(self, num_address_bits, num_samples, data_gen_seed,
+                 thresholds):
         self._num_address_bits = num_address_bits
         self._num_samples = num_samples
-        self._np_random = self._init_rng(seed)
+        self._np_random = init_np_random_state(data_gen_seed)
         self._total_bits = calc_total_bits(self._num_address_bits)
         self._thresholds = self._convert_and_validate_thresholds(
             thresholds, self._total_bits)
@@ -142,9 +146,6 @@ class RealMultiplexerBuilder(IMultiplexerBuilder):
     def _thresholds_are_in_valid_range(self, thresholds):
         return np.all(self.THRESHOLD_MIN <= thresholds) and \
             np.all(thresholds <= self.THRESHOLD_MAX)
-
-    def _init_rng(self, seed):
-        return np.random.RandomState(seed)
 
     def create_data(self):
         return self._np_random.rand(self._num_samples, self._total_bits)

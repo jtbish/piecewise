@@ -1,6 +1,6 @@
-from piecewise.algorithm.rng import np_random
+from piecewise.algorithm.hyperparams import get_hyperparam
+from piecewise.algorithm.rng import get_rng
 from piecewise.dtype import Condition, IntegerAllele
-from piecewise.algorithm.hyperparams import hyperparams_registry as hps_reg
 
 from ..rule_repr import IRuleRepr
 from .elem.discrete_elem import DiscreteElem, DiscreteWildcardElem
@@ -33,7 +33,8 @@ class DiscreteRuleRepr(IRuleRepr):
         """
         condition = Condition()
         for situation_elem in situation:
-            should_use_wildcard = np_random.rand() < hps_reg["p_wildcard"]
+            should_use_wildcard = get_rng().rand() < get_hyperparam(
+                "p_wildcard")
             if should_use_wildcard:
                 condition.append(self._make_wildcard_elem())
             else:
@@ -46,7 +47,7 @@ class DiscreteRuleRepr(IRuleRepr):
         for elem_idx, (condition_elem,
                        situation_elem) in enumerate(zip(condition, situation)):
 
-            should_mutate_elem = np_random.rand() < hps_reg["mu"]
+            should_mutate_elem = get_rng().rand() < get_hyperparam("mu")
             if should_mutate_elem:
                 if self.is_wildcard(condition_elem):
                     condition[elem_idx] = \

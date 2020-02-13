@@ -7,31 +7,33 @@ from .multiplexer_builders import (DiscreteMultiplexerBuilder,
 
 def make_discrete_mux_env(num_address_bits=2,
                           shuffle_dataset=True,
+                          shuffle_seed=0,
                           reward_correct=1000,
                           reward_incorrect=0):
     """Factory function for making a discrete multiplexer environment."""
     num_address_bits = _validate_and_return_num_address_bits(num_address_bits)
     mux_builder = DiscreteMultiplexerBuilder(num_address_bits)
     mux_director = MultiplexerDirector(mux_builder, num_address_bits,
-                                       shuffle_dataset, reward_correct,
-                                       reward_incorrect)
+                                       shuffle_dataset, shuffle_seed,
+                                       reward_correct, reward_incorrect)
     return mux_director.make_env()
 
 
 def make_real_mux_env(thresholds,
                       num_address_bits=2,
                       shuffle_dataset=True,
+                      shuffle_seed=0,
                       num_samples=1000,
-                      seed=0,
+                      data_gen_seed=0,
                       reward_correct=1000,
                       reward_incorrect=0):
     """Factory function for making a real multiplexer environment."""
     num_address_bits = _validate_and_return_num_address_bits(num_address_bits)
-    mux_builder = RealMultiplexerBuilder(num_address_bits, num_samples, seed,
-                                         thresholds)
+    mux_builder = RealMultiplexerBuilder(num_address_bits, num_samples,
+                                         data_gen_seed, thresholds)
     mux_director = MultiplexerDirector(mux_builder, num_address_bits,
-                                       shuffle_dataset, reward_correct,
-                                       reward_incorrect)
+                                       shuffle_dataset, shuffle_seed,
+                                       reward_correct, reward_incorrect)
     return mux_director.make_env()
 
 

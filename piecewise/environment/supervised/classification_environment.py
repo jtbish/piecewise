@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 from piecewise.dtype import DataSpaceBuilder, Dimension
+from piecewise.util.rng import init_np_random_state
 
 from ..environment import (EnvironmentABC, EnvironmentResponse,
                            EnvironmentStepTypes, check_terminal)
@@ -14,10 +15,12 @@ class ClassificationEnvironment(EnvironmentABC):
                  obs_space=None,
                  action_set=None,
                  shuffle_dataset=True,
+                 shuffle_seed=0,
                  reward_correct=1000,
                  reward_incorrect=0):
         self._dataset = self._format_dataset_if_necessary(dataset)
         self._shuffle_dataset = bool(shuffle_dataset)
+        self._np_random = init_np_random_state(shuffle_seed)
         self._reward_correct = float(reward_correct)
         self._reward_incorrect = float(reward_incorrect)
         self._num_data_points = self._dataset.shape[0]
@@ -93,7 +96,7 @@ class ClassificationEnvironment(EnvironmentABC):
 
     def _choose_dataset_idx_order(self):
         if self._shuffle_dataset:
-            return np.random.permutation(range(self._num_data_points))
+            return self._np_random.permutation(range(self._num_data_points))
         else:
             return list(range(self._num_data_points))
 

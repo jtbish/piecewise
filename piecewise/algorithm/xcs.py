@@ -15,7 +15,7 @@ from .component import (EpsilonGreedy, FitnessWeightedAvgPrediction,
                         XCSRouletteWheelDeletion, XCSSubsumption,
                         make_canonical_xcs_ga)
 from .component.action_selection import select_greedy_action
-from .hyperparams import hyperparams_registry as hps_reg
+from .hyperparams import get_hyperparam
 
 XCSComponents = namedtuple("XCSComponents", [
     "matching", "covering", "prediction", "action_selection",
@@ -121,6 +121,7 @@ class XCS(AlgorithmABC):
         """Second loop of GENERATE MATCH SET function from
         'An Algorithmic Description of XCS' (Butz and Wilson, 2002)."""
         while self._should_cover(match_set):
+            logging.info("Generating covering classifier.")
             covering_classifier = self._gen_covering_classifier(
                 match_set, self._situation, self._time_step)
             self._population.add(covering_classifier,
@@ -128,7 +129,7 @@ class XCS(AlgorithmABC):
             match_set.add(covering_classifier)
 
     def _should_cover(self, match_set):
-        return num_unique_actions(match_set) < hps_reg["theta_mna"]
+        return num_unique_actions(match_set) < get_hyperparam("theta_mna")
 
     def _gen_action_set(self, match_set, action):
         """GENERATE ACTION SET function from 'An Algorithmic
@@ -169,7 +170,7 @@ class XCS(AlgorithmABC):
         discovery step last."""
         self._do_credit_assignment(action_set, payoff)
         self._update_fitness(action_set)
-        if hps_reg["do_as_subsumption"]:
+        if get_hyperparam("do_as_subsumption"):
             self._do_action_set_subsumption(action_set)
         if self._should_do_rule_discovery():
             self._discover_classifiers(action_set, self._population, situation,
@@ -209,7 +210,7 @@ class XCS(AlgorithmABC):
         time_since_last_rule_discovery = self._time_step - \
             mean_time_stamp_in_pop
         return time_since_last_rule_discovery > \
-            hps_reg["theta_ga"]
+            get_hyperparam("theta_ga")
 
     def test_query(self, situation):
         match_set = self._gen_match_set(situation)
@@ -274,7 +275,7 @@ class MultiStepXCS(XCS):
 
     def _calc_discounted_payoff(self):
         max_prediction = max(self._prediction_array.values())
-        payoff = self._prev_reward + (hps_reg["gamma"] * max_prediction)
+        payoff = self._prev_reward + (get_hyperparam("gamma") * max_prediction)
         return payoff
 
     def _try_update_curr_action_set(self, env_response):

@@ -1,4 +1,4 @@
-class HyperparamsRegistry:
+class _HyperparamsRegistry:
     def __init__(self):
         self._dict = {}
 
@@ -14,4 +14,12 @@ class HyperparamsRegistry:
         raise NotImplementedError
 
 
-hyperparams_registry = HyperparamsRegistry()
+_hyperparams_registry = _HyperparamsRegistry()
+
+
+def register_hyperparams(hyperparams_dict):
+    _hyperparams_registry.register(hyperparams_dict)
+
+
+def get_hyperparam(name):
+    return _hyperparams_registry[name]

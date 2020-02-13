@@ -1,5 +1,5 @@
-from piecewise.algorithm.rng import np_random
-from piecewise.algorithm.hyperparams import hyperparams_registry as hps_reg
+from piecewise.algorithm.rng import get_rng
+from piecewise.algorithm.hyperparams import get_hyperparam
 
 
 class RuleReprMutation:
@@ -22,7 +22,7 @@ class RuleReprMutation:
         self._mutate_action(classifier)
 
     def _mutate_action(self, classifier):
-        should_mutate_action = np_random.rand() < hps_reg["mu"]
+        should_mutate_action = get_rng().rand() < get_hyperparam("mu")
         if should_mutate_action:
             possible_actions = self._env_action_set - {classifier.action}
-            classifier.action = np_random.choice(tuple(possible_actions))
+            classifier.action = get_rng().choice(tuple(possible_actions))

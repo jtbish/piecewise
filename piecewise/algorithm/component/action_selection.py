@@ -1,14 +1,14 @@
 import logging
 
-from piecewise.algorithm.hyperparams import hyperparams_registry as hps_reg
-from piecewise.algorithm.rng import np_random
+from piecewise.algorithm.hyperparams import get_hyperparam
+from piecewise.algorithm.rng import get_rng
 
 
 class EpsilonGreedy:
     def __call__(self, prediction_array):
         """SELECT ACTION function from 'An Algorithmic
         Description of XCS' (Butz and Wilson, 2002)."""
-        should_exploit = np_random.rand() > hps_reg["p_explore"]
+        should_exploit = get_rng().rand() > get_hyperparam("p_explore")
         if should_exploit:
             return select_greedy_action(prediction_array)
         else:
@@ -27,7 +27,7 @@ def select_greedy_action(prediction_array):
 def _select_random_action_with_valid_prediction(prediction_array):
     if len(prediction_array) != 0:
         possible_actions = prediction_array.keys()
-        return np_random.choice(list(possible_actions))
+        return get_rng().choice(list(possible_actions))
     else:
         return _fallback_to_random_selection_from_action_set(
             prediction_array.env_action_set)
@@ -36,4 +36,4 @@ def _select_random_action_with_valid_prediction(prediction_array):
 def _fallback_to_random_selection_from_action_set(env_action_set):
     logging.warning("Falling back to random action selection due to empty "
                     "prediction array.")
-    return np_random.choice(list(env_action_set))
+    return get_rng().choice(list(env_action_set))

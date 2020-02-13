@@ -1,5 +1,5 @@
-from piecewise.algorithm.rng import np_random
-from piecewise.algorithm.hyperparams import hyperparams_registry as hps_reg
+from piecewise.algorithm.hyperparams import get_hyperparam
+from piecewise.algorithm.rng import get_rng
 from piecewise.dtype import Condition, FloatAllele
 
 from .elem.centre_spread_elem import CentreSpreadElem
@@ -26,7 +26,7 @@ class CentreSpreadRuleRepr(IntervalRuleReprABC):
         condition = Condition()
         for situation_elem in situation:
             centre = situation_elem
-            spread = np_random.uniform(0, hps_reg["s_nought"])
+            spread = get_rng().uniform(0, get_hyperparam("s_nought"))
             condition.append(self._make_elem(centre, spread))
 
         return condition

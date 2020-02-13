@@ -1,1 +1,1 @@
-from .monitor import Monitor, MonitorItem
+from .monitor import Monitor, MonitorItem, NullMonitor

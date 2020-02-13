@@ -1,5 +1,5 @@
-from piecewise.algorithm.hyperparams import hyperparams_registry as hps_reg
-from piecewise.algorithm.rng import np_random
+from piecewise.algorithm.hyperparams import get_hyperparam
+from piecewise.algorithm.rng import get_rng
 from piecewise.dtype import Classifier, Rule
 from piecewise.util.classifier_set_stats import get_unique_actions_set
 
@@ -24,13 +24,13 @@ class RuleReprCovering:
         covering_action = self._gen_covering_action(match_set)
 
         rule = Rule(covering_condition, covering_action)
-        classifier = Classifier(rule, hps_reg["prediction_I"],
-                                hps_reg["epsilon_I"], hps_reg["fitness_I"],
-                                time_step)
+        classifier = Classifier(rule, get_hyperparam("prediction_I"),
+                                get_hyperparam("epsilon_I"),
+                                get_hyperparam("fitness_I"), time_step)
         return classifier
 
     def _gen_covering_action(self, match_set):
         possible_covering_actions = \
             tuple(self._env_action_set - get_unique_actions_set(match_set))
         assert len(possible_covering_actions) > 0
-        return np_random.choice(possible_covering_actions)
+        return get_rng().choice(possible_covering_actions)
