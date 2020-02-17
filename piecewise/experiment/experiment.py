@@ -90,7 +90,8 @@ class Experiment:
         logging.info(f"\nTime step {self._time_step}")
         situation = self._get_situation()
         logging.info(f"Situation: {situation}")
-        action = self._alg.train_query(situation, self._time_step)
+        (action, did_explore) = self._alg.train_query(situation,
+                                                      self._time_step)
         logging.info(f"Action: {action}")
         env_response = self._env.act(action)
         logging.info(f"Response: {env_response}")

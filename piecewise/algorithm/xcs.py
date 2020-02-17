@@ -15,8 +15,7 @@ from .component import (EpsilonGreedy, FitnessWeightedAvgPrediction,
                         XCSRouletteWheelDeletion, XCSSubsumption,
                         make_canonical_xcs_ga)
 from .component.action_selection import select_greedy_action
-from .hyperparams import get_hyperparam, register_hyperparams
-from .rng import seed_rng
+from .hyperparams import get_hyperparam
 
 XCSComponents = namedtuple("XCSComponents", [
     "matching", "covering", "prediction", "action_selection",
@@ -25,14 +24,10 @@ XCSComponents = namedtuple("XCSComponents", [
 ])
 
 
-# TODO change the two xcs factories to builders to enforce the duped
-# register_hyperparams, seed_rng calls
 def make_canonical_xcs(env, rule_repr, hyperparams, seed):
     """Public factory function to make instance of 'Canonical XCS' for the
     given environment and rule repr, i.e. XCS with components as described in
     'An Algorithmic Description of XCS' (Butz and Wilson, 2002)'."""
-    register_hyperparams(hyperparams)
-    seed_rng(seed)
     matching = RuleReprMatching(rule_repr)
     covering = RuleReprCovering(env.action_set, rule_repr)
     prediction = FitnessWeightedAvgPrediction(env.action_set)
@@ -56,8 +51,6 @@ def make_custom_xcs(env, matching, covering, prediction, action_selection,
                     rule_discovery, deletion, hyperparams, seed):
     """Public factory function to make instance of XCS with custom
     components."""
-    register_hyperparams(hyperparams)
-    seed_rng(seed)
     components = XCSComponents(matching, covering, prediction,
                                action_selection, credit_assignment,
                                fitness_update, subsumption, rule_discovery,
@@ -80,7 +73,7 @@ class XCS(AlgorithmABC):
     """Implementation of XCS, based on pseudocode given in 'An Algorithmic
     Description of XCS' (Butz and Wilson, 2002)."""
     def __init__(self, components, hyperparams, seed):
-        super().__init__()
+        super().__init__(hyperparams, seed)
         self._init_component_strats(components)
         self._init_prev_step_tracking_attrs()
         self._init_curr_step_tracking_attrs()
@@ -119,10 +112,11 @@ class XCS(AlgorithmABC):
         self._match_set = self._gen_match_set(self._situation)
         self._perform_covering(self._match_set)
         self._prediction_array = self._gen_prediction_array(self._match_set)
-        action = self._select_action(self._prediction_array)
-        self._action_set = self._gen_action_set(self._match_set, action)
+        action_select_res = self._select_action(self._prediction_array)
+        self._action_set = self._gen_action_set(self._match_set,
+                                                action_select_res.action)
 
-        return action
+        return action_select_res
 
     def _perform_covering(self, match_set):
         """Second loop of GENERATE MATCH SET function from
@@ -255,7 +249,12 @@ class XCS(AlgorithmABC):
         self._deletion_strat(self._population)
 
     def _select_action(self, prediction_array):
-        return self._action_selection_strat(prediction_array)
+        action_select_res = self._action_selection_strat(prediction_array)
+        if action_select_res.did_explore:
+            logging.debug("Action selection: explored")
+        else:
+            logging.debug("Action selection: exploited")
+        return action_select_res
 
     def _do_credit_assignment(self, action_set, payoff):
         self._credit_assignment_strat(action_set, payoff)

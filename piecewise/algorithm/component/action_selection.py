@@ -1,21 +1,23 @@
 import logging
+from collections import namedtuple
 
 from piecewise.algorithm.hyperparams import get_hyperparam
 from piecewise.algorithm.rng import get_rng
+
+ActionSelectRes = namedtuple("ActionSelectRes", ["action", "did_explore"])
 
 
 class EpsilonGreedy:
     def __call__(self, prediction_array):
         """SELECT ACTION function from 'An Algorithmic
         Description of XCS' (Butz and Wilson, 2002)."""
-        should_exploit = get_rng().rand() > get_hyperparam("p_explore")
-        if should_exploit:
-            logging.debug("Action selection - exploited")
-            return select_greedy_action(prediction_array)
-        else:
-            logging.debug("Action selection - explored")
-            return \
+        should_explore = get_rng().rand() <= get_hyperparam("p_explore")
+        if should_explore:
+            action = \
                 _select_random_action_with_valid_prediction(prediction_array)
+        else:
+            action = select_greedy_action(prediction_array)
+        return ActionSelectRes(action=action, did_explore=should_explore)
 
 
 def select_greedy_action(prediction_array):

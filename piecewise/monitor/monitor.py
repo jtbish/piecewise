@@ -15,6 +15,8 @@ class IMonitor(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
 
+class PopulationMonitor(
+
 class Monitor(IMonitor):
     def __init__(self, items, update_freq):
         """Update freq in units of 'number of epochs'."""

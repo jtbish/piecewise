@@ -2,12 +2,15 @@ import abc
 
 from piecewise.dtype import Population
 
-from .hyperparams import get_hyperparam
+from .hyperparams import get_hyperparam, register_hyperparams
+from .rng import seed_rng
 
 
 class AlgorithmABC(metaclass=abc.ABCMeta):
     """ABC for an algorithm."""
-    def __init__(self):
+    def __init__(self, hyperparams, seed):
+        register_hyperparams(hyperparams)
+        seed_rng(seed)
         self._population = Population(get_hyperparam("N"))
 
     @abc.abstractmethod
