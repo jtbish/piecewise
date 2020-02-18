@@ -51,6 +51,7 @@ class Population(ClassifierSetBase):
     def max_micros(self):
         return self._max_micros
 
+    # TODO evil?
     @property
     def operations_record(self):
         return self._operation_recorder

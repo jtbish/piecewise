@@ -4,6 +4,7 @@ from collections import namedtuple
 from enum import Enum
 
 from piecewise.error.environment_error import OutOfDataError
+from piecewise.util import ParametrizedMixin
 
 
 def check_terminal(public_method):
@@ -29,7 +30,7 @@ EnvironmentStepTypes = Enum("EnivronmentStepTypes",
                             ["single_step", "multi_step"])
 
 
-class EnvironmentABC(metaclass=abc.ABCMeta):
+class EnvironmentABC(ParametrizedMixin, metaclass=abc.ABCMeta):
     """ABC for environments."""
     def __init__(self, obs_space, action_set, step_type):
         self._obs_space = obs_space

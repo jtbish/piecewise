@@ -1,53 +1,52 @@
 import abc
-import logging
-from collections import namedtuple
+import copy
+import pickle
 
-MonitorItem = namedtuple("MonitorItem", ["name", "callback_func"])
+from piecewise.util import ParametrizedMixin
 
 
-class IMonitor(metaclass=abc.ABCMeta):
+class MonitorABC(ParametrizedMixin, metaclass=abc.ABCMeta):
+    def __init__(self):
+        # keys of history are time steps of updates
+        self._history = {}
+
     @abc.abstractmethod
-    def try_update(self, experiment):
+    def update(self, lcs):
         raise NotImplementedError
 
-    @abc.abstractmethod
     def query(self):
-        raise NotImplementedError
+        return self._history
+
+    def save(self, save_path):
+        filename = f"{self.__class__.__name__}.pkl"
+        with open(save_path / filename, "wb") as fp:
+            pickle.dump(self.query(), fp)
 
 
-class PopulationMonitor(
+# TODO move deepcopies below into LCS getters?
 
-class Monitor(IMonitor):
-    def __init__(self, items, update_freq):
-        """Update freq in units of 'number of epochs'."""
-        self._items = items
-        self._items_history = {item.name: [] for item in self._items}
+
+class PopulationMonitor(MonitorABC):
+    def __init__(self, update_freq):
+        assert update_freq > 0
         self._update_freq = update_freq
+        super().__init__()
 
-    def try_update(self, experiment):
-        logging.debug("Trying to update monitor.")
-        if self._should_update(experiment.time_step):
-            logging.debug("Updating monitor.")
-            self._update(experiment)
+        self.record_parametrization(update_freq=update_freq)
 
-    def _should_update(self, epoch_num):
-        return epoch_num % self._update_freq == 0
+    def update(self, lcs):
+        if self._should_update(lcs.time_step):
+            self._update(lcs)
 
-    def _update(self, experiment):
-        for item in self._items:
-            self._update_item_history(experiment, item)
+    def _should_update(self, time_step):
+        return time_step % self._update_freq == 0
 
-    def _update_item_history(self, experiment, item):
-        item_history = self._items_history[item.name]
-        item_history.append(item.callback_func(experiment))
-
-    def query(self):
-        return self._items_history
+    def _update(self, lcs):
+        pop_copy = copy.deepcopy(lcs.population)
+        self._history[lcs.time_step] = pop_copy
 
 
-class NullMonitor(IMonitor):
-    def try_update(self, experiment):
-        pass
-
-    def query(self):
-        pass
+class LoopMonitor(MonitorABC):
+    def update(self, lcs):
+        loop_data_copy = copy.deepcopy(lcs.loop_data)
+        self._history[lcs.time_step] = loop_data_copy

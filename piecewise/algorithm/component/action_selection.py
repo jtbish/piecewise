@@ -4,7 +4,8 @@ from collections import namedtuple
 from piecewise.algorithm.hyperparams import get_hyperparam
 from piecewise.algorithm.rng import get_rng
 
-ActionSelectRes = namedtuple("ActionSelectRes", ["action", "did_explore"])
+ActionSelectResponse = namedtuple("ActionSelectResponse",
+                                  ["action", "did_explore"])
 
 
 class EpsilonGreedy:
@@ -17,7 +18,7 @@ class EpsilonGreedy:
                 _select_random_action_with_valid_prediction(prediction_array)
         else:
             action = select_greedy_action(prediction_array)
-        return ActionSelectRes(action=action, did_explore=should_explore)
+        return ActionSelectResponse(action=action, did_explore=should_explore)
 
 
 def select_greedy_action(prediction_array):

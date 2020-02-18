@@ -4,9 +4,8 @@ import logging
 from piecewise.algorithm import make_canonical_xcs
 from piecewise.environment import make_discrete_mux_env
 from piecewise.experiment import Experiment
-from piecewise.monitor import Monitor, MonitorItem
+from piecewise.monitor import LoopMonitor, PopulationMonitor
 from piecewise.rule_repr import DiscreteRuleRepr
-from piecewise.util.classifier_set_stats import calc_summary_stat
 
 
 def main():
@@ -20,13 +19,13 @@ def main():
     rule_repr = DiscreteRuleRepr()
 
     alg_hyperparams = {
-        "N": 800,
+        "N": 400,
         "beta": 0.2,
         "alpha": 0.1,
-        "epsilon_nought": 10,
+        "epsilon_nought": 0.01,
         "nu": 5,
         "gamma": 0.71,
-        "theta_ga": 12,
+        "theta_ga": 25,
         "chi": 0.8,
         "mu": 0.04,
         "theta_del": 20,
@@ -43,48 +42,16 @@ def main():
     }
     alg = make_canonical_xcs(env, rule_repr, alg_hyperparams, seed=0)
 
-    monitor_items = [
-        MonitorItem("num_micros",
-                    lambda experiment: experiment.population.num_micros),
-        MonitorItem("num_macros",
-                    lambda experiment: experiment.population.num_macros),
-        MonitorItem("performance",
-                    lambda experiment: experiment.latest_return),
-        MonitorItem(
-            "mean_error", lambda experiment: calc_summary_stat(
-                experiment.population, "mean", "error")),
-        MonitorItem(
-            "max_fitness", lambda experiment: calc_summary_stat(
-                experiment.population, "max", "fitness")),
-        MonitorItem(
-            "deletion", lambda experiment: experiment.population.
-            operations_record["deletion"]),
-        MonitorItem(
-            "covering", lambda experiment: experiment.population.
-            operations_record["covering"]),
-        MonitorItem(
-            "as_subsumption", lambda experiment: experiment.population.
-            operations_record["as_subsumption"]),
-        MonitorItem(
-            "ga_subsumption", lambda experiment: experiment.population.
-            operations_record["ga_subsumption"]),
-        MonitorItem(
-            "discovery", lambda experiment: experiment.population.
-            operations_record["discovery"]),
-        MonitorItem(
-            "absorption", lambda experiment: experiment.population.
-            operations_record["absorption"])
-    ]
-    monitor = Monitor(monitor_items, update_freq=1)
+    pop_monitor = PopulationMonitor(update_freq=100)
+    loop_monitor = LoopMonitor()
 
     experiment = Experiment(save_dir="mux",
                             env=env,
                             alg=alg,
                             num_training_samples=1000,
-                            monitor=monitor,
+                            monitors=[pop_monitor, loop_monitor],
                             logging_level=logging.DEBUG)
     experiment.run()
-    experiment.save()
 
 
 if __name__ == "__main__":

@@ -16,7 +16,14 @@ def make_discrete_mux_env(num_address_bits=2,
     mux_director = MultiplexerDirector(mux_builder, num_address_bits,
                                        shuffle_dataset, shuffle_seed,
                                        reward_correct, reward_incorrect)
-    return mux_director.make_env()
+    env = mux_director.make_env()
+    env.record_parametrization(name="discrete_mux",
+                               num_address_bits=num_address_bits,
+                               shuffle_dataset=shuffle_dataset,
+                               shuffle_seed=shuffle_seed,
+                               reward_correct=reward_correct,
+                               reward_incorrect=reward_incorrect)
+    return env
 
 
 def make_real_mux_env(thresholds,
@@ -34,6 +41,16 @@ def make_real_mux_env(thresholds,
     mux_director = MultiplexerDirector(mux_builder, num_address_bits,
                                        shuffle_dataset, shuffle_seed,
                                        reward_correct, reward_incorrect)
+    env = mux_director.make_env()
+    # TODO this is gross
+    env.record_parametrization(name="real_mux",
+                               thresholds=thresholds,
+                               num_address_bits=num_address_bits,
+                               shuffle_dataset=shuffle_dataset,
+                               num_samples=num_samples,
+                               data_gen_seed=data_gen_seed,
+                               reward_correct=reward_correct,
+                               reward_incorrect=reward_incorrect)
     return mux_director.make_env()
 
 

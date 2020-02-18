@@ -1,0 +1,2 @@
+ClassificationEnvironment: {'name': 'discrete_mux', 'num_address_bits': 2, 'shuffle_dataset': True, 'shuffle_seed': 0, 'reward_correct': 1000, 'reward_incorrect': 0}
+SingleStepXCS: {'hyperparams': {'N': 400, 'beta': 0.2, 'alpha': 0.1, 'epsilon_nought': 0.01, 'nu': 5, 'gamma': 0.71, 'theta_ga': 25, 'chi': 0.8, 'mu': 0.04, 'theta_del': 20, 'delta': 0.1, 'theta_sub': 20, 'p_wildcard': 0.33, 'prediction_I': 0.001, 'epsilon_I': 0.001, 'fitness_I': 0.001, 'p_explore': 0.5, 'theta_mna': 2, 'do_ga_subsumption': True, 'do_as_subsumption': True}, 'seed': 0}

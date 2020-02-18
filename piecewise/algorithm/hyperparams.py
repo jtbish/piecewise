@@ -16,6 +16,9 @@ class _HyperparamsRegistry:
 
 _hyperparams_registry = _HyperparamsRegistry()
 
+# mask access to registry behind accessor functions to ensure callers can't
+# mutate it by accident - it is "immutable"
+
 
 def register_hyperparams(hyperparams_dict):
     _hyperparams_registry.register(hyperparams_dict)

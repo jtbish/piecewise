@@ -8,7 +8,7 @@ from piecewise.error.core_errors import InternalError
 from piecewise.util.classifier_set_stats import (calc_summary_stat,
                                                  num_unique_actions)
 
-from .algorithm import AlgorithmABC
+from .algorithm import AlgorithmABC, AlgorithmResponse
 from .component import (EpsilonGreedy, FitnessWeightedAvgPrediction,
                         RuleReprCovering, RuleReprMatching,
                         XCSAccuracyFitnessUpdate, XCSCreditAssignment,
@@ -112,11 +112,12 @@ class XCS(AlgorithmABC):
         self._match_set = self._gen_match_set(self._situation)
         self._perform_covering(self._match_set)
         self._prediction_array = self._gen_prediction_array(self._match_set)
-        action_select_res = self._select_action(self._prediction_array)
-        self._action_set = self._gen_action_set(self._match_set,
-                                                action_select_res.action)
+        action_select_response = self._select_action(self._prediction_array)
+        action = action_select_response.action
+        self._action_set = self._gen_action_set(self._match_set, action)
 
-        return action_select_res
+        return AlgorithmResponse(
+            action=action, did_explore=action_select_response.did_explore)
 
     def _perform_covering(self, match_set):
         """Second loop of GENERATE MATCH SET function from
@@ -158,7 +159,7 @@ class XCS(AlgorithmABC):
     @abc.abstractmethod
     def _step_type_train_update(self, env_response):
         """Update specific for single/multi step environment - implemented in
-        XCSABC subclasses."""
+        XCS subclasses."""
         raise NotImplementedError
 
     def _update_action_set(self, action_set, situation, payoff):

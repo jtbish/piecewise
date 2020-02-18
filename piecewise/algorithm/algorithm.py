@@ -1,14 +1,19 @@
 import abc
+from collections import namedtuple
 
 from piecewise.dtype import Population
+from piecewise.util import ParametrizedMixin
 
 from .hyperparams import get_hyperparam, register_hyperparams
 from .rng import seed_rng
 
+AlgorithmResponse = namedtuple("AlgorithmResponse", ["action", "did_explore"])
 
-class AlgorithmABC(metaclass=abc.ABCMeta):
+
+class AlgorithmABC(ParametrizedMixin, metaclass=abc.ABCMeta):
     """ABC for an algorithm."""
     def __init__(self, hyperparams, seed):
+        self.record_parametrization(hyperparams=hyperparams, seed=seed)
         register_hyperparams(hyperparams)
         seed_rng(seed)
         self._population = Population(get_hyperparam("N"))
