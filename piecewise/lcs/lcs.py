@@ -1,6 +1,6 @@
 import logging
-from collections import namedtuple
 import pickle
+from collections import namedtuple
 
 from piecewise.constants import EPOCH_NUM_MIN, TIME_STEP_MIN
 from piecewise.monitor import Monitor, NullMonitor

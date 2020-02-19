@@ -15,6 +15,7 @@ class MonitorABC(metaclass=abc.ABCMeta):
 
 class Monitor(MonitorABC):
     def __init__(self, name, update_freq=1):
+        assert update_freq > 0
         self._name = name
         self._update_freq = update_freq
         self._history = {}
