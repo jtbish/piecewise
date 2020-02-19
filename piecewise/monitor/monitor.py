@@ -2,51 +2,39 @@ import abc
 import copy
 import pickle
 
-from piecewise.util import ParametrizedMixin
 
-
-class MonitorABC(ParametrizedMixin, metaclass=abc.ABCMeta):
-    def __init__(self):
-        # keys of history are time steps of updates
-        self._history = {}
-
+class MonitorABC(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def update(self, lcs):
+    def update(self, time_step, value):
         raise NotImplementedError
 
-    def query(self):
-        return self._history
-
+    @abc.abstractmethod
     def save(self, save_path):
-        filename = f"{self.__class__.__name__}.pkl"
-        with open(save_path / filename, "wb") as fp:
-            pickle.dump(self.query(), fp)
+        raise NotImplementedError
 
 
-# TODO move deepcopies below into LCS getters?
-
-
-class PopulationMonitor(MonitorABC):
-    def __init__(self, update_freq):
-        assert update_freq > 0
+class Monitor(MonitorABC):
+    def __init__(self, name, update_freq=1):
+        self._name = name
         self._update_freq = update_freq
-        super().__init__()
+        self._history = {}
 
-        self.record_parametrization(update_freq=update_freq)
-
-    def update(self, lcs):
-        if self._should_update(lcs.time_step):
-            self._update(lcs)
+    def update(self, time_step, value):
+        if self._should_update(time_step):
+            self._history[time_step] = copy.deepcopy(value)
 
     def _should_update(self, time_step):
         return time_step % self._update_freq == 0
 
-    def _update(self, lcs):
-        pop_copy = copy.deepcopy(lcs.population)
-        self._history[lcs.time_step] = pop_copy
+    def save(self, save_path):
+        filename = f"{self._name}_monitor.pkl"
+        with open(save_path / filename, "wb") as fp:
+            pickle.dump(self._history, fp)
 
 
-class LoopMonitor(MonitorABC):
-    def update(self, lcs):
-        loop_data_copy = copy.deepcopy(lcs.loop_data)
-        self._history[lcs.time_step] = loop_data_copy
+class NullMonitor(MonitorABC):
+    def update(self, time_step, value):
+        pass
+
+    def save(self, save_path):
+        pass

@@ -13,23 +13,14 @@ class Experiment:
                  env,
                  alg,
                  num_training_samples,
-                 monitors=None,
+                 use_population_monitor=False,
+                 population_monitor_freq=1,
+                 use_loop_monitor=False,
                  logging_level=logging.INFO):
-        self._monitors = self._init_monitors(monitors)
-        self._lcs = LCS(env, alg, num_training_samples)
-        self._setup_logging(logging_level)
+        self._lcs = LCS(env, alg, num_training_samples, use_population_monitor,
+                        population_monitor_freq, use_loop_monitor)
         self._save_path = self._setup_save_path(save_dir)
-
-    def _init_monitors(self, given_monitors):
-        if given_monitors is None:
-            return []
-        else:
-            return given_monitors
-
-    def _setup_logging(self, logging_level):
-        logging.basicConfig(filename=self._save_path / "experiment.log",
-                            format="%(levelname)s: %(message)s",
-                            level=logging_level)
+        self._setup_logging(logging_level, self._save_path)
 
     def _setup_save_path(self, save_dir):
         save_path = Path(save_dir)
@@ -39,30 +30,28 @@ class Experiment:
             raise ExperimentError(f"Save dir '{save_dir}' already exists.")
         return save_path
 
-    def run(self):
-        self._lcs.train(self._monitors)
-        self._save()
+    def _setup_logging(self, logging_level, save_path):
+        logging.basicConfig(filename=save_path / "experiment.log",
+                            format="%(levelname)s: %(message)s",
+                            level=logging_level)
 
-    def _save(self):
-        for monitor in self._monitors:
-            monitor.save(self._save_path)
+    def run(self):
+        trained_population = self._lcs.train()
+        return trained_population
+
+    def save(self):
+        self._lcs.save_monitor_data(self._save_path)
+        self._lcs.save_trained_population(self._save_path)
         self._save_run_script()
-        self._save_parametrization()
+        self._save_param_config()
         self._save_lib_version_info()
-        self._save_final_population()
 
     def _save_run_script(self):
         run_script_path = Path(__main__.__file__)
         shutil.copyfile(run_script_path, self._save_path / "run_script.py")
 
-    def _save_parametrization(self):
-        with open(self._save_path / "params.txt", "w") as fp:
-            for parametrized in (self._env, self._alg, self):
-                fp.write(parametrized.get_parametrization_as_str())
-                fp.write("\n")
-
-    def _save_lib_version_info(self):
+    def _save_param_config(self):
         pass
 
-    def _save_final_population(self):
+    def _save_lib_version_info(self):
         pass

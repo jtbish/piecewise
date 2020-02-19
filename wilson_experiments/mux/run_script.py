@@ -4,7 +4,6 @@ import logging
 from piecewise.algorithm import make_canonical_xcs
 from piecewise.environment import make_discrete_mux_env
 from piecewise.experiment import Experiment
-from piecewise.monitor import LoopMonitor, PopulationMonitor
 from piecewise.rule_repr import DiscreteRuleRepr
 
 
@@ -42,16 +41,16 @@ def main():
     }
     alg = make_canonical_xcs(env, rule_repr, alg_hyperparams, seed=0)
 
-    pop_monitor = PopulationMonitor(update_freq=100)
-    loop_monitor = LoopMonitor()
-
     experiment = Experiment(save_dir="mux",
                             env=env,
                             alg=alg,
                             num_training_samples=1000,
-                            monitors=[pop_monitor, loop_monitor],
+                            use_population_monitor=True,
+                            population_monitor_freq=100,
+                            use_loop_monitor=True,
                             logging_level=logging.DEBUG)
     experiment.run()
+    experiment.save()
 
 
 if __name__ == "__main__":

@@ -1,1 +1,1 @@
-from .monitor import LoopMonitor, PopulationMonitor
+from .monitor import Monitor, NullMonitor
