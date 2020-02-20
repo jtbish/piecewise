@@ -1,6 +1,6 @@
 import pytest
 
-from piecewise.algorithm.hyperparams import register_hyperparams
+from piecewise.lcs.hyperparams import register_hyperparams
 from piecewise.rule_repr import DiscreteRuleRepr
 from piecewise.rule_repr.discrete.elem.discrete_elem import \
     DiscreteWildcardElem

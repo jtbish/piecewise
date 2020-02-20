@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 from hypothesis import given
 
-from piecewise.algorithm.hyperparams import register_hyperparams
+from piecewise.lcs.hyperparams import register_hyperparams
 from piecewise.dtype import FloatAllele
 from piecewise.dtype.config import float_allele_rel_tol
 from piecewise.rule_repr.interval.elem.centre_spread_elem import \

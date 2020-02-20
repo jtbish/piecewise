@@ -12,7 +12,7 @@ _DUMMY_ACTION = 0
 
 @pytest.fixture
 def wrapper_env():
-    return GymEnvironment(_GYM_ENV_NAME, _ENV_SEED)
+    return GymEnvironment(env_name=_GYM_ENV_NAME, seed=_ENV_SEED)
 
 
 @pytest.fixture

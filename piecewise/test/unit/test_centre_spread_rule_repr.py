@@ -6,7 +6,7 @@ from piecewise.rule_repr.interval.centre_spread_rule_repr import \
 from piecewise.rule_repr.interval.elem.centre_spread_elem import \
     CentreSpreadElem
 from piecewise.rule_repr.interval.elem.interval_elem import Interval
-from piecewise.algorithm.hyperparams import register_hyperparams
+from piecewise.lcs.hyperparams import register_hyperparams
 
 TESTING_DIMS = [(-1.0, 1.0), (-1.0, 0.0), (0.0, 1.0), (-10.0, 10.0),
                 (-50.0, 10.0), (-10.0, 50.0), (-100.0, 0.0), (0.0, 100.0),

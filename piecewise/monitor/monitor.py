@@ -22,6 +22,8 @@ class Monitor(MonitorABC):
 
     def update(self, time_step, value):
         if self._should_update(time_step):
+            # take a deepcopy of the value to make sure the refs stored in
+            # self._history over time are different
             self._history[time_step] = copy.deepcopy(value)
 
     def _should_update(self, time_step):

@@ -1,5 +1,5 @@
-from piecewise.algorithm.hyperparams import get_hyperparam
-from piecewise.algorithm.rng import get_rng
+from piecewise.lcs.hyperparams import get_hyperparam
+from piecewise.lcs.rng import get_rng
 from piecewise.dtype import Condition, FloatAllele
 
 from .elem.centre_spread_elem import CentreSpreadElem

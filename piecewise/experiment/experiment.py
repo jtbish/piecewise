@@ -1,29 +1,34 @@
 import logging
+import pickle
 import shutil
 import subprocess
 from pathlib import Path
 
 import __main__
 from piecewise.error.experiment_error import ExperimentError
-from piecewise.lcs import LCS
+
+from .trainer import Trainer
 
 
 class Experiment:
     def __init__(self,
                  name,
                  env,
-                 alg,
+                 lcs,
                  num_training_samples,
-                 use_population_monitor=False,
-                 population_monitor_freq=1,
+                 use_lcs_monitor=False,
+                 lcs_monitor_freq=1,
                  use_loop_monitor=False,
                  logging_level=logging.INFO,
                  var_args=None):
-        self._lcs = LCS(env, alg, num_training_samples, use_population_monitor,
-                        population_monitor_freq, use_loop_monitor)
+        self._trainer = Trainer(env, lcs, num_training_samples,
+                                use_lcs_monitor, lcs_monitor_freq,
+                                use_loop_monitor)
         self._save_path = self._setup_save_path(name)
         self._setup_logging(logging_level, self._save_path)
         self._var_args = var_args
+
+        self._trained_lcs = None
 
     def _setup_save_path(self, name):
         save_path = Path(name)
@@ -39,16 +44,19 @@ class Experiment:
                             level=logging_level)
 
     def run(self):
-        trained_population = self._lcs.train()
-        return trained_population
+        self._trained_lcs = self._trainer.train_lcs()
 
-    def save(self):
-        self._lcs.save_monitor_data(self._save_path)
-        self._lcs.save_trained_population(self._save_path)
+    def save_results(self):
+        self._trainer.save_monitor_data(self._save_path)
+        self._save_trained_lcs()
         self._save_run_script()
         self._save_var_args()
         self._save_lib_version_info()
         self._save_python_env_info()
+
+    def _save_trained_lcs(self):
+        with open(self._save_path / "trained_lcs.pkl", "wb") as fp:
+            pickle.dump(self._trained_lcs, fp)
 
     def _save_run_script(self):
         run_script_path = Path(__main__.__file__)

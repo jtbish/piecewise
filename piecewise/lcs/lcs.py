@@ -1,96 +1,42 @@
-import logging
-import pickle
+import abc
 from collections import namedtuple
 
-from piecewise.constants import EPOCH_NUM_MIN, TIME_STEP_MIN
-from piecewise.monitor import Monitor, NullMonitor
+from piecewise.dtype import Population
 
-LoopData = namedtuple("LoopData",
-                      ["situation", "alg_response", "env_response"])
+from .hyperparams import get_hyperparam, register_hyperparams
+from .rng import seed_rng
+
+LCSTrainResponse = namedtuple("LCSTrainResponse", ["action", "did_explore"])
 
 
-class LCS:
-    def __init__(self, env, alg, num_training_samples, use_population_monitor,
-                 population_monitor_freq, use_loop_monitor):
-        self._env = env
-        self._alg = alg
-        self._num_training_samples = num_training_samples
-        self._population_monitor = \
-            self._init_population_monitor(use_population_monitor,
-                                          population_monitor_freq)
-        self._loop_monitor = self._init_loop_monitor(use_loop_monitor)
+class LCS(metaclass=abc.ABCMeta):
+    """ABC for an LCS."""
+    def __init__(self, rule_repr, hyperparams, seed):
+        self._rule_repr = rule_repr
+        register_hyperparams(hyperparams)
+        seed_rng(seed)
+        self._population = Population(get_hyperparam("N"))
 
-        self._time_step = TIME_STEP_MIN
-        self._epoch_num = EPOCH_NUM_MIN
+    @abc.abstractmethod
+    def train_query(self, situation, time_step):
+        """Queries the algorithm for an action to perform during training."""
+        raise NotImplementedError
 
-        self._population = None
-        self._loop_data = None
+    @abc.abstractmethod
+    def train_update(self, env_response):
+        """Updates and returns the population given the environmental
+        response."""
+        raise NotImplementedError
 
-    def _init_population_monitor(self, use_population_monitor,
-                                 population_monitor_freq):
-        if use_population_monitor:
-            return Monitor("population", update_freq=population_monitor_freq)
-        else:
-            return NullMonitor()
+    @abc.abstractmethod
+    def test_query(self, situation):
+        """Queries the algorithm for an action to perform during testing."""
+        raise NotImplementedError
 
-    def _init_loop_monitor(self, use_loop_monitor):
-        if use_loop_monitor:
-            return Monitor("loop_data", update_freq=1)
-        else:
-            return NullMonitor()
+    @property
+    def rule_repr(self):
+        return self._rule_repr
 
-    def get_parametrization(self):
-        pass
-
-    def train(self):
-        logging.info("Starting training")
-        while not self._is_finished_training():
-            self._train_single_epoch()
-            self._epoch_num += 1
-        logging.info("Finished training")
+    @property
+    def population(self):
         return self._population
-
-    def _train_single_epoch(self):
-        logging.info(f"Epoch {self._epoch_num}")
-        self._env.reset()
-        while not self._env.is_terminal() and not self._is_finished_training():
-            self._train_single_time_step()
-            self._time_step += 1
-            self._update_monitors()
-
-    def _train_single_time_step(self):
-        logging.info(f"Time step {self._time_step}")
-
-        situation = self._get_situation()
-        logging.info(f"Situation: {situation}")
-
-        alg_response = self._alg.train_query(situation, self._time_step)
-        logging.info(f"Alg response: {alg_response}")
-
-        action = alg_response.action
-        env_response = self._env.act(action)
-        logging.info(f"Env response: {env_response}")
-
-        self._population = self._alg.train_update(env_response)
-        self._loop_data = LoopData(situation=situation,
-                                   alg_response=alg_response,
-                                   env_response=env_response)
-
-    def _get_situation(self):
-        obs = self._env.observe()
-        return obs
-
-    def _update_monitors(self):
-        self._population_monitor.update(self._time_step, self._population)
-        self._loop_monitor.update(self._time_step, self._loop_data)
-
-    def _is_finished_training(self):
-        return self._time_step == self._num_training_samples
-
-    def save_monitor_data(self, save_path):
-        for monitor in (self._population_monitor, self._loop_monitor):
-            monitor.save(save_path)
-
-    def save_trained_population(self, save_path):
-        with open(save_path / "trained_population.pkl", "wb") as fp:
-            pickle.dump(self._population, fp)

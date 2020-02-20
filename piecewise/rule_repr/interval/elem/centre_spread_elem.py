@@ -1,5 +1,5 @@
-from piecewise.algorithm.hyperparams import get_hyperparam
-from piecewise.algorithm.rng import get_rng
+from piecewise.lcs.hyperparams import get_hyperparam
+from piecewise.lcs.rng import get_rng
 
 from .interval_elem import IntervalElemABC
 
