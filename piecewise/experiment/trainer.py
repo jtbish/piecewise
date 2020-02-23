@@ -65,6 +65,8 @@ class Trainer:
         env_response = self._env.act(action)
         logging.info(f"Env response: {env_response}")
 
+        self._lcs.train_update(env_response)
+
         self._loop_data = LoopData(situation=situation,
                                    lcs_response=lcs_response,
                                    env_response=env_response)

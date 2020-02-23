@@ -33,7 +33,6 @@ def main(args):
         "theta_del": 20,
         "delta": 0.1,
         "theta_sub": 20,
-        "p_wildcard": 0.33,
         "prediction_I": 1e-3,
         "epsilon_I": 1e-3,
         "fitness_I": 1e-3,
@@ -44,6 +43,8 @@ def main(args):
         "m": 0.1,
         "s_nought": 1.0
     }
+    # TODO
+    # m and s_nought are sensitive to the range of each feature.......
     lcs = make_custom_xcs_from_canonical_base(
         env,
         rule_repr,
@@ -54,7 +55,7 @@ def main(args):
     experiment = Experiment(name=args.experiment_name,
                             env=env,
                             lcs=lcs,
-                            num_training_samples=20000,
+                            num_training_samples=40000,
                             use_lcs_monitor=True,
                             lcs_monitor_freq=1000,
                             use_loop_monitor=True,

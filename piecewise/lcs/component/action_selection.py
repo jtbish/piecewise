@@ -22,6 +22,7 @@ class DecayingEpsilonGreedy:
 
     def __call__(self, prediction_array):
         self._apply_decay()
+        logging.debug(f"Epsilon = {self._epsilon}")
         return _epsilon_greedy(prediction_array, self._epsilon)
 
     def _apply_decay(self):
