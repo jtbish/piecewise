@@ -7,8 +7,10 @@ from .interval_elem import IntervalElemABC
 class CentreSpreadElem(IntervalElemABC):
     """Represents a (centre, spread) tuple."""
     def __init__(self, centre_allele, spread_allele):
-        self._centre_allele = centre_allele
-        self._spread_allele = spread_allele
+        super().__init__(first_allele=centre_allele,
+                         second_allele=spread_allele)
+        self._centre_allele = self._first_allele
+        self._spread_allele = self._second_allele
 
     def __repr__(self):
         return (f"{self.__class__.__name__}("

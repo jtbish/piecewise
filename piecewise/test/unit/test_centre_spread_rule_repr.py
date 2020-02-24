@@ -1,6 +1,6 @@
 import pytest
 
-from piecewise.dtype import DataSpaceBuilder, Dimension
+from piecewise.dtype import DataSpaceBuilder, Dimension, IntervalCondition
 from piecewise.rule_repr.interval.centre_spread_rule_repr import \
     CentreSpreadRuleRepr
 from piecewise.rule_repr.interval.elem.centre_spread_elem import \
@@ -44,6 +44,7 @@ def make_mock_condition_elem(mocker):
         elem.lower.return_value = lower
         elem.upper.return_value = upper
         elem.interval.return_value = Interval(lower, upper)
+        elem.blah.return_value = 26
         return elem
 
     return _make_mock_condition_elem
@@ -53,7 +54,7 @@ def make_mock_condition_elem(mocker):
 def make_mock_single_elem_condition(make_mock_condition_elem):
     def _make_mock_single_elem_condition(lower, upper):
         elem = make_mock_condition_elem(lower, upper)
-        return [elem]
+        return IntervalCondition.from_elem_args(elem)
 
     return _make_mock_single_elem_condition
 

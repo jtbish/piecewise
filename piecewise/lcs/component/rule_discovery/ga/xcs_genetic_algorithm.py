@@ -67,8 +67,11 @@ class XCSGeneticAlgorithm:
 
     def _perform_crossover(self, children, parents):
         should_do_crossover = get_rng().rand() < get_hyperparam("chi")
+        (child_one, child_two) = children
         if should_do_crossover:
-            self._crossover_strat(*children)
+            self._rule_repr.crossover_conditions(child_one.condition,
+                                                 child_two.condition,
+                                                 self._crossover_strat)
             self._update_children_params(children, parents)
 
     def _update_children_params(self, children, parents):

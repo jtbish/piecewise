@@ -2,30 +2,28 @@ from piecewise.lcs.rng import get_rng
 
 
 class TwoPointCrossover:
-    def __call__(self, child_one, child_two):
+    def __call__(self, first_vec, second_vec):
         """Based on APPLY CROSSOVER function from 'An Algorithmic Description
         of XCS' (Butz and Wilson, 2002)."""
-        assert len(child_one.condition) == len(child_two.condition)
+        assert len(first_vec) == len(second_vec)
         (first_idx, second_idx) = \
-            self._choose_random_crossover_idxs(len(child_one.condition))
+            self._choose_random_crossover_idxs(len(first_vec))
         (first_idx,
          second_idx) = self._order_crossover_idxs(first_idx, second_idx)
-        self._crossover_child_conditions(child_one, child_two, first_idx,
-                                         second_idx)
+        assert first_idx <= second_idx
+        self._crossover_vecs(first_vec, second_vec, first_idx, second_idx)
 
-    def _choose_random_crossover_idxs(self, condition_len):
+    def _choose_random_crossover_idxs(self, vec_len):
         num_idxs = 2
-        return tuple(
-            [get_rng().randint(0, condition_len) for _ in range(num_idxs)])
+        return tuple([get_rng().randint(0, vec_len) for _ in range(num_idxs)])
 
     def _order_crossover_idxs(self, first_idx, second_idx):
         return (min(first_idx, second_idx), max(first_idx, second_idx))
 
-    def _crossover_child_conditions(self, child_one, child_two, first_idx,
-                                    second_idx):
+    def _crossover_vecs(self, first_vec, second_vec, first_idx, second_idx):
         for swap_idx in range(first_idx, second_idx):
-            self._swap_condition_elements(child_one, child_two, swap_idx)
+            self._swap_vec_elems(first_vec, second_vec, swap_idx)
 
-    def _swap_condition_elements(self, child_one, child_two, swap_idx):
-        child_one.condition[swap_idx], child_two.condition[swap_idx] = \
-                child_two.condition[swap_idx], child_one.condition[swap_idx]
+    def _swap_vec_elems(self, first_vec, second_vec, swap_idx):
+        first_vec[swap_idx], second_vec[swap_idx] = \
+                second_vec[swap_idx], first_vec[swap_idx]

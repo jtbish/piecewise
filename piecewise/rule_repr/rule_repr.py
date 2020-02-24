@@ -18,6 +18,13 @@ class IRuleRepr(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
+    def crossover_conditions(self, first_condition, second_condition,
+                             crossover_strat):
+        """Crosses over the given conditions in place, using the specified
+        crossover strategy."""
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def mutate_condition(self, condition, situation=None):
         """Mutates the given condition in-place.
 

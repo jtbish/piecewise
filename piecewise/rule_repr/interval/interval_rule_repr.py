@@ -24,7 +24,8 @@ class IntervalRuleReprABC(IRuleRepr, metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     def does_match(self, condition, situation):
-        for (condition_elem, situation_elem) in zip(condition, situation):
+        for (condition_elem, situation_elem) in zip(condition.elems,
+                                                    situation):
             if not condition_elem.lower() <= situation_elem <= \
                     condition_elem.upper():
                 return False
@@ -34,12 +35,13 @@ class IntervalRuleReprABC(IRuleRepr, metaclass=abc.ABCMeta):
     def gen_covering_condition(self, situation):
         raise NotImplementedError
 
-    def mutate_condition(self, condition, situation=None):
-        for condition_elem in condition:
-            self._mutate_condition_elem(condition_elem)
+    def crossover_conditions(self, first_condition, second_condition,
+                             crossover_strat):
+        crossover_strat(first_condition.alleles, second_condition.alleles)
 
-    def _mutate_condition_elem(self, condition_elem):
-        condition_elem.mutate()
+    def mutate_condition(self, condition, situation=None):
+        for condition_elem in condition.elems:
+            condition_elem.mutate()
 
     def is_wildcard(self, condition_elem, elem_idx):
         return self._is_equiv_to_wildcard(condition_elem,
@@ -47,7 +49,8 @@ class IntervalRuleReprABC(IRuleRepr, metaclass=abc.ABCMeta):
 
     def num_wildcards(self, condition):
         num_wildcards = 0
-        for (condition_elem, wildcard_elem) in zip(condition, self._wildcards):
+        for (condition_elem, wildcard_elem) in zip(condition.elems,
+                                                   self._wildcards):
             if self._is_equiv_to_wildcard(condition_elem, wildcard_elem):
                 num_wildcards += 1
         return num_wildcards

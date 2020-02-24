@@ -1,6 +1,6 @@
+from piecewise.dtype import DiscreteCondition, IntegerAllele
 from piecewise.lcs.hyperparams import get_hyperparam
 from piecewise.lcs.rng import get_rng
-from piecewise.dtype import Condition, IntegerAllele
 
 from ..rule_repr import IRuleRepr
 from .elem.discrete_elem import DiscreteElem, DiscreteWildcardElem
@@ -31,15 +31,20 @@ class DiscreteRuleRepr(IRuleRepr):
         GENERATE COVERING CLASSIFIER function from
         'An Algorithmic Description of XCS' (Butz and Wilson, 2002).
         """
-        condition = Condition()
+        condition_elems = []
         for situation_elem in situation:
             should_use_wildcard = get_rng().rand() < get_hyperparam(
                 "p_wildcard")
             if should_use_wildcard:
-                condition.append(self._make_wildcard_elem())
+                condition_elems.append(self._make_wildcard_elem())
             else:
-                condition.append(self._copy_situation_elem(situation_elem))
-        return condition
+                condition_elems.append(
+                    self._copy_situation_elem(situation_elem))
+        return DiscreteCondition(condition_elems)
+
+    def crossover_conditions(self, first_condition, second_condition,
+                             crossover_strat):
+        crossover_strat(first_condition, second_condition)
 
     def mutate_condition(self, condition, situation):
         """First part (condition mutation) of APPLY MUTATION function from 'An

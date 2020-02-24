@@ -1,6 +1,6 @@
+from piecewise.dtype import FloatAllele, IntervalCondition
 from piecewise.lcs.hyperparams import get_hyperparam
 from piecewise.lcs.rng import get_rng
-from piecewise.dtype import Condition, FloatAllele
 
 from .elem.centre_spread_elem import CentreSpreadElem
 from .interval_rule_repr import IntervalRuleReprABC
@@ -23,13 +23,15 @@ class CentreSpreadRuleRepr(IntervalRuleReprABC):
     def gen_covering_condition(self, situation):
         """Implementation of covering for XCSR as described in 'Get Real! XCS
         With Continuous-Valued Inputs' (Wilson, 2000)."""
-        condition = Condition()
+        condition_elems = []
         for situation_elem in situation:
             centre = situation_elem
             spread = get_rng().uniform(0, get_hyperparam("s_nought"))
-            condition.append(self._make_elem(centre, spread))
+            condition_elems.append(self._make_elem(centre, spread))
 
-        return condition
+        return IntervalCondition(condition_elems)
 
     def _make_elem(self, centre, spread):
+        # TODO dispatch to float/integer allele depending on type of centre &
+        # spread
         return CentreSpreadElem(FloatAllele(centre), FloatAllele(spread))

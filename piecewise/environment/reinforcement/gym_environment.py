@@ -29,23 +29,27 @@ class GymEnvironment(EnvironmentABC):
 
     def _gen_obs_space_if_not_given(self, obs_space):
         if obs_space is None:
-            # TODO extract function
-            lower_vector = self._wrapped_env.observation_space.low
-            upper_vector = self._wrapped_env.observation_space.high
-            obs_space_builder = DataSpaceBuilder()
-            for (lower, upper) in zip(lower_vector, upper_vector):
-                obs_space_builder.add_dim(Dimension(lower, upper))
-            return obs_space_builder.create_space()
+            return self._gen_obs_space()
         else:
             return obs_space
 
+    def _gen_obs_space(self):
+        lower_vector = self._wrapped_env.observation_space.low
+        upper_vector = self._wrapped_env.observation_space.high
+        obs_space_builder = DataSpaceBuilder()
+        for (lower, upper) in zip(lower_vector, upper_vector):
+            obs_space_builder.add_dim(Dimension(lower, upper))
+        return obs_space_builder.create_space()
+
     def _gen_action_set_if_not_given(self, action_set):
         if action_set is None:
-            # TODO extract function
-            num_actions = self._wrapped_env.action_space.n
-            return set(range(num_actions))
+            return self._gen_action_set()
         else:
             return action_set
+
+    def _gen_action_set(self):
+        num_actions = self._wrapped_env.action_space.n
+        return set(range(num_actions))
 
     def reset(self):
         self._curr_obs = self._wrapped_env.reset()
