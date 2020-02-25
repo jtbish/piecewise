@@ -1,28 +1,27 @@
-from piecewise.dtype import DiscreteCondition, IntegerAllele
+from piecewise.dtype import Condition, DiscreteAllele, DiscreteWildcardAllele
 from piecewise.lcs.hyperparams import get_hyperparam
 from piecewise.lcs.rng import get_rng
 
 from ..rule_repr import IRuleRepr
-from .elem.discrete_elem import DiscreteElem, DiscreteWildcardElem
 
 
 class DiscreteRuleRepr(IRuleRepr):
     """Rule representation that works with discrete (i.e. integer) inputs,
-    storing a single integer in each element of a condition.
+    storing a single discrete value for each allele in the condition genotype.
 
-    Uses the DiscreteElem class to encapsulate condition elements, as well as
-    the DiscreteWildcardElem as a sentinel class for representing wildcard
-    elements."""
-    _WILDCARD_ELEM = DiscreteWildcardElem()
+    Uses the DiscreteAllele class to encapsulate genotype alleles, as well as
+    the DiscreteWildcardAllele as a sentinel class for representing
+    wildcards."""
+    _WILDCARD_ALLELE = DiscreteWildcardAllele()
 
     def does_match(self, condition, situation):
         """DOES MATCH function from 'An Algorithmic Description of XCS'
         (Butz and Wilson, 2002)."""
-        for (condition_elem, situation_elem) in zip(condition, situation):
-            condition_elem_is_wildcard = self.is_wildcard(condition_elem)
-            condition_elem_matches_situation = condition_elem == situation_elem
-            if not condition_elem_is_wildcard and \
-                    not condition_elem_matches_situation:
+        for (allele, situation_elem) in zip(condition, situation):
+            allele_is_wildcard = self._is_wildcard(allele)
+            allele_matches_input = allele == situation_elem
+            if not allele_is_wildcard and \
+                    not allele_matches_input:
                 return False
         return True
 
@@ -31,16 +30,15 @@ class DiscreteRuleRepr(IRuleRepr):
         GENERATE COVERING CLASSIFIER function from
         'An Algorithmic Description of XCS' (Butz and Wilson, 2002).
         """
-        condition_elems = []
+        alleles = []
         for situation_elem in situation:
-            should_use_wildcard = get_rng().rand() < get_hyperparam(
+            should_make_wildcard = get_rng().rand() < get_hyperparam(
                 "p_wildcard")
-            if should_use_wildcard:
-                condition_elems.append(self._make_wildcard_elem())
+            if should_make_wildcard:
+                alleles.append(self._make_wildcard_allele())
             else:
-                condition_elems.append(
-                    self._copy_situation_elem(situation_elem))
-        return DiscreteCondition(condition_elems)
+                alleles.append(self._make_allele_to_copy_input(situation_elem))
+        return Condition(rule_repr=self, alleles=alleles)
 
     def crossover_conditions(self, first_condition, second_condition,
                              crossover_strat):
@@ -49,27 +47,25 @@ class DiscreteRuleRepr(IRuleRepr):
     def mutate_condition(self, condition, situation):
         """First part (condition mutation) of APPLY MUTATION function from 'An
         Algorithmic Description of XCS' (Butz and Wilson, 2002)."""
-        for elem_idx, (condition_elem,
-                       situation_elem) in enumerate(zip(condition, situation)):
+        for idx, (allele,
+                  situation_elem) in enumerate(zip(condition, situation)):
 
-            should_mutate_elem = get_rng().rand() < get_hyperparam("mu")
-            if should_mutate_elem:
-                if self.is_wildcard(condition_elem):
-                    condition[elem_idx] = \
-                        self._copy_situation_elem(situation_elem)
+            should_mutate_allele = get_rng().rand() < get_hyperparam("mu")
+            if should_mutate_allele:
+                if self.is_wildcard(allele):
+                    condition[idx] = \
+                        self._make_allele_to_copy_input(situation_elem)
                 else:
-                    condition[elem_idx] = self._make_wildcard_elem()
+                    condition[idx] = self._make_wildcard_elem()
 
-    def is_wildcard(self, condition_elem, elem_idx=None):
-        return condition_elem == self._WILDCARD_ELEM
+    def _is_wildcard(self, allele):
+        return allele == self._WILDCARD_ALLELE
 
-    def num_wildcards(self, condition):
-        return [
-            self.is_wildcard(condition_elem) for condition_elem in condition
-        ].count(True)
+    def _make_wildcard_allele(self):
+        return DiscreteWildcardAllele()
 
-    def _make_wildcard_elem(self):
-        return DiscreteWildcardElem()
+    def _make_allele_to_copy_input(self, situation_elem):
+        return DiscreteAllele(situation_elem)
 
-    def _copy_situation_elem(self, situation_elem):
-        return DiscreteElem(IntegerAllele(situation_elem))
+    def genotype_to_phenotype(self, condition):
+        return tuple([allele for allele in condition])

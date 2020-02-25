@@ -1,4 +1,5 @@
 import abc
+
 from piecewise.lcs.hyperparams import get_hyperparam
 
 
@@ -42,20 +43,26 @@ class XCSSubsumption(ISubsumptionStrategy):
         """IS MORE GENERAL function from 'An Algorithmic Description of XCS'
         (Butz and Wilson, 2002), modified to be rule representation
         agnostic."""
-        if general_classifier.num_wildcards(self._rule_repr) <= \
-                specific_classifier.num_wildcards(self._rule_repr):
-            return False
-        return self._is_actually_more_general(general_classifier,
-                                              specific_classifier)
+        # TODO what the hell
+        return self._rule_repr.is_more_general(general_classifier.condition,
+                                               specific_classifier.condition)
 
-    def _is_actually_more_general(self, general_classifier,
-                                  specific_classifier):
-        for elem_idx, (general_condition_elem, specific_condition_elem) in \
-            enumerate(zip(
-                general_classifier.condition, specific_classifier.condition)):
-            if not self._rule_repr.is_wildcard(
-                    general_condition_elem, elem_idx) and \
-                    general_condition_elem != \
-                    specific_condition_elem:
-                return False
-        return True
+
+#
+#        if general_classifier.num_wildcards(self._rule_repr) <= \
+#                specific_classifier.num_wildcards(self._rule_repr):
+#            return False
+#        return self._is_actually_more_general(general_classifier,
+#                                              specific_classifier)
+#
+#    def _is_actually_more_general(self, general_classifier,
+#                                  specific_classifier):
+#        for elem_idx, (general_condition_elem, specific_condition_elem) in \
+#            enumerate(zip(
+#                general_classifier.condition, specific_classifier.condition)):
+#            if not self._rule_repr.is_wildcard(
+#                    general_condition_elem, elem_idx) and \
+#                    general_condition_elem != \
+#                    specific_condition_elem:
+#                return False
+#        return True

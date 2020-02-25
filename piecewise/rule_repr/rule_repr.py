@@ -11,10 +11,7 @@ class IRuleRepr(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def gen_covering_condition(self, situation):
         """Generates and returns a covering condition for the given
-        situation.
-
-        May or may not require hyperparameters, hence the
-        hyperparams argument is None by default."""
+        situation."""
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -33,15 +30,13 @@ class IRuleRepr(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def is_wildcard(self, condition_elem, elem_idx=None):
-        """Determines if the given element of a condition (along with its index
-        in the condition) is (equivalent) to a wildcard.
-
-        May or may not require the index of the element in its condition,
-        hence the elem_idx argument is None by default."""
+    def calc_generality(self, condition):
+        """Returns the generality of the condition as a fraction,
+        i.e. how much of the input space the condition covers."""
         raise NotImplementedError
 
     @abc.abstractmethod
-    def num_wildcards(self, condition):
-        """Returns the number of wildcard elements in the condition."""
+    def genotype_to_phenotype(self, condition):
+        """Converts the given condition (in genotype space) to its
+        representation in phenotype space."""
         raise NotImplementedError
