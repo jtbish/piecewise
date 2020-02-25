@@ -41,13 +41,18 @@ def convert_input_to_int(method):
     into an integer."""
     @functools.wraps(method)
     def int_converter(self, input_):
-        try:
-            int_ = int(input_)
-        except ValueError:
-            raise ConversionError(f"Cannot convert input '{input_}' to int.")
+        int_ = _convert_input_to_int(input_)
         return method(self, int_)
 
     return int_converter
+
+
+def _convert_input_to_int(input_):
+    try:
+        int_ = int(input_)
+    except ValueError:
+        raise ConversionError(f"Cannot convert input '{input_}' to int.")
+    return int_
 
 
 class DiscreteAllele(AlleleABC):
@@ -56,9 +61,12 @@ class DiscreteAllele(AlleleABC):
     def __init__(self, value):
         super().__init__(value)
 
-    @convert_input_to_int
     def __eq__(self, other):
-        return self._value == other
+        if other == DISCRETE_WILDCARD_ALLELE:
+            return False
+        else:
+            other = _convert_input_to_int(other)
+            return self._value == other
 
     def __repr__(self):
         return f"{self.__class__.__name__}(" f"{self._value!r})"
