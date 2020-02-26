@@ -1,41 +1,33 @@
-from piecewise.dtype import Condition, FloatAllele
+from piecewise.dtype import Condition, FloatAllele, Genotype
 from piecewise.lcs.hyperparams import get_hyperparam
 from piecewise.lcs.rng import get_rng
 
+from .interval import Interval
 from .interval_rule_repr import IntervalRuleReprABC
-from .predicate.centre_spread_predicate import CentreSpreadPredicate
 
 
 def make_centre_spread_rule_repr(env):
-    return CentreSpreadRuleRepr(situation_space=env.obs_space,
-                                env_dtype=env.dtype)
+    return CentreSpreadRuleRepr(situation_space=env.obs_space)
 
 
 class CentreSpreadRuleRepr(IntervalRuleReprABC):
     """Rule representation that works with (centre, spread) interval
     predicates."""
-    def __init__(self, situation_space, env_dtype):
-        super().__init__(situation_space, env_dtype)
+    def __init__(self, situation_space):
+        super().__init__(situation_space)
 
-    def _create_wildcard_predicate_for_dim(self, dimension):
-        centre = (dimension.upper + dimension.lower) / 2
-        spread = dimension.upper - centre
-        return self._make_predicate(centre, spread)
-
-    def _make_predicate(self, centre, spread):
-        return CentreSpreadPredicate(centre, spread)
-
-    def gen_covering_condition(self, situation):
+    def _gen_covering_condition(self, situation):
         alleles = []
         for situation_elem in situation:
             centre = situation_elem
             spread = get_rng().uniform(0, get_hyperparam("s_nought"))
-            alleles.append(self._allele_type(centre))
-            alleles.append(self._allele_type(spread))
-        return Condition(rule_repr=self, alleles=alleles)
+            alleles.append(FloatAllele(centre))
+            alleles.append(FloatAllele(spread))
+        genotype = Genotype(alleles)
+        return Condition(genotype)
 
     def mutate_condition(self, condition, situation=None):
-        for allele in condition:
+        for allele in condition.genotype:
             self._mutate_allele(allele)
 
     def _mutate_allele(self, allele):
@@ -46,12 +38,12 @@ class CentreSpreadRuleRepr(IntervalRuleReprABC):
             adjustment_amount = adjustment_magnitude * adjustment_sign
             allele += adjustment_amount
 
-    def genotype_to_phenotype(self, condition):
-        assert len(condition) % 2 == 0
-        phenotype = []
-        for centre_idx in range(0, len(condition), 2):
-            spread_idx = centre_idx + 1
-            centre = condition[centre_idx].value
-            spread = condition[spread_idx].value
-            phenotype.append(self._make_predicate(centre, spread))
-        return tuple(phenotype)
+    def _make_phenotype_interval_from_allele_vals(self,
+                                                  first_val,
+                                                  second_val,
+                                                  situation_space_idx=None):
+        centre = first_val
+        spread = second_val
+        lower = centre - spread
+        upper = centre + spread
+        return Interval(lower, upper)

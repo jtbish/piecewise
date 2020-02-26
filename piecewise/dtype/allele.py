@@ -2,7 +2,7 @@ import abc
 import functools
 import math
 
-from piecewise.error.allele_error import ConversionError
+from piecewise.error.allele_error import AlleleError, ConversionError
 
 from .config import float_allele_rel_tol
 from .formatting import as_truncated_str
@@ -41,18 +41,13 @@ def convert_input_to_int(method):
     into an integer."""
     @functools.wraps(method)
     def int_converter(self, input_):
-        int_ = _convert_input_to_int(input_)
+        try:
+            int_ = int(input_)
+        except ValueError:
+            raise ConversionError(f"Cannot convert input '{input_}' to int.")
         return method(self, int_)
 
     return int_converter
-
-
-def _convert_input_to_int(input_):
-    try:
-        int_ = int(input_)
-    except ValueError:
-        raise ConversionError(f"Cannot convert input '{input_}' to int.")
-    return int_
 
 
 class DiscreteAllele(AlleleABC):
@@ -61,21 +56,39 @@ class DiscreteAllele(AlleleABC):
     def __init__(self, value):
         super().__init__(value)
 
-    def __eq__(self, other):
-        if other == DISCRETE_WILDCARD_ALLELE:
-            return False
-        else:
-            other = _convert_input_to_int(other)
-            return self._value == other
-
     def __repr__(self):
         return f"{self.__class__.__name__}(" f"{self._value!r})"
+
+    @convert_input_to_int
+    def __eq__(self, other):
+        return self._value == other
 
     def __int__(self):
         return self._value
 
 
-DISCRETE_WILDCARD_ALLELE = "#"
+WILDCARD_CHAR = "#"
+
+
+class DiscreteWildcardAllele(AlleleABC):
+    def __init__(self):
+        super().__init__(value=WILDCARD_CHAR)
+
+    @AlleleABC.value.setter
+    def value(self):
+        raise AlleleError(f"Updates on {self.__class__.__name__} value attr "
+                          "not allowed")
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}()"
+
+    def __eq__(self, other):
+        return type(self) == type(other)
+
+    def __int__(self):
+        # necessary so that DiscreteAllele __eq__ method can do a comparison
+        # with this obj
+        return self._value
 
 
 def convert_input_to_float(method):

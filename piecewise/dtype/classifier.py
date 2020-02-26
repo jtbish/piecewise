@@ -158,12 +158,6 @@ class Classifier:
     def is_macro(self):
         return self._numerosity > NUMEROSITY_MIN
 
-    def generality_as_percentage(self, rule_repr):
-        return (self.num_wildcards(rule_repr) / len(self.condition)) * 100
-
-    def num_wildcards(self, rule_repr):
-        return rule_repr.num_wildcards(self.condition)
-
     def __eq__(self, other):
         return self._rule == other.rule and \
             math.isclose(self._prediction, other.prediction,

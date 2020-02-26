@@ -1,55 +1,43 @@
 import abc
 
-from piecewise.dtype import FloatAllele, IntegerAllele
-from piecewise.environment import EnvironmentDtypes
-
 from ..rule_repr import IRuleRepr
+from .interval import Interval
 
 
 class IntervalRuleReprABC(IRuleRepr, metaclass=abc.ABCMeta):
-    def __init__(self, situation_space, env_dtype):
+    def __init__(self, situation_space):
         self._situation_space = situation_space
-        self._wildcard_predicates = self._create_wildcard_predicates()
-        self._allele_type = self._init_allele_type(env_dtype)
+        self._wildcard_intervals = self._create_wildcard_intervals()
 
-    def _create_wildcard_predicates(self):
+    def _create_wildcard_intervals(self):
         return tuple([
-            self._create_wildcard_predicate_for_dim(dimension)
+            self._create_wildcard_interval_for_dim(dimension)
             for dimension in self._situation_space
         ])
 
-    @abc.abstractmethod
-    def _create_wildcard_predicate_for_dim(self, dimension):
-        """Creates a wildcard predicate for the given dimension of the situation
-        space.
-
-        Dependent on the specific interval representation, hence is abstract
-        and is up to subclasses to implement."""
-        raise NotImplementedError
-
-    def _init_allele_type(self, env_dtype):
-        if env_dtype == EnvironmentDtypes.discrete:
-            return IntegerAllele
-        elif env_dtype == EnvironmentDtypes.continuous:
-            return FloatAllele
-        else:
-            raise Exception
+    def _create_wildcard_interval_for_dim(self, dimension):
+        return Interval(dimension.lower, dimension.upper)
 
     def does_match(self, condition, situation):
-        phenotype = self.genotype_to_phenotype(condition)
-        for (interval_predicate, situation_elem) in zip(phenotype, situation):
-            if not interval_predicate.lower() <= situation_elem <= \
-                    interval_predicate.upper():
+        phenotype = condition.phenotype(self)
+        for (interval, situation_elem) in zip(phenotype, situation):
+            if not interval.contains_point(situation_elem):
                 return False
         return True
 
-    @abc.abstractmethod
     def gen_covering_condition(self, situation):
+        condition = self._gen_covering_condition(situation)
+        genotype_has_even_len = len(condition.genotype) % 2 == 0
+        assert genotype_has_even_len
+        return condition
+
+    @abc.abstractmethod
+    def _gen_covering_condition(self, situation):
         raise NotImplementedError
 
     def crossover_conditions(self, first_condition, second_condition,
                              crossover_strat):
-        crossover_strat(first_condition, second_condition)
+        crossover_strat(first_condition.genotype, second_condition.genotype)
 
     @abc.abstractmethod
     def mutate_condition(self, condition, situation=None):
@@ -59,6 +47,20 @@ class IntervalRuleReprABC(IRuleRepr, metaclass=abc.ABCMeta):
         return interval_predicate.contains(
             self._wildcard_predicates[phenotype_idx])
 
+    def map_genotype_to_phenotype(self, genotype):
+        assert len(genotype) % 2 == 0
+        phenotype = []
+        for first_allele_idx in range(0, len(genotype), 2):
+            second_allele_idx = first_allele_idx + 1
+            first_val = genotype[first_allele_idx].value
+            second_val = genotype[second_allele_idx].value
+            situation_space_idx = int(first_allele_idx / 2)
+            phenotype.append(
+                self._make_phenotype_interval_from_allele_vals(
+                    first_val, second_val, situation_space_idx))
+        return tuple(phenotype)
+
     @abc.abstractmethod
-    def genotype_to_phenotype(self, condition):
+    def _make_phenotype_interval_from_allele_vals(self, first_val, second_val,
+                                                  situation_space_idx):
         raise NotImplementedError

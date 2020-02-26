@@ -25,8 +25,8 @@ class IRuleRepr(metaclass=abc.ABCMeta):
     def mutate_condition(self, condition, situation=None):
         """Mutates the given condition in-place.
 
-        May or may not require hyperparameters or an environmental situation,
-        hence these arguments are None by default."""
+        May or may not require an environmental situation,
+        hence this argument is None by default."""
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -36,7 +36,11 @@ class IRuleRepr(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def genotype_to_phenotype(self, condition):
-        """Converts the given condition (in genotype space) to its
+    def first_contains_second(self, first_condition, second_condition):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def map_genotype_to_phenotype(self, genotype):
+        """Converts the given genotype to its
         representation in phenotype space."""
         raise NotImplementedError
