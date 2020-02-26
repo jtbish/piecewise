@@ -36,7 +36,10 @@ class IRuleRepr(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def first_contains_second(self, first_condition, second_condition):
+    def check_condition_subsumption(self, subsumer_condition,
+                                    susbsumee_condition):
+        """Determines if the subsumer condition logically subsumes the
+        susbsumee condition."""
         raise NotImplementedError
 
     @abc.abstractmethod

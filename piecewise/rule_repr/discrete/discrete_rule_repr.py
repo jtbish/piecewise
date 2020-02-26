@@ -72,7 +72,7 @@ class DiscreteRuleRepr(IRuleRepr):
         ].count(True)
         return num_wildcards / len(condition.genotype)
 
-    def first_contains_second(self, first_condition, second_condition):
+    def does_subsume_condition(self, first_condition, second_condition):
         for (first_allele, second_allele) in zip(first_condition.genotype,
                                                  second_condition.genotype):
             if not self._is_wildcard(first_allele) and \

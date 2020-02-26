@@ -11,7 +11,7 @@ def make_min_percentage_rule_repr(env):
 
 
 class MinPercentageRuleRepr(IntervalRuleReprABC):
-    """Rule representation that works with (min, percent_to_max) interval
+    """Rule representation that works with (lower, frac_to_upper) interval
     predicates."""
     def __init__(self, situation_space):
         super().__init__(situation_space)

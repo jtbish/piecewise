@@ -11,12 +11,9 @@ class IntervalRuleReprABC(IRuleRepr, metaclass=abc.ABCMeta):
 
     def _create_wildcard_intervals(self):
         return tuple([
-            self._create_wildcard_interval_for_dim(dimension)
+            Interval(dimension.lower, dimension.upper)
             for dimension in self._situation_space
         ])
-
-    def _create_wildcard_interval_for_dim(self, dimension):
-        return Interval(dimension.lower, dimension.upper)
 
     def does_match(self, condition, situation):
         phenotype = condition.phenotype(self)
@@ -43,9 +40,31 @@ class IntervalRuleReprABC(IRuleRepr, metaclass=abc.ABCMeta):
     def mutate_condition(self, condition, situation=None):
         raise NotImplementedError
 
-    def _is_wildcard(self, interval_predicate, phenotype_idx):
-        return interval_predicate.contains(
-            self._wildcard_predicates[phenotype_idx])
+    def _is_wildcard(self, interval, phenotype_idx):
+        return interval.contains_interval(
+            self._wildcard_intervals[phenotype_idx])
+
+    def calc_generality(self, condition):
+        phenotype = condition.phenotype(self)
+        assert len(phenotype) == len(self._situation_space)
+        cover_fractions = \
+            [phenotype_interval.fraction_covered_of(wildcard_interval) for
+                (phenotype_interval, wildcard_interval) in
+                zip(phenotype, self._wildcard_intervals)]
+        generality = sum(cover_fractions) / len(phenotype)
+        assert 0.0 <= generality <= 1.0
+        return generality
+
+    def check_condition_subsumption(self, subsumer_condition,
+                                    subsumee_condition):
+        subsumer_phenotype = subsumer_condition.phenotype(self)
+        subsumee_phenotype = subsumee_condition.phenotype(self)
+        for (idx, subsumer_interval, subsumee_interval) in \
+                enumerate(zip(subsumer_phenotype, subsumee_phenotype)):
+            if not self._is_wildcard(subsumer_interval, idx) and \
+                    subsumer_interval.contains_interval(subsumee_interval):
+                return False
+        return True
 
     def map_genotype_to_phenotype(self, genotype):
         assert len(genotype) % 2 == 0
