@@ -1,3 +1,6 @@
+import functools
+import math
+
 import gym
 from gym import logger
 
@@ -56,7 +59,6 @@ class GymEnvironment(EnvironmentABC):
         self._is_terminal = False
         self._wrapped_env_was_done_last_step = False
 
-    @check_terminal
     def observe(self):
         return self._curr_obs
 
@@ -74,3 +76,48 @@ class GymEnvironment(EnvironmentABC):
 
     def is_terminal(self):
         return self._is_terminal
+
+
+def discretise_gym_environment(gym_env, discretisation_vec):
+    """Discretise GymEnvironment obj at run time."""
+    # add new attrs
+    gym_env._discretisation_vec = discretisation_vec
+    gym_env._orig_obs_space = gym_env._obs_space
+
+    def make_discrete_obs_space(discretisation_vec):
+        discrete_obs_space_builder = DataSpaceBuilder()
+        for num_bins in discretisation_vec:
+            discrete_obs_space_builder.add_dim(
+                Dimension(lower=0, upper=(num_bins - 1)))
+        return discrete_obs_space_builder.create_space()
+
+    # override obs_space attr so it is discrete
+    gym_env._obs_space = make_discrete_obs_space(discretisation_vec)
+
+    # decorate observe() func to do discretisation
+    def discretise_observe(observe_method):
+        @functools.wraps(observe_method)
+        def _discretise_observe(self):
+            undiscretised_obs = observe_method()
+            assert len(self._discretisation_vec) == len(undiscretised_obs)
+            discretised_obs = []
+            for (feature_val, orig_obs_space_dim,
+                 num_bins) in zip(undiscretised_obs, self._orig_obs_space,
+                                  self._discretisation_vec):
+                feature_dist_from_dim_lower = \
+                    feature_val - orig_obs_space_dim.lower
+                assert feature_dist_from_dim_lower >= 0
+                bin_width = \
+                    (orig_obs_space_dim.upper - orig_obs_space_dim.lower) / \
+                    num_bins
+                discrete_feature_val = \
+                    math.floor(feature_dist_from_dim_lower/bin_width)
+                discretised_obs.append(discrete_feature_val)
+            return discretised_obs
+        return _discretise_observe
+
+    # TODO wtf
+    func = discretise_observe(gym_env.observe)
+    bound_method = func.__get__(gym_env, gym_env.__class__)
+    setattr(gym_env, "observe", bound_method)
+    return gym_env
