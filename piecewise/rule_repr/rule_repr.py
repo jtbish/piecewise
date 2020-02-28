@@ -31,15 +31,13 @@ class IRuleRepr(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def calc_generality(self, condition):
-        """Returns the generality of the condition as a fraction,
-        i.e. how much of the input space the condition covers."""
+        """Returns the generality of the condition as a fraction."""
         raise NotImplementedError
 
     @abc.abstractmethod
-    def check_condition_subsumption(self, subsumer_condition,
-                                    susbsumee_condition):
-        """Determines if the subsumer condition logically subsumes the
-        susbsumee condition."""
+    def check_condition_subsumption(self, first_condition, second_condition):
+        """Determines if the first condition logically subsumes the
+        second condition."""
         raise NotImplementedError
 
     @abc.abstractmethod

@@ -36,8 +36,7 @@ class MultiplexerDirector:
         obs_space = self._mux_builder.create_obs_space()
         env = ClassificationEnvironment(
             dataset=dataset,
-            obs_space=obs_space,
-            action_set=None,
+            custiom_obs_space=obs_space,
             shuffle_dataset=self._shuffle_dataset,
             shuffle_seed=self._shuffle_seed,
             reward_correct=self._reward_correct,

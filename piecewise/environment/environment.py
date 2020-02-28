@@ -31,15 +31,15 @@ EnvironmentStepTypes = Enum("EnivronmentStepTypes",
 
 class EnvironmentABC(metaclass=abc.ABCMeta):
     """ABC for environments."""
-    def __init__(self, obs_space, action_set, step_type):
-        self._obs_space = obs_space
+    def __init__(self, action_set, step_type):
         self._action_set = action_set
         self._step_type = step_type
         self.reset()
 
     @property
+    @abc.abstractmethod
     def obs_space(self):
-        return self._obs_space
+        raise NotImplementedError
 
     @property
     def action_set(self):
@@ -67,6 +67,6 @@ class EnvironmentABC(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def is_terminal(self):
-        """Checks whether the current epoch of the environment is in a terminal
+        """Returns whether the current epoch of the environment is in a terminal
         state (no more data left to observe)."""
         raise NotImplementedError

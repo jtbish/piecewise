@@ -12,8 +12,7 @@ class ClassificationEnvironment(EnvironmentABC):
     """Environment that manages interaction with a static labelled dataset."""
     def __init__(self,
                  dataset,
-                 obs_space=None,
-                 action_set=None,
+                 custom_obs_space=None,
                  shuffle_dataset=True,
                  shuffle_seed=0,
                  reward_correct=1000,
@@ -26,10 +25,15 @@ class ClassificationEnvironment(EnvironmentABC):
         self._num_data_points = self._dataset.shape[0]
         self._num_features = self._dataset.shape[1] - 1
         data, labels = self._split_dataset()
-        obs_space = self._gen_obs_space_if_not_given(data, obs_space)
-        action_set = self._gen_action_set_if_not_given(labels, action_set)
+        self._obs_space = self._gen_obs_space_if_not_given(
+            data, custom_obs_space)
+        action_set = self._gen_action_set(labels)
         step_type = EnvironmentStepTypes.single_step
-        super().__init__(obs_space, action_set, step_type)
+        super().__init__(action_set, step_type)
+
+    @property
+    def obs_space(self):
+        return self._obs_space
 
     @property
     def dataset(self):
@@ -66,11 +70,11 @@ class ClassificationEnvironment(EnvironmentABC):
         generic_column_names.append("label")
         data_frame.columns = generic_column_names
 
-    def _gen_obs_space_if_not_given(self, data, obs_space):
-        if obs_space is None:
+    def _gen_obs_space_if_not_given(self, data, custom_obs_space):
+        if custom_obs_space is None:
             return self._gen_obs_space(data)
         else:
-            return obs_space
+            return custom_obs_space
 
     def _gen_obs_space(self, data):
         obs_space_builder = DataSpaceBuilder()
@@ -84,11 +88,8 @@ class ClassificationEnvironment(EnvironmentABC):
         upper = np.max(feature_vec)
         return Dimension(lower, upper)
 
-    def _gen_action_set_if_not_given(self, labels, action_set):
-        if action_set is None:
-            return set([label for label in labels])
-        else:
-            return action_set
+    def _gen_action_set(self, labels):
+        return set([label for label in labels])
 
     def reset(self):
         self._dataset_idx_order = self._choose_dataset_idx_order()

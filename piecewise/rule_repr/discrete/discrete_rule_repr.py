@@ -1,5 +1,4 @@
-from piecewise.dtype import (Condition, DiscreteAllele, DiscreteWildcardAllele,
-                             Genotype)
+from piecewise.dtype import Condition, Genotype
 from piecewise.lcs.hyperparams import get_hyperparam
 from piecewise.lcs.rng import get_rng
 
@@ -10,7 +9,7 @@ class DiscreteRuleRepr(IRuleRepr):
     """Rule representation that works with discrete (i.e. integer) inputs,
     storing a single discrete value for each allele in the condition genotype.
     """
-    _WILDCARD_ALLELE = DiscreteWildcardAllele()
+    _WILDCARD_ALLELE = "#"
 
     def does_match(self, condition, situation):
         """DOES MATCH function from 'An Algorithmic Description of XCS'
@@ -33,9 +32,10 @@ class DiscreteRuleRepr(IRuleRepr):
             should_make_wildcard = get_rng().rand() < get_hyperparam(
                 "p_wildcard")
             if should_make_wildcard:
-                alleles.append(self._make_wildcard_allele())
+                alleles.append(self._WILDCARD_ALLELE)
             else:
-                alleles.append(self._make_allele_to_copy_input(situation_elem))
+                # copy situation
+                alleles.append(situation_elem)
         genotype = Genotype(alleles)
         return Condition(genotype)
 
@@ -52,27 +52,22 @@ class DiscreteRuleRepr(IRuleRepr):
             should_mutate_allele = get_rng().rand() < get_hyperparam("mu")
             if should_mutate_allele:
                 if self._is_wildcard(allele):
-                    genotype[idx] = \
-                        self._make_allele_to_copy_input(situation_elem)
+                    genotype[idx] = situation_elem
                 else:
-                    genotype[idx] = self._make_wildcard_allele()
+                    genotype[idx] = self._WILDCARD_ALLELE
 
     def _is_wildcard(self, allele):
         return allele == self._WILDCARD_ALLELE
-
-    def _make_wildcard_allele(self):
-        return DiscreteWildcardAllele()
-
-    def _make_allele_to_copy_input(self, situation_elem):
-        return DiscreteAllele(situation_elem)
 
     def calc_generality(self, condition):
         num_wildcards = [
             self._is_wildcard(allele) for allele in condition.genotype
         ].count(True)
-        return num_wildcards / len(condition.genotype)
+        generality = num_wildcards / len(condition.genotype)
+        assert 0.0 <= generality <= 1.0
+        return generality
 
-    def does_subsume_condition(self, first_condition, second_condition):
+    def check_condition_subsumption(self, first_condition, second_condition):
         for (first_allele, second_allele) in zip(first_condition.genotype,
                                                  second_condition.genotype):
             if not self._is_wildcard(first_allele) and \
@@ -81,4 +76,4 @@ class DiscreteRuleRepr(IRuleRepr):
         return True
 
     def map_genotype_to_phenotype(self, genotype):
-        return tuple([allele.value for allele in genotype])
+        return tuple(genotype)

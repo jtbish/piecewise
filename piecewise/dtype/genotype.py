@@ -1,3 +1,8 @@
+import numpy as np
+
+from .config import float_allele_rel_tol
+
+
 class Genotype:
     """Mutable sequence type that represents a sequence of alleles."""
     def __init__(self, alleles):
@@ -9,9 +14,19 @@ class Genotype:
 
     def __eq__(self, other):
         for (my_allele, other_allele) in zip(self._alleles, other._alleles):
-            if my_allele != other_allele:
+            if not self._alleles_are_equal(my_allele, other_allele):
                 return False
         return True
+
+    def _alleles_are_equal(self, my_allele, other_allele):
+        are_floats = isinstance(my_allele, np.floating) and \
+                isinstance(other_allele, np.floating)
+        if are_floats:
+            return np.isclose(my_allele,
+                              other_allele,
+                              rtol=float_allele_rel_tol)
+        else:
+            return my_allele == other_allele
 
     def __setitem__(self, idx, value):
         self._alleles[idx] = value

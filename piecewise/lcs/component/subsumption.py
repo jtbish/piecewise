@@ -16,9 +16,9 @@ class ISubsumptionStrategy(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def is_more_general(self, general_classifier, specific_classifier):
-        """Determines if the 'general' classifier is indeed more general than
-        the 'specific' classifier."""
+    def is_more_general(self, first_classifier, second_classifier):
+        """Determines if the first classifier is more general than the second
+        classifier."""
         raise NotImplementedError
 
 
@@ -30,10 +30,8 @@ class XCSSubsumption(ISubsumptionStrategy):
         """DOES SUBSUME function from 'An Algorithmic Description of XCS'
         (Butz and Wilson, 2002)."""
         return self.could_subsume(subsumer) and \
-            self._have_same_actions(subsumer,
-                                    subsumee) and \
-            self.subsumer_is_more_general(subsumer,
-                                          subsumee) and \
+            subsumer.action == subsumee.action and \
+            self.is_more_general(subsumer, subsumee) and \
             self.subsumer_contains_subsumee(subsumer,
                                             subsumee)
 
@@ -43,22 +41,21 @@ class XCSSubsumption(ISubsumptionStrategy):
         return classifier.experience > get_hyperparam("theta_sub") and \
             classifier.error < get_hyperparam("epsilon_nought")
 
-    def _have_same_actions(self, subsumer, subsumee):
-        return subsumer.action == subsumee.action
-
-    def subsumer_is_more_general(self, subsumer, subsumee):
-        """First part of IS MORE GENERAL function from 'An Algorithmic Description of XCS'
+    def is_more_general(self, first_classifier, second_classifier):
+        """First part of IS MORE GENERAL function from
+        'An Algorithmic Description of XCS'
         (Butz and Wilson, 2002), modified to be rule representation
         agnostic."""
-        subsumer_generality = \
-            self._rule_repr.calc_generality(subsumer.condition)
-        subsumee_generality = \
-            self._rule_repr.calc_generality(subsumee.condition)
-        return subsumer_generality > subsumee_generality
+        first_classifier_generality = \
+            self._rule_repr.calc_generality(first_classifier.condition)
+        second_classifier_generality = \
+            self._rule_repr.calc_generality(second_classifier.condition)
+        return first_classifier_generality > second_classifier_generality
 
     def subsumer_contains_subsumee(self, subsumer, subsumee):
-        """Second part of IS MORE GENERAL function from 'An Algorithmic Description of XCS'
+        """Second part of IS MORE GENERAL function from
+        'An Algorithmic Description of XCS'
         (Butz and Wilson, 2002), modified to be rule representation
         agnostic."""
-        return self._rule_repr.first_contains_second(subsumer.condition,
-                                                     subsumee.condition)
+        return self._rule_repr.check_condition_subsumption(
+            subsumer.condition, subsumee.condition)
