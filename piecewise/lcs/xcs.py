@@ -245,7 +245,11 @@ class XCS(LCS):
             for classifier in action_set:
                 if self._subsumption_strat.is_more_general(
                         most_general_classifier, classifier):
+                    logging.debug("Attempting to do an action set "
+                                  "subsumption.")
                     action_set.remove(classifier)
+                    # TODO there is a bug here......
+                    # TODO something bad about decorators in population??
                     self._population.replace(replacee=classifier,
                                              replacer=most_general_classifier,
                                              operation_label="as_subsumption")

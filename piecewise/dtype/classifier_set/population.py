@@ -51,7 +51,6 @@ class Population(ClassifierSetBase):
     def max_micros(self):
         return self._max_micros
 
-    # TODO evil?
     @property
     def operations_record(self):
         return self._operation_recorder
@@ -109,7 +108,7 @@ class Population(ClassifierSetBase):
         """Replace the first classifier (replacee) with the second classifier
         (replacer) in the population.
 
-        This involves completely removing all copies of the eplacee and
+        This involves completely removing all copies of the replacee and
         incrementing the numerosity of the replacer by the same number of
         copies - therefore there is no overall diff in population size as a
         result of this operation.
