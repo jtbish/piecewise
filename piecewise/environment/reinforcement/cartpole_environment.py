@@ -2,7 +2,7 @@ import gym
 
 from piecewise.dtype import DataSpaceBuilder, Dimension
 
-from .gym_environment import GymEnvironment
+from .gym_environment import GymEnvironment, NormalisedGymEnvironment
 
 _ENV_NAME = "CartPole-v0"
 # These were found via the following procedure:
@@ -21,16 +21,23 @@ _POLE_VEL_LOWER = -3.6696
 _POLE_VEL_UPPER = 3.6696
 
 
-def make_cartpole_environment(seed=0, normalise=False):
-    overriden_obs_space = _gen_overriden_obs_space()
+def make_continuous_cartpole_env(normalise, seed=0):
+    raw_env = _make_raw_cartpole_env(seed)
+    if normalise:
+        return NormalisedGymEnvironment(raw_env)
+    else:
+        return raw_env
+
+
+def _make_raw_cartpole_env(seed):
+    custom_obs_space = _gen_custom_obs_space()
     return GymEnvironment(env_name=_ENV_NAME,
-                          custom_obs_space=overriden_obs_space,
+                          custom_obs_space=custom_obs_space,
                           custom_action_set=None,
-                          seed=seed,
-                          normalise=normalise)
+                          seed=seed)
 
 
-def _gen_overriden_obs_space():
+def _gen_custom_obs_space():
     actual_env = gym.make(_ENV_NAME)
     lower_vector = actual_env.observation_space.low
     upper_vector = actual_env.observation_space.high

@@ -113,7 +113,7 @@ class Population(ClassifierSetBase):
         copies - therefore there is no overall diff in population size as a
         result of this operation.
 
-        Replacer *must* already exist in the population.
+        Both replacee and replacer *must* already exist in the population.
 
         Throws:
             MemberNotFoundError: if either replacee or replacer are not in the

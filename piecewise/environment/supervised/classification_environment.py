@@ -4,11 +4,11 @@ import pandas as pd
 from piecewise.dtype import DataSpaceBuilder, Dimension
 from piecewise.util.rng import init_np_random_state
 
-from ..environment import (EnvironmentABC, EnvironmentResponse,
-                           EnvironmentStepTypes, check_terminal)
+from ..environment import (EnvironmentResponse, EnvironmentStepTypes,
+                           IEnvironment, check_terminal)
 
 
-class ClassificationEnvironment(EnvironmentABC):
+class ClassificationEnvironment(IEnvironment):
     """Environment that manages interaction with a static labelled dataset."""
     def __init__(self,
                  dataset,
@@ -27,9 +27,8 @@ class ClassificationEnvironment(EnvironmentABC):
         data, labels = self._split_dataset()
         self._obs_space = self._gen_obs_space_if_not_given(
             data, custom_obs_space)
-        action_set = self._gen_action_set(labels)
-        step_type = EnvironmentStepTypes.single_step
-        super().__init__(action_set, step_type)
+        self._action_set = self._gen_action_set(labels)
+        self.reset()
 
     @property
     def obs_space(self):
@@ -38,6 +37,10 @@ class ClassificationEnvironment(EnvironmentABC):
     @property
     def dataset(self):
         return self._dataset
+
+    @property
+    def step_type(self):
+        return EnvironmentStepTypes.single_step
 
     @property
     def data(self):

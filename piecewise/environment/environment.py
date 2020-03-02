@@ -29,21 +29,17 @@ EnvironmentStepTypes = Enum("EnivronmentStepTypes",
                             ["single_step", "multi_step"])
 
 
-class EnvironmentABC(metaclass=abc.ABCMeta):
-    """ABC for environments."""
-    def __init__(self, action_set, step_type):
-        self._action_set = action_set
-        self._step_type = step_type
-        self.reset()
-
+class IEnvironment(metaclass=abc.ABCMeta):
+    """Interface for environments."""
     @property
     @abc.abstractmethod
     def obs_space(self):
         raise NotImplementedError
 
     @property
+    @abc.abstractmethod
     def action_set(self):
-        return self._action_set
+        raise NotImplementedError
 
     @property
     def step_type(self):

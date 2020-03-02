@@ -1,14 +1,22 @@
 import functools
 
+from piecewise.dtype import Classifier
 from piecewise.error.classifier_set_error import MemberNotFoundError
 
 
 def verify_membership(method):
-    """Decorator to ensure classifiers in positional args are contained in the
-    classifier set before performing an operation on the set with them."""
+    """Decorator to ensure classifiers in args (both positional and keyword) are
+    contained in the classifier set before performing an operation on the set
+    with them."""
     @functools.wraps(method)
     def _verify_membership(self, *args, **kwargs):
-        for classifier in args:
+        all_args = list(args)
+        for kwarg in kwargs.values():
+            all_args.append(kwarg)
+        classifier_args = [
+            arg for arg in all_args if isinstance(arg, Classifier)
+        ]
+        for classifier in classifier_args:
             if classifier not in self._members:
                 raise MemberNotFoundError()
         return method(self, *args, **kwargs)

@@ -21,5 +21,4 @@ class ClassifierSet(ClassifierSetBase):
             MemberNotFoundError: if the classifier is not in the set.
         """
         self._members.remove(classifier)
-
         self._dec_num_micros(classifier.numerosity)

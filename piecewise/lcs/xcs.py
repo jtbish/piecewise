@@ -1,4 +1,5 @@
 import abc
+import copy
 import logging
 from collections import namedtuple
 
@@ -226,6 +227,10 @@ class XCS(LCS):
         """DO ACTION SET SUBSUMPTION function from 'An Algorithmic Description
         of XCS' (Butz and Wilson, 2002).
         """
+        # TODO remove after testing
+        for classifier in action_set:
+            assert classifier in self._population
+
         most_general_classifier = \
             self._find_most_general_classifier(action_set)
         self._perform_subsumptions(most_general_classifier, action_set)
@@ -242,14 +247,13 @@ class XCS(LCS):
 
     def _perform_subsumptions(self, most_general_classifier, action_set):
         if most_general_classifier is not None:
-            for classifier in action_set:
+            action_set_for_looping = copy.deepcopy(action_set)
+            for classifier in action_set_for_looping:
                 if self._subsumption_strat.is_more_general(
                         most_general_classifier, classifier):
                     logging.debug("Attempting to do an action set "
                                   "subsumption.")
                     action_set.remove(classifier)
-                    # TODO there is a bug here......
-                    # TODO something bad about decorators in population??
                     self._population.replace(replacee=classifier,
                                              replacer=most_general_classifier,
                                              operation_label="as_subsumption")
@@ -342,9 +346,31 @@ class MultiStepXCS(XCS):
         if self._prev_action_set is not None:
             assert self._prev_situation is not None
             assert self._prev_reward is not None
+            self._prev_action_set = \
+                self._filter_action_set_for_updating(self._prev_action_set)
             payoff = self._calc_discounted_payoff()
             self._update_action_set(self._prev_action_set,
                                     self._prev_situation, payoff)
+
+    def _filter_action_set_for_updating(self, action_set):
+        """Filters the given action set to only contain references to
+        classifiers that are currently in the population.
+
+        This is necessary because classifier references are stored in multiple
+        places: the population, the current action set, and the previous action
+        set.
+
+        During updating of the action sets in multi-step XCS, action set
+        subsumption can take place. This can cause incongruency between the
+        three sets, as sometimes a classifier may be removed from some sets but
+        not the others, e.g. if the previous action set undergoes subsumption,
+        removes some classifiers from itself and the population, the changes
+        are not reflected in the current action set."""
+        result = ClassifierSet()
+        for classifier in action_set:
+            if classifier in self._population:
+                result.add(classifier)
+        return result
 
     def _calc_discounted_payoff(self):
         max_prediction = max(self._prediction_array.values())
@@ -355,7 +381,10 @@ class MultiStepXCS(XCS):
         reward = env_response.reward
         if env_response.is_terminal:
             payoff = reward
+            self._action_set = self._filter_action_set_for_updating(
+                self._action_set)
             self._update_action_set(self._action_set, self._situation, payoff)
+            self._prev_action_set = None
         else:
             self._update_prev_step_tracking_attrs(reward)
 
