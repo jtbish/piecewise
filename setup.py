@@ -20,7 +20,8 @@ setuptools.setup(
     ],
     install_requires=[
         "numpy",
-        "pandas"
+        "pandas",
+        "gym"
     ],
     python_requires='>=3.6',
 )

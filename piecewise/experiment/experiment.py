@@ -53,7 +53,6 @@ class Experiment:
         self._save_run_script()
         self._save_lcs_hyperparams()
         self._save_var_args()
-        self._save_lib_version_info()
         self._save_python_env_info()
 
     def _save_trained_lcs(self):
@@ -74,14 +73,11 @@ class Experiment:
             with open(self._save_path / "var_args.txt", "w") as fp:
                 fp.write(str(self._var_args))
 
-    def _save_lib_version_info(self):
-        result = subprocess.run(["git", "rev-parse", "HEAD"],
-                                stdout=subprocess.PIPE)
+    def _save_python_env_info(self):
+        result = subprocess.run(["pip3", "freeze"],
+                                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         return_val = result.stdout.decode("utf-8")
         exit_status = result.returncode
-        with open(self._save_path / "lib_version_info.txt", "w") as fp:
-            fp.write(f"This is Piecewise, HEAD @ {return_val}")
-
-    def _save_python_env_info(self):
-        # TODO
+        with open(self._save_path / "python_env_info.txt", "w") as fp:
+            fp.write(str(return_val))
         pass
