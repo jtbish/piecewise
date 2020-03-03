@@ -5,6 +5,7 @@ from collections import namedtuple
 
 from piecewise.dtype import ClassifierSet
 from piecewise.environment import EnvironmentStepTypes
+from piecewise.error.classifier_set_error import MemberNotFoundError
 from piecewise.error.core_errors import InternalError
 from piecewise.util.classifier_set_stats import (calc_summary_stat,
                                                  num_unique_actions)
@@ -217,25 +218,25 @@ class XCS(LCS):
         discovery step last."""
         self._do_credit_assignment(action_set, payoff)
         self._update_fitness(action_set)
-        if get_hyperparam("do_as_subsumption"):
+        if self._should_do_action_set_subsumption():
             self._do_action_set_subsumption(action_set)
         if self._should_do_rule_discovery():
             self._discover_classifiers(action_set, self._population, situation,
                                        self._time_step)
 
+    def _should_do_action_set_subsumption(self):
+        return get_hyperparam("do_as_subsumption")
+
     def _do_action_set_subsumption(self, action_set):
         """DO ACTION SET SUBSUMPTION function from 'An Algorithmic Description
         of XCS' (Butz and Wilson, 2002).
         """
-        # TODO remove after testing
-        for classifier in action_set:
-            assert classifier in self._population
-
         most_general_classifier = \
-            self._find_most_general_classifier(action_set)
-        self._perform_subsumptions(most_general_classifier, action_set)
+            self._find_most_general_classifier_in_action_set(action_set)
+        self._perform_action_set_subsumptions(most_general_classifier,
+                                              action_set)
 
-    def _find_most_general_classifier(self, action_set):
+    def _find_most_general_classifier_in_action_set(self, action_set):
         most_general_classifier = None
         for classifier in action_set:
             if self._subsumption_strat.could_subsume(classifier):
@@ -245,18 +246,27 @@ class XCS(LCS):
                     most_general_classifier = classifier
         return most_general_classifier
 
-    def _perform_subsumptions(self, most_general_classifier, action_set):
+    def _perform_action_set_subsumptions(self, most_general_classifier,
+                                         action_set):
         if most_general_classifier is not None:
-            action_set_for_looping = copy.deepcopy(action_set)
-            for classifier in action_set_for_looping:
+            for classifier in copy.deepcopy(action_set):
                 if self._subsumption_strat.is_more_general(
                         most_general_classifier, classifier):
                     logging.debug("Attempting to do an action set "
                                   "subsumption.")
                     action_set.remove(classifier)
-                    self._population.replace(replacee=classifier,
-                                             replacer=most_general_classifier,
-                                             operation_label="as_subsumption")
+                    self._try_subsume_in_population(
+                        replacee=classifier, replacer=most_general_classifier)
+
+    def _try_subsume_in_population(self, replacee, replacer):
+        try:
+            self._population.replace(replacee,
+                                     replacer,
+                                     operation_label="as_subsumption")
+        except MemberNotFoundError:
+            logging.debug("Tried to do as subsumption but failed.")
+        else:
+            logging.debug("Successfully did as subsumption.")
 
     def _should_do_rule_discovery(self):
         mean_time_stamp_in_pop = calc_summary_stat(self._population, "mean",
@@ -346,31 +356,9 @@ class MultiStepXCS(XCS):
         if self._prev_action_set is not None:
             assert self._prev_situation is not None
             assert self._prev_reward is not None
-            self._prev_action_set = \
-                self._filter_action_set_for_updating(self._prev_action_set)
             payoff = self._calc_discounted_payoff()
             self._update_action_set(self._prev_action_set,
                                     self._prev_situation, payoff)
-
-    def _filter_action_set_for_updating(self, action_set):
-        """Filters the given action set to only contain references to
-        classifiers that are currently in the population.
-
-        This is necessary because classifier references are stored in multiple
-        places: the population, the current action set, and the previous action
-        set.
-
-        During updating of the action sets in multi-step XCS, action set
-        subsumption can take place. This can cause incongruency between the
-        three sets, as sometimes a classifier may be removed from some sets but
-        not the others, e.g. if the previous action set undergoes subsumption,
-        removes some classifiers from itself and the population, the changes
-        are not reflected in the current action set."""
-        result = ClassifierSet()
-        for classifier in action_set:
-            if classifier in self._population:
-                result.add(classifier)
-        return result
 
     def _calc_discounted_payoff(self):
         max_prediction = max(self._prediction_array.values())
@@ -381,8 +369,6 @@ class MultiStepXCS(XCS):
         reward = env_response.reward
         if env_response.is_terminal:
             payoff = reward
-            self._action_set = self._filter_action_set_for_updating(
-                self._action_set)
             self._update_action_set(self._action_set, self._situation, payoff)
             self._prev_action_set = None
         else:

@@ -6,6 +6,7 @@ from pathlib import Path
 
 import __main__
 from piecewise.error.experiment_error import ExperimentError
+from piecewise.lcs.hyperparams import get_registry
 
 from .trainer import Trainer
 
@@ -50,6 +51,7 @@ class Experiment:
         self._trainer.save_monitor_data(self._save_path)
         self._save_trained_lcs()
         self._save_run_script()
+        self._save_lcs_hyperparams()
         self._save_var_args()
         self._save_lib_version_info()
         self._save_python_env_info()
@@ -61,6 +63,11 @@ class Experiment:
     def _save_run_script(self):
         run_script_path = Path(__main__.__file__)
         shutil.copyfile(run_script_path, self._save_path / "run_script.py")
+
+    def _save_lcs_hyperparams(self):
+        hyperparams = get_registry()
+        with open(self._save_path / "lcs_hyperparams.txt", "w") as fp:
+            fp.write(str(hyperparams))
 
     def _save_var_args(self):
         if self._var_args is not None:
