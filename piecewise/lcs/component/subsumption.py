@@ -29,11 +29,9 @@ class XCSSubsumption(ISubsumptionStrategy):
     def does_subsume(self, subsumer, subsumee):
         """DOES SUBSUME function from 'An Algorithmic Description of XCS'
         (Butz and Wilson, 2002)."""
-        return self.could_subsume(subsumer) and \
-            subsumer.action == subsumee.action and \
-            self.is_more_general(subsumer, subsumee) and \
-            self.subsumer_contains_subsumee(subsumer,
-                                            subsumee)
+        return subsumer.action == subsumee.action and \
+            self._could_subsume(subsumer) and \
+            self.is_more_general(subsumer, subsumee)
 
     def could_subsume(self, classifier):
         """COULD SUBSUME function from 'An Algorithmic Description of XCS'
@@ -42,17 +40,20 @@ class XCSSubsumption(ISubsumptionStrategy):
             classifier.error < get_hyperparam("epsilon_nought")
 
     def is_more_general(self, first_classifier, second_classifier):
-        """First part of IS MORE GENERAL function from
+        """IS MORE GENERAL function from
         'An Algorithmic Description of XCS'
         (Butz and Wilson, 2002), modified to be rule representation
         agnostic."""
-        first_classifier_generality = \
+        first_generality = \
             self._rule_repr.calc_generality(first_classifier.condition)
-        second_classifier_generality = \
+        second_generality = \
             self._rule_repr.calc_generality(second_classifier.condition)
-        return first_classifier_generality > second_classifier_generality
+        first_contains_second = self._subsumer_contains_subsumee(
+                subsumer=first_classifier_generality, subsumee=second_classifier)
+        return (first_generality > second_generality) and \
+                first_contains_second
 
-    def subsumer_contains_subsumee(self, subsumer, subsumee):
+    def _subsumer_contains_subsumee(self, subsumer, subsumee):
         """Second part of IS MORE GENERAL function from
         'An Algorithmic Description of XCS'
         (Butz and Wilson, 2002), modified to be rule representation

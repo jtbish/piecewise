@@ -218,14 +218,11 @@ class XCS(LCS):
         discovery step last."""
         self._do_credit_assignment(action_set, payoff)
         self._update_fitness(action_set)
-        if self._should_do_action_set_subsumption():
+        if get_hyperparam("do_as_subsumption"):
             self._do_action_set_subsumption(action_set)
-        if self._should_do_rule_discovery():
+        if self._should_do_rule_discovery_in_action_set(action_set):
             self._discover_classifiers(action_set, self._population, situation,
                                        self._time_step)
-
-    def _should_do_action_set_subsumption(self):
-        return get_hyperparam("do_as_subsumption")
 
     def _do_action_set_subsumption(self, action_set):
         """DO ACTION SET SUBSUMPTION function from 'An Algorithmic Description
@@ -249,7 +246,10 @@ class XCS(LCS):
     def _perform_action_set_subsumptions(self, most_general_classifier,
                                          action_set):
         if most_general_classifier is not None:
-            for classifier in copy.deepcopy(action_set):
+            # loop over copy of action set because possibly removing classifiers
+            # from it during loop
+            action_set_copy = copy.deepcopy(action_set):
+            for classifier in action_set_copy:
                 if self._subsumption_strat.is_more_general(
                         most_general_classifier, classifier):
                     logging.debug("Attempting to do an action set "
@@ -264,15 +264,15 @@ class XCS(LCS):
                                      replacer,
                                      operation_label="as_subsumption")
         except MemberNotFoundError:
-            logging.debug("Tried to do as subsumption but failed.")
+            logging.debug("AS subsumption failure.")
         else:
-            logging.debug("Successfully did as subsumption.")
+            logging.debug("AS subsumption success.")
 
-    def _should_do_rule_discovery(self):
-        mean_time_stamp_in_pop = calc_summary_stat(self._population, "mean",
+    def _should_do_rule_discovery_in_action_set(self, action_set):
+        mean_time_stamp_in_action_set = calc_summary_stat(action_set, "mean",
                                                    "time_stamp")
         time_since_last_rule_discovery = self._time_step - \
-            mean_time_stamp_in_pop
+            mean_time_stamp_in_action_set
         return time_since_last_rule_discovery > \
             get_hyperparam("theta_ga")
 

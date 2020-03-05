@@ -21,12 +21,29 @@ class DecayingEpsilonGreedy:
         self._epsilon = 1.0
 
     def __call__(self, prediction_array):
-        self._apply_decay()
+        self._decay_epsilon()
         logging.debug(f"Epsilon = {self._epsilon}")
         return _epsilon_greedy(prediction_array, self._epsilon)
 
-    def _apply_decay(self):
-        self._epsilon *= get_hyperparam("e_greedy_decay_factor")
+    def _decay_epsilon(self):
+        self._epsilon *= get_hyperparam("epsilon_decay_factor")
+
+
+class LowerBoundDecayingEpsilonGreedy:
+    def __init__(self, lower_bound):
+        assert lower_bound >= 0.0
+        self._epsilon_lower_bound = lower_bound
+        self._epislon = 1.0
+
+    def __call__(self, prediction_array):
+        self._decay_epsilon()
+        logging.debug(f"Epsilon = {self._epsilon}")
+        return _epsilon_greedy(prediction_array, self._epsilon)
+
+    def _decay_epsilon(self):
+        self._epsilon = max(
+                self._epsilon * get_hyperparam("epsilon_decay_factor"),
+                self._epsilon_lower_bound)
 
 
 def _epsilon_greedy(prediction_array, epsilon):

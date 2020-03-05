@@ -33,27 +33,25 @@ class ClassifierSetBase:
     correspond to the number of microclassifiers or the number of
     macroclassifiers?
 
-    Instead of causing confusion, the two concepts are explicitly separated
-    into different methods: see num_micros() and num_macros().
+    Instead of causing confusion, the two concepts are explicitly separated:
+    see num_micros and num_macros properties.
 
     Uses a list as the internal data structure to hold Classifier objs, because
     Classifier objs are mutable and thus not hashable, so not suitable for use
     in a hash-based data structure.
+
+    num_micros is an abstract property because the two subclasses of this base
+    (ClassifierSet and Population), handle calculation of this property
+    differently (namely it is actually calculated for the former but cached
+    and validated for the latter).
     """
     def __init__(self):
         self._members = []
-        self._num_micros = 0
 
     @property
+    @abc.abstractmethod
     def num_micros(self):
-        return self._num_micros
-
-    def _inc_num_micros(self, added_numerosity):
-        self._num_micros += added_numerosity
-
-    def _dec_num_micros(self, removed_numerosity):
-        self._num_micros -= removed_numerosity
-        assert self._num_micros >= 0
+        raise NotImplementedError
 
     @property
     def num_macros(self):

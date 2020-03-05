@@ -27,7 +27,7 @@ class DeletionStrategyABC(metaclass=abc.ABCMeta):
 
         This method should only ever be called if the population
         is past its microclassifier capacity."""
-        return NotImplementedError
+        raise NotImplementedError
 
 
 class XCSRouletteWheelDeletion(DeletionStrategyABC):

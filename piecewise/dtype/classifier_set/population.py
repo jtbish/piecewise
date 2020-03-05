@@ -33,9 +33,16 @@ class Population(ClassifierSetBase):
     of operation performed: these labels are forwarded to the private atomic
     methods of the class which use them to record the number of different types
     of operations performed (see record_operation decorator).
+
+    Notably this class continually updates and caches the num_micros property
+    when operations are performed on it. This is possible (and maintains an
+    accurate state) because all mutations of classifier numerosities is done
+    by calling public methods on the population, which internally take care
+    of numerosity incermenting/decrementing.
     """
     def __init__(self, max_micros):
         self._max_micros = self._validate_and_return_max_micros(max_micros)
+        self._num_micros = 0
         self._operation_recorder = \
             PopulationOperationRecorder()
         super().__init__()
@@ -48,12 +55,23 @@ class Population(ClassifierSetBase):
         return max_micros
 
     @property
+    def num_micros(self):
+        return self._num_micros
+
+    @property
     def max_micros(self):
         return self._max_micros
 
     @property
     def operations_record(self):
         return self._operation_recorder
+
+    def _inc_num_micros(self, added_numerosity):
+        self._num_micros += added_numerosity
+
+    def _dec_num_micros(self, removed_numerosity):
+        self._num_micros -= removed_numerosity
+        assert self._num_micros >= 0
 
     def add(self, classifier, *, operation_label=None):
         """Adds the given classifier to the population.
@@ -81,7 +99,7 @@ class Population(ClassifierSetBase):
     def _try_to_absorb(self, classifier):
         for member in self._members:
             if member.rule == classifier.rule:
-                self._absorb(classifier, member)
+                self._absorb(absorbee=classifier, absorber=member)
                 return True
         return False
 

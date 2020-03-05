@@ -55,7 +55,6 @@ class ContinuousMinPercentageRuleRepr(IRuleRepr):
             alleles.append(lower)
             alleles.append(frac_to_upper)
         genotype = Genotype(alleles)
-        self._enforce_genotype_maps_to_valid_phenotype(genotype)
         return Condition(genotype)
 
     def _calc_frac_to_upper(self, lower, upper, dimension_upper):

@@ -157,3 +157,55 @@ class NormalisedGymEnvironment(IEnvironment):
 
     def is_terminal(self):
         return self._raw_env.is_terminal()
+
+class DiscretisedGymEnvironment(IEnvironment):
+    """Decorator obj for GymEnvironment operating in continuous space to
+    discretise the observation space."""
+    def __init__(self, gym_env, discertisation_vec):
+        assert isinstance(gym_env, GymEnvironment)
+        self._raw_env = gym_env
+        self._discretisation_vec = discertisation_vec
+        self._discretised_obs_space = self._gen_discretised_obs_space(
+                discertisation_vec)
+
+    def _gen_discretised_obs_space(self, discertisation_vec):
+        obs_space_builder = DataSpaceBuilder()
+        for num_buckets in discertisation_vec:
+            obs_space_builder.add_dim(Dimension(0.0, 1.0))
+        return obs_space_builder.create_space()
+
+    @property
+    def obs_space(self):
+        return self._discretised_obs_space
+
+    @property
+    def action_set(self):
+        return self._raw_env.action_set
+
+    @property
+    def step_type(self):
+        return self._raw_env.step_type
+
+    def reset(self):
+        self._raw_env.reset()
+
+    def observe(self):
+        raw_obs = self._raw_env.observe()
+        return self._discretise_raw_obs(raw_obs)
+
+    def _discretise_raw_obs(self, raw_obs):
+        discretised_obs = []
+        for (raw_obs_val, raw_obs_space_dim) in \
+                zip(raw_obs, self._raw_env.obs_space):
+            discretised_val = (raw_obs_val - raw_obs_space_dim.lower) / \
+                (raw_obs_space_dim.upper - raw_obs_space_dim.lower)
+            assert 0.0 <= discretised_val <= 1.0
+            discretised_obs.append(discretised_val)
+
+        return np.asarray(discretised_obs)
+
+    def act(self, action):
+        return self._raw_env.act(action)
+
+    def is_terminal(self):
+        return self._raw_env.is_terminal()
