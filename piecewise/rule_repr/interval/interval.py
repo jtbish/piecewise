@@ -1,4 +1,4 @@
-class ContinuousInterval:
+class Interval:
     def __init__(self, lower, upper):
         assert lower <= upper
         self._lower = lower
@@ -27,10 +27,12 @@ class ContinuousInterval:
         e.g. if this interval is [0.0, 1.0] and
         other interval is [0.75, 1.25], result is 0.25, since
         other covers region [0.75, 1.0] in this.
+
+        Same logic applies to discrete intervals.
         """
         # trunc bounds of other interval to be compatible with this interval
         # (so that other interval falls within this interval)
-        other_lower_trunc = max(other_interval.lower, self._lower)
+        other_lower_trunc = max(other_interval._lower, self._lower)
         other_upper_trunc = min(other_interval._upper, self._upper)
         cover_fraction = (other_upper_trunc - other_lower_trunc) / \
             (self._upper - self._lower)
