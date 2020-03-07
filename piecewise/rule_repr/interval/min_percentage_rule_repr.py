@@ -92,7 +92,7 @@ class MinSpanRuleReprABC(IRuleRepr, metaclass=abc.ABCMeta):
             self._wildcard_intervals[phenotype_idx])
 
 
-class ContinuousMinPercentageRuleRepr(IRuleRepr):
+class ContinuousMinPercentageRuleRepr(MinSpanRuleReprABC):
     """Rule representation that works with (lower, frac_to_upper)
     genotype in continuous space."""
     _MIN_FRAC_TO_UPPER_VAL = 0.0
@@ -178,7 +178,7 @@ class ContinuousMinPercentageRuleRepr(IRuleRepr):
         return upper
 
 
-class DiscereteMinSpanRuleRepr(IRuleRepr):
+class DiscereteMinSpanRuleRepr(MinSpanRuleReprABC):
     """Rule representation that works with (lower, span_to_upper)
     genotype in discrete space."""
     _MIN_SPAN_TO_UPPER_VAL = 0

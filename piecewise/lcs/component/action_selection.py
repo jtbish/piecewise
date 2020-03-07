@@ -29,6 +29,7 @@ class DecayingEpsilonGreedy:
         self._epsilon *= get_hyperparam("epsilon_decay_factor")
 
 
+# TODO hyperparams??
 class LowerBoundDecayingEpsilonGreedy:
     def __init__(self, lower_bound):
         assert lower_bound >= 0.0

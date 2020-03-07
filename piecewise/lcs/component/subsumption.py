@@ -30,7 +30,7 @@ class XCSSubsumption(ISubsumptionStrategy):
         """DOES SUBSUME function from 'An Algorithmic Description of XCS'
         (Butz and Wilson, 2002)."""
         return subsumer.action == subsumee.action and \
-            self._could_subsume(subsumer) and \
+            self.could_subsume(subsumer) and \
             self.is_more_general(subsumer, subsumee)
 
     def could_subsume(self, classifier):
@@ -49,9 +49,9 @@ class XCSSubsumption(ISubsumptionStrategy):
         second_generality = \
             self._rule_repr.calc_generality(second_classifier.condition)
         first_contains_second = self._subsumer_contains_subsumee(
-                subsumer=first_classifier_generality, subsumee=second_classifier)
+            subsumer=first_classifier, subsumee=second_classifier)
         return (first_generality > second_generality) and \
-                first_contains_second
+            first_contains_second
 
     def _subsumer_contains_subsumee(self, subsumer, subsumee):
         """Second part of IS MORE GENERAL function from
