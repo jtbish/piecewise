@@ -1,19 +1,19 @@
-import gym
 import numpy as np
-from gym import logger
 
+import gym
+from gym.spaces import Box, Discrete
 from piecewise.dtype import DataSpaceBuilder, Dimension
+from piecewise.error.core_errors import InternalError
 
 from ..environment import (CorrectActionNotApplicable, EnvironmentResponse,
                            EnvironmentStepTypes, IEnvironment, check_terminal)
 
-# quieten warnings from gym
-gym.logger.set_level(logger.ERROR)
-
 
 class GymEnvironment(IEnvironment):
     """Wrapper over an OpenAI Gym environment to conform with Piecewise
-    environment interface."""
+    environment interface.
+
+    Supports discrete / continuous obs space, discrete action set."""
     def __init__(self,
                  env_name,
                  custom_obs_space=None,
@@ -24,8 +24,7 @@ class GymEnvironment(IEnvironment):
             self._wrapped_env, custom_obs_space)
         self._action_set = self._gen_action_set_if_not_given(
             self._wrapped_env, custom_action_set)
-        self._curr_obs = None
-        self.reset()
+        self._is_terminal = True
 
     @property
     def obs_space(self):
@@ -51,6 +50,20 @@ class GymEnvironment(IEnvironment):
             return custom_obs_space
 
     def _gen_obs_space(self, wrapped_env):
+        if isinstance(wrapped_env.observation_space, Discrete):
+            return self._gen_discrete_obs_space(wrapped_env)
+        elif isinstance(wrapped_env.observation_space, Box):
+            return self._gen_continuous_obs_space(wrapped_env)
+        else:
+            raise InternalError("Unrecognised gym environment obs space type.")
+
+    def _gen_discrete_obs_space(self, wrapped_env):
+        num_obss = wrapped_env.observation_space.n
+        obs_space_builder = DataSpaceBuilder()
+        obs_space_builder.add_dim(Dimension(lower=0, upper=(num_obss - 1)))
+        return obs_space_builder.create_space()
+
+    def _gen_continuous_obs_space(self, wrapped_env):
         lower_vector = wrapped_env.observation_space.low
         upper_vector = wrapped_env.observation_space.high
         obs_space_builder = DataSpaceBuilder()
@@ -69,13 +82,12 @@ class GymEnvironment(IEnvironment):
         return set(range(num_actions))
 
     def reset(self):
-        self._curr_obs = self._wrapped_env.reset()
         self._is_terminal = False
-        self._wrapped_env_was_done_last_step = False
+        wrapped_obs = self._wrapped_env.reset()
+        return self._enforce_valid_obs(wrapped_obs)
 
-    @check_terminal
-    def observe(self):
-        obs = self._curr_obs
+    def _enforce_valid_obs(self, obs):
+        obs = np.atleast_1d(obs)
         obs = self._truncate_obs(obs)
         return obs
 
@@ -87,17 +99,16 @@ class GymEnvironment(IEnvironment):
             feature_val = max(feature_val, dimension.lower)
             feature_val = min(feature_val, dimension.upper)
             truncated_obs.append(feature_val)
-        return truncated_obs
+        return np.asarray(truncated_obs)
 
     @check_terminal
-    def act(self, action):
+    def step(self, action):
         assert action in self._action_set
         wrapped_obs, wrapped_reward, wrapped_done, _ = self._wrapped_env.step(
             action)
-        self._curr_obs = wrapped_obs
-        self._is_terminal = self._wrapped_env_was_done_last_step
-        self._wrapped_env_was_done_last_step = wrapped_done
+        self._is_terminal = wrapped_done
         return EnvironmentResponse(
+            obs=self._enforce_valid_obs(wrapped_obs),
             reward=wrapped_reward,
             was_correct_action=CorrectActionNotApplicable,
             is_terminal=self._is_terminal)
@@ -135,10 +146,7 @@ class NormalisedGymEnvironment(IEnvironment):
         return self._raw_env.step_type
 
     def reset(self):
-        self._raw_env.reset()
-
-    def observe(self):
-        raw_obs = self._raw_env.observe()
+        raw_obs = self._raw_env.reset()
         return self._normalise_raw_obs(raw_obs)
 
     def _normalise_raw_obs(self, raw_obs):
@@ -152,8 +160,13 @@ class NormalisedGymEnvironment(IEnvironment):
 
         return np.asarray(normalised_obs)
 
-    def act(self, action):
-        return self._raw_env.act(action)
+    def step(self, action):
+        raw_response = self._raw_env.act(action)
+        return EnvironmentResponse(
+            obs=self._normalise_raw_obs(raw_response.obs),
+            reward=raw_response.reward,
+            was_correct_action=raw_response.was_correct_action,
+            is_terminal=raw_response.is_terminal)
 
     def is_terminal(self):
         return self._raw_env.is_terminal()

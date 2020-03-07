@@ -22,7 +22,8 @@ def check_terminal(public_method):
 
 
 EnvironmentResponse = namedtuple(
-    "EnvironmentResponse", ["reward", "was_correct_action", "is_terminal"])
+    "EnvironmentResponse",
+    ["obs", "reward", "was_correct_action", "is_terminal"])
 CorrectActionNotApplicable = "N/A"
 
 EnvironmentStepTypes = Enum("EnivronmentStepTypes",
@@ -47,16 +48,13 @@ class IEnvironment(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def reset(self):
-        """Resets the environment to be ready for the next epoch."""
+        """Resets the environment to be ready for the next epoch.
+
+        Returns the initial obs of the epoch."""
         raise NotImplementedError
 
     @abc.abstractmethod
-    def observe(self):
-        """Returns the most recent observation from the environment."""
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def act(self, action):
+    def step(self, action):
         """Performs the given action on the environment, returns an
         EnvironmentResponse named tuple."""
         raise NotImplementedError
@@ -64,5 +62,5 @@ class IEnvironment(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def is_terminal(self):
         """Returns whether the current epoch of the environment is in a terminal
-        state (no more data left to observe)."""
+        state."""
         raise NotImplementedError

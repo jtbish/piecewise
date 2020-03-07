@@ -15,7 +15,7 @@ class LCS(metaclass=abc.ABCMeta):
         self._rule_repr = rule_repr
         register_hyperparams(hyperparams)
         seed_rng(seed)
-        self._population = Population(get_hyperparam("N"))
+        self._population = Population(max_micros=get_hyperparam("N"))
 
     @abc.abstractmethod
     def train_query(self, situation, time_step):
@@ -24,8 +24,7 @@ class LCS(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def train_update(self, env_response):
-        """Updates and returns the population given the environmental
-        response."""
+        """Updates the population given the environmental response."""
         raise NotImplementedError
 
     @abc.abstractmethod

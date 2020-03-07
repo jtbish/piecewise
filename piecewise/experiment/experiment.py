@@ -75,9 +75,9 @@ class Experiment:
 
     def _save_python_env_info(self):
         result = subprocess.run(["pip3", "freeze"],
-                                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.DEVNULL)
         return_val = result.stdout.decode("utf-8")
         exit_status = result.returncode
         with open(self._save_path / "python_env_info.txt", "w") as fp:
             fp.write(str(return_val))
-        pass

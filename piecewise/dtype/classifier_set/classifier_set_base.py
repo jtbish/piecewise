@@ -1,3 +1,4 @@
+import abc
 import functools
 
 from piecewise.dtype import Classifier

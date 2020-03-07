@@ -46,33 +46,27 @@ class Trainer:
 
     def _train_single_epoch(self):
         logging.info(f"Epoch {self._epoch_num}")
-        self._env.reset()
+        situation = self._env.reset()
         while not self._env.is_terminal() and not self._is_finished_training():
-            self._train_single_time_step()
+            logging.info(f"Time step {self._time_step}")
+            logging.info(f"Situation: {situation}")
+
+            lcs_response = self._lcs.train_query(situation, self._time_step)
+            logging.info(f"LCS response: {lcs_response}")
+            action = lcs_response.action
+
+            env_response = self._env.step(action)
+            logging.info(f"Env response: {env_response}")
+
+            self._lcs.train_update(env_response)
+
+            self._loop_data = LoopData(situation=situation,
+                                       lcs_response=lcs_response,
+                                       env_response=env_response)
+
+            situation = env_response.obs
             self._time_step += 1
             self._update_monitors()
-
-    def _train_single_time_step(self):
-        logging.info(f"Time step {self._time_step}")
-
-        situation = self._get_situation()
-        logging.info(f"Situation: {situation}")
-
-        lcs_response = self._lcs.train_query(situation, self._time_step)
-        logging.info(f"LCS response: {lcs_response}")
-
-        action = lcs_response.action
-        env_response = self._env.act(action)
-        logging.info(f"Env response: {env_response}")
-
-        self._lcs.train_update(env_response)
-
-        self._loop_data = LoopData(situation=situation,
-                                   lcs_response=lcs_response,
-                                   env_response=env_response)
-
-    def _get_situation(self):
-        return self._env.observe()
 
     def _update_monitors(self):
         self._lcs_monitor.update(self._time_step, self._lcs)

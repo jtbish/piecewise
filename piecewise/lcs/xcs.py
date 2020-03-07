@@ -246,9 +246,9 @@ class XCS(LCS):
     def _perform_action_set_subsumptions(self, most_general_classifier,
                                          action_set):
         if most_general_classifier is not None:
-            # loop over copy of action set because possibly removing classifiers
-            # from it during loop
-            action_set_copy = copy.deepcopy(action_set):
+            # loop over copy of action set because possibly removing
+            # classifiers from it during loop
+            action_set_copy = copy.deepcopy(action_set)
             for classifier in action_set_copy:
                 if self._subsumption_strat.is_more_general(
                         most_general_classifier, classifier):
@@ -269,8 +269,8 @@ class XCS(LCS):
             logging.debug("AS subsumption success.")
 
     def _should_do_rule_discovery_in_action_set(self, action_set):
-        mean_time_stamp_in_action_set = calc_summary_stat(action_set, "mean",
-                                                   "time_stamp")
+        mean_time_stamp_in_action_set = calc_summary_stat(
+            action_set, "mean", "time_stamp")
         time_since_last_rule_discovery = self._time_step - \
             mean_time_stamp_in_action_set
         return time_since_last_rule_discovery > \
