@@ -29,12 +29,9 @@ class DecayingEpsilonGreedy:
         self._epsilon *= get_hyperparam("epsilon_decay_factor")
 
 
-# TODO hyperparams??
 class LowerBoundDecayingEpsilonGreedy:
-    def __init__(self, lower_bound):
-        assert lower_bound >= 0.0
-        self._epsilon_lower_bound = lower_bound
-        self._epislon = 1.0
+    def __init__(self):
+        self._epsilon = 1.0
 
     def __call__(self, prediction_array):
         self._decay_epsilon()
@@ -43,8 +40,8 @@ class LowerBoundDecayingEpsilonGreedy:
 
     def _decay_epsilon(self):
         self._epsilon = max(
-                self._epsilon * get_hyperparam("epsilon_decay_factor"),
-                self._epsilon_lower_bound)
+            self._epsilon * get_hyperparam("epsilon_decay_factor"),
+            get_hyperparam("epsilon_lower_bound"))
 
 
 def _epsilon_greedy(prediction_array, epsilon):

@@ -23,7 +23,7 @@ def _calc_min(classifier_set, classifier_property):
 
 def _calc_mean(classifier_set, classifier_property):
     return sum([
-        getattr(classifier, classifier_property)
+        getattr(classifier, classifier_property) * classifier.numerosity
         for classifier in classifier_set
     ]) / classifier_set.num_micros
 

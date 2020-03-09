@@ -137,8 +137,8 @@ class Population(ClassifierSetBase):
             MemberNotFoundError: if either replacee or replacer are not in the
                 population.
         """
-        self._atomic_remove_whole(replacee)
         num_replacer_copies = replacee.numerosity
+        self._atomic_remove_whole(replacee)
         self._atomic_copy_existing(replacer,
                                    num_replacer_copies,
                                    operation_label=operation_label)
