@@ -1,4 +1,5 @@
 import copy
+import logging
 from collections import namedtuple
 
 from piecewise.lcs.hyperparams import get_hyperparam
@@ -69,9 +70,13 @@ class XCSGeneticAlgorithm:
         should_do_crossover = get_rng().rand() < get_hyperparam("chi")
         if should_do_crossover:
             (child_one, child_two) = children
+            logging.debug(f"Before crossover {child_one.condition}, "
+                f"{child_two.condition}")
             self._rule_repr.crossover_conditions(child_one.condition,
                                                  child_two.condition,
                                                  self._crossover_strat)
+            logging.debug(f"After crossover {child_one.condition}, "
+                f"{child_two.condition}")
             self._update_children_params(children, parents)
 
     def _update_children_params(self, children, parents):
@@ -88,8 +93,11 @@ class XCSGeneticAlgorithm:
         child_two.fitness = child_one.fitness
 
     def _perform_mutation(self, children, situation):
+        child_one, child_two = children
+        logging.debug(f"Before mutation: {child_one.rule}, {child_two.rule}")
         for child in children:
             self._mutation_strat(child, situation)
+        logging.debug(f"After mutation: {child_one.rule}, {child_two.rule}")
 
     def _update_population(self, children, parents, population):
         should_do_subsumption = get_hyperparam("do_ga_subsumption")

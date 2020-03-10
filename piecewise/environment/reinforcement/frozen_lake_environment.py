@@ -10,6 +10,15 @@ from .gym_environment import GymEnvironment
 
 def make_frozen_lake_4x4_env(seed=0):
     gym_env = GymEnvironment(env_name="FrozenLake-v0",
+                             env_kwargs=None,
+                             custom_obs_space=None,
+                             custom_action_set=None,
+                             seed=seed)
+    return FrozenLakeGymEnvironment(gym_env, grid_size=4)
+
+def make_frozen_lake_4x4_no_slip_env(seed=0):
+    gym_env = GymEnvironment(env_name="FrozenLake-v0",
+                             env_kwargs={"is_slippery": False},
                              custom_obs_space=None,
                              custom_action_set=None,
                              seed=seed)
@@ -18,6 +27,7 @@ def make_frozen_lake_4x4_env(seed=0):
 
 def make_frozen_lake_8x8_env(seed=0):
     gym_env = GymEnvironment(env_name="FrozenLake8x8-v0",
+                             env_kwargs=None,
                              custom_obs_space=None,
                              custom_action_set=None,
                              seed=seed)

@@ -7,44 +7,38 @@ from piecewise.lcs.rng import get_rng
 ActionSelectResponse = namedtuple("ActionSelectResponse",
                                   ["action", "did_explore"])
 
+class GreedyActionSelection:
+    def __call__(self, prediction_array, time_step=None):
+        action = select_greedy_action(prediction_array)
+        return ActionSelectResponse(action, did_explore=False)
+
 
 class FixedEpsilonGreedy:
-    def __call__(self, prediction_array):
+    def __call__(self, prediction_array, time_step=None):
         """SELECT ACTION function from 'An Algorithmic
         Description of XCS' (Butz and Wilson, 2002)."""
         epsilon = get_hyperparam("p_explore")
         return _epsilon_greedy(prediction_array, epsilon)
 
 
-class DecayingEpsilonGreedy:
+class LinearDecayEpsilonGreedy:
     def __init__(self):
-        self._epsilon = 1.0
+        self._epsilon_max = 1.0
+        self._epsilon = self._epsilon_max
 
-    def __call__(self, prediction_array):
-        self._decay_epsilon()
-        logging.debug(f"Epsilon = {self._epsilon}")
+    def __call__(self, prediction_array, time_step):
+        self._decay_epsilon(time_step)
         return _epsilon_greedy(prediction_array, self._epsilon)
 
-    def _decay_epsilon(self):
-        self._epsilon *= get_hyperparam("epsilon_decay_factor")
-
-
-class LowerBoundDecayingEpsilonGreedy:
-    def __init__(self):
-        self._epsilon = 1.0
-
-    def __call__(self, prediction_array):
-        self._decay_epsilon()
-        logging.debug(f"Epsilon = {self._epsilon}")
-        return _epsilon_greedy(prediction_array, self._epsilon)
-
-    def _decay_epsilon(self):
-        self._epsilon = max(
-            self._epsilon * get_hyperparam("epsilon_decay_factor"),
-            get_hyperparam("epsilon_lower_bound"))
+    def _decay_epsilon(self, time_step):
+        decayed_val = self._epsilon_max - \
+            get_hyperparam("e_greedy_decay_factor")*time_step
+        self._epsilon = max(decayed_val, get_hyperparam("e_greedy_min_epsilon"))
 
 
 def _epsilon_greedy(prediction_array, epsilon):
+    logging.debug(f"Epsilon = {epsilon}")
+    assert 0.0 <= epsilon <= 1.0
     should_explore = get_rng().rand() <= epsilon
     if should_explore:
         action = \

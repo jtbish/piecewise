@@ -1,5 +1,6 @@
-from .action_selection import (DecayingEpsilonGreedy, FixedEpsilonGreedy,
-                               LowerBoundDecayingEpsilonGreedy)
+from .action_selection import (FixedEpsilonGreedy,
+                               LinearDecayEpsilonGreedy,
+                               GreedyActionSelection)
 from .covering import RuleReprCovering
 from .credit_assignment import XCSCreditAssignment
 from .deletion import XCSRouletteWheelDeletion

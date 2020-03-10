@@ -1,4 +1,7 @@
-class Interval:
+import abc
+
+
+class IntervalABC(metaclass=abc.ABCMeta):
     def __init__(self, lower, upper):
         assert lower <= upper
         self._lower = lower
@@ -20,6 +23,19 @@ class Interval:
         return self._lower <= other_interval._lower and \
             self._upper >= other_interval._upper
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}(" f"{self._lower!r},{self._upper!r})"
+
+    def __str__(self):
+        return f"[{self._lower}, {self._upper}]"
+
+
+class DiscreteInterval(IntervalABC):
+    def num_vals_covered(self):
+        return (self._upper - self._lower) + 1
+
+
+class ContinuousInterval(IntervalABC):
     def fraction_covered_by(self, other_interval):
         """Returns the fraction of *this* interval that is covered *by the
         other interval*.
@@ -27,8 +43,6 @@ class Interval:
         e.g. if this interval is [0.0, 1.0] and
         other interval is [0.75, 1.25], result is 0.25, since
         other covers region [0.75, 1.0] in this.
-
-        Same logic applies to discrete intervals.
         """
         # trunc bounds of other interval to be compatible with this interval
         # (so that other interval falls within this interval)

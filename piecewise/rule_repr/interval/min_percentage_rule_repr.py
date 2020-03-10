@@ -6,7 +6,7 @@ from piecewise.lcs.rng import get_rng
 from piecewise.util import truncate_val
 
 from ..rule_repr import IRuleRepr
-from .interval import Interval
+from .interval import DiscreteInterval, ContinuousInterval
 
 
 def make_continuous_min_percentage_rule_repr(env):
@@ -18,14 +18,16 @@ def make_discrete_min_span_rule_repr(env):
 
 
 class MinSpanRuleReprABC(IRuleRepr, metaclass=abc.ABCMeta):
-    def __init__(self, situation_space):
+    def __init__(self, situation_space, interval_cls):
         self._situation_space = situation_space
+        self._interval_cls = interval_cls
         self._wildcard_intervals = \
-            self._create_wildcard_intervals(self._situation_space)
+            self._create_wildcard_intervals(self._situation_space,
+                self._interval_cls)
 
-    def _create_wildcard_intervals(self, situation_space):
+    def _create_wildcard_intervals(self, situation_space, interval_cls):
         return tuple([
-            Interval(dimension.lower, dimension.upper)
+            interval_cls(dimension.lower, dimension.upper)
             for dimension in situation_space
         ])
 
@@ -66,16 +68,9 @@ class MinSpanRuleReprABC(IRuleRepr, metaclass=abc.ABCMeta):
     def mutate_condition(self, condition, situation=None):
         raise NotImplementedError
 
+    @abc.abstractmethod
     def calc_generality(self, condition):
-        phenotype = condition.phenotype(self)
-        assert len(phenotype) == len(self._situation_space)
-        cover_fractions = \
-            [wildcard_interval.fraction_covered_by(phenotype_interval) for
-                (wildcard_interval, phenotype_interval) in
-                zip(self._wildcard_intervals, phenotype)]
-        generality = sum(cover_fractions) / len(phenotype)
-        assert 0.0 <= generality <= 1.0
-        return generality
+        raise NotImplementedError
 
     def check_condition_subsumption(self, first_condition, second_condition):
         first_phenotype = first_condition.phenotype(self)
@@ -97,6 +92,9 @@ class ContinuousMinPercentageRuleRepr(MinSpanRuleReprABC):
     genotype in continuous space."""
     _MIN_FRAC_TO_UPPER_VAL = 0.0
     _MAX_FRAC_TO_UPPER_VAL = 1.0
+
+    def __init__(self, situation_space):
+        super().__init__(situation_space, interval_cls=ContinuousInterval)
 
     def gen_covering_condition(self, situation):
         alleles = []
@@ -150,6 +148,17 @@ class ContinuousMinPercentageRuleRepr(MinSpanRuleReprABC):
                 genotype[allele_idx] += mutation_amount
         self._enforce_genotype_maps_to_valid_phenotype(genotype)
 
+    def calc_generality(self, condition):
+        phenotype = condition.phenotype(self)
+        assert len(phenotype) == len(self._wildcard_intervals)
+        cover_fractions = \
+            [wildcard_interval.fraction_covered_by(phenotype_interval) for
+                (wildcard_interval, phenotype_interval) in
+                zip(self._wildcard_intervals, phenotype)]
+        generality = sum(cover_fractions) / len(phenotype)
+        assert 0.0 <= generality <= 1.0
+        return generality
+
     def map_genotype_to_phenotype(self, genotype):
         phenotype = []
         for lower_allele_idx in range(0, len(genotype), 2):
@@ -170,7 +179,7 @@ class ContinuousMinPercentageRuleRepr(MinSpanRuleReprABC):
         interval_lower = lower_allele
         interval_upper = self._calc_upper(lower_allele, frac_to_upper_allele,
                                           dimension.upper)
-        return Interval(interval_lower, interval_upper)
+        return self._interval_cls(interval_lower, interval_upper)
 
     def _calc_upper(self, lower, frac_to_upper, dimension_upper):
         span_from_lower = (dimension_upper - lower) * frac_to_upper
@@ -182,6 +191,9 @@ class DiscereteMinSpanRuleRepr(MinSpanRuleReprABC):
     """Rule representation that works with (lower, span_to_upper)
     genotype in discrete space."""
     _MIN_SPAN_TO_UPPER_VAL = 0
+
+    def __init__(self, situation_space):
+        super().__init__(situation_space, interval_cls=DiscreteInterval)
 
     def gen_covering_condition(self, situation):
         alleles = []
@@ -246,6 +258,20 @@ class DiscereteMinSpanRuleRepr(MinSpanRuleReprABC):
                 genotype[allele_idx] += mutation_amount
         self._enforce_genotype_maps_to_valid_phenotype(genotype)
 
+    def calc_generality(self, condition):
+        phenotype = condition.phenotype(self)
+        assert len(phenotype) == len(self._wildcard_intervals)
+        phenotype_interval_coverages = \
+            [phenotype_interval.num_vals_covered() for phenotype_interval in
+                phenotype]
+        wildcard_interval_coverages = \
+            [wildcard_interval.num_vals_covered() for wildcard_interval in
+                self._wildcard_intervals]
+        generality = sum(phenotype_interval_coverages) / \
+            sum(wildcard_interval_coverages)
+        assert 0.0 <= generality <= 1.0
+        return generality
+
     def map_genotype_to_phenotype(self, genotype):
         phenotype = []
         for lower_allele_idx in range(0, len(genotype), 2):
@@ -265,4 +291,4 @@ class DiscereteMinSpanRuleRepr(MinSpanRuleReprABC):
                                               span_to_upper_allele):
         interval_lower = lower_allele
         interval_upper = lower_allele + span_to_upper_allele
-        return Interval(interval_lower, interval_upper)
+        return self._interval_cls(interval_lower, interval_upper)

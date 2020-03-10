@@ -142,6 +142,7 @@ class XCS(LCS):
         self._prediction_array = None
         self._situation = None
         self._time_step = None
+        self._did_explore = None
 
     def train_query(self, situation, time_step):
         """First half (until line 7) of RUN EXPERIMENT function from
@@ -154,12 +155,14 @@ class XCS(LCS):
         self._match_set = self._gen_match_set(self._situation)
         self._perform_covering(self._match_set)
         self._prediction_array = self._gen_prediction_array(self._match_set)
-        action_select_response = self._select_action(self._prediction_array)
+        action_select_response = \
+            self._select_action(self._prediction_array, self._time_step)
         action = action_select_response.action
         self._action_set = self._gen_action_set(self._match_set, action)
+        self._did_explore = action_select_response.did_explore
 
         return LCSTrainResponse(action=action,
-                                did_explore=action_select_response.did_explore)
+                                did_explore=self._did_explore)
 
     def gen_match_set(self, situation):
         return self._matching_strat(self._population, situation)
@@ -254,6 +257,8 @@ class XCS(LCS):
                         most_general_classifier, classifier):
                     logging.debug("Attempting to do an action set "
                                   "subsumption.")
+                    logging.debug(f"Subsumer: {most_general_classifier}")
+                    logging.debug(f"Subsumee: {classifier}")
                     action_set.remove(classifier)
                     self._try_subsume_in_population(
                         replacee=classifier, replacer=most_general_classifier)
@@ -274,7 +279,7 @@ class XCS(LCS):
         time_since_last_rule_discovery = self._time_step - \
             mean_time_stamp_in_action_set
         return time_since_last_rule_discovery > \
-            get_hyperparam("theta_ga")
+            get_hyperparam("theta_ga") and self._did_explore
 
     def test_query(self, situation):
         match_set = self._gen_match_set(situation)
@@ -316,15 +321,15 @@ class XCS(LCS):
                                           time_step)
 
     def _perform_deletion(self):
-        logging.debug("Performing deletion")
         self._deletion_strat(self._population)
 
-    def _select_action(self, prediction_array):
-        action_select_res = self._action_selection_strat(prediction_array)
+    def _select_action(self, prediction_array, time_step):
+        action_select_res = self._action_selection_strat(prediction_array, time_step)
+        action = action_select_res.action
         if action_select_res.did_explore:
-            logging.debug("Action selection: explored")
+            logging.debug(f"Action selection: explored, {action}")
         else:
-            logging.debug("Action selection: exploited")
+            logging.debug(f"Action selection: exploited, {action}")
         return action_select_res
 
     def _do_credit_assignment(self, action_set, payoff):
@@ -354,6 +359,7 @@ class MultiStepXCS(XCS):
 
     def _try_update_prev_action_set(self):
         if self._prev_action_set is not None:
+            logging.debug("Updating prev as")
             assert self._prev_situation is not None
             assert self._prev_reward is not None
             payoff = self._calc_discounted_payoff()
@@ -368,10 +374,12 @@ class MultiStepXCS(XCS):
     def _try_update_curr_action_set(self, env_response):
         reward = env_response.reward
         if env_response.is_terminal:
+            logging.debug("Terminal state, updating curr as")
             payoff = reward
             self._update_action_set(self._action_set, self._situation, payoff)
             self._prev_action_set = None
         else:
+            logging.debug("Non-terminal state, rebinding prev as var")
             self._update_prev_step_tracking_attrs(reward)
 
     def _update_prev_step_tracking_attrs(self, reward):

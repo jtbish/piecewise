@@ -1,4 +1,5 @@
 import abc
+import logging
 from piecewise.lcs.rng import get_rng
 
 from piecewise.util.classifier_set_stats import calc_summary_stat
@@ -16,6 +17,7 @@ class DeletionStrategyABC(metaclass=abc.ABCMeta):
 
     def _perform_deletions(self, population):
         num_deletions = population.num_micros - population.max_micros
+        logging.debug(f"Performing {num_deletions} deletions.")
         assert num_deletions >= 1
         for _ in range(num_deletions):
             classifier_to_delete = self._select_for_deletion(population)

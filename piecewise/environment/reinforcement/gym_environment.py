@@ -16,10 +16,11 @@ class GymEnvironment(IEnvironment):
     Supports discrete / continuous obs space, discrete action set."""
     def __init__(self,
                  env_name,
+                 env_kwargs=None,
                  custom_obs_space=None,
                  custom_action_set=None,
                  seed=0):
-        self._wrapped_env = self._init_wrapped_env(env_name, seed)
+        self._wrapped_env = self._init_wrapped_env(env_name, env_kwargs, seed)
         self._obs_space = self._gen_obs_space_if_not_given(
             self._wrapped_env, custom_obs_space)
         self._action_set = self._gen_action_set_if_not_given(
@@ -38,8 +39,10 @@ class GymEnvironment(IEnvironment):
     def step_type(self):
         return EnvironmentStepTypes.multi_step
 
-    def _init_wrapped_env(self, env_name, seed):
-        wrapped_env = gym.make(env_name)
+    def _init_wrapped_env(self, env_name, env_kwargs, seed):
+        if env_kwargs is None:
+            env_kwargs = {}
+        wrapped_env = gym.make(env_name, **env_kwargs)
         wrapped_env.seed(seed)
         return wrapped_env
 

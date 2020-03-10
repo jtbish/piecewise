@@ -153,6 +153,16 @@ class Population(ClassifierSetBase):
         """
         self._atomic_remove_single_copy(classifier, operation_label="deletion")
 
+    @verify_membership
+    def remove(self, classifier, *, operation_label=None):
+        """Removes the given classifier from the population, i.e. removes all
+        copies / the whole macroclassifier.
+
+        Throws:
+            MemberNotFoundError: if the classifier is not in the population.
+        """
+        self._atomic_remove_whole(classifier, operation_label=operation_label)
+
     # Atomic operations - wrapped with operation recording
 
     @record_operation
