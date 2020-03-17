@@ -8,6 +8,7 @@ from piecewise.lcs.rng import get_rng
 from .operator.crossover import TwoPointCrossover
 from .operator.mutation import RuleReprMutation
 from .operator.selection import roulette_wheel_selection
+from piecewise.error.classifier_set_error import MemberNotFoundError
 
 GAOperators = namedtuple("GAOperators", ["selection", "crossover", "mutation"])
 ClassifierPair = namedtuple("ClassifierPair", ["first", "second"])
@@ -114,8 +115,16 @@ class XCSGeneticAlgorithm:
         for parent in parents:
             if self._subsumption_strat.does_subsume(parent, child):
                 assert child.numerosity == 1
-                population.duplicate(parent,
-                                     num_copies=1,
-                                     operation_label="ga_subsumption")
+                self._try_duplicate_parent_in_population(parent, population)
                 return True
         return False
+
+    def _try_duplicate_parent_in_population(self, parent, population):
+        try:
+            population.duplicate(parent,
+                                 num_copies=1,
+                                 operation_label="ga_subsumption")
+        except MemberNotFoundError:
+            logging.debug("GA subsumption failure.")
+        else:
+            logging.debug("GA subsumption success.")
