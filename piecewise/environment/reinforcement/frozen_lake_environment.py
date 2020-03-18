@@ -1,12 +1,27 @@
-import math
 import copy
+import math
 
 import numpy as np
 
+from gym.envs.registration import register
+from gym.envs.toy_text.frozen_lake import MAPS
 from piecewise.dtype import DataSpaceBuilder, Dimension
 
 from ..environment import EnvironmentResponse, IEnvironment
 from .gym_environment import GymEnvironment
+
+# result of calling generate_random_map in gym frozen_lake.py
+MAPS["6x6"] = \
+    ["SFFFHH",
+     "HHFFHF",
+     "HFFFFF",
+     "FHFFFH",
+     "FFFFHF",
+     "FFFFFG"]
+
+register(id="FrozenLake6x6-v0",
+         entry_point="gym.envs.toy_text:FrozenLakeEnv",
+         kwargs={"map_name": "6x6"})
 
 
 def make_frozen_lake_4x4_env(slip_prob=0.0, seed=0):
@@ -19,6 +34,16 @@ def make_frozen_lake_4x4_env(slip_prob=0.0, seed=0):
     return FrozenLakeGymEnvironment(gym_env, grid_size=4, slip_prob=slip_prob)
 
 
+def make_frozen_lake_6x6_env(slip_prob=0.0, seed=0):
+    is_slippery = slip_prob > 0.0
+    gym_env = GymEnvironment(env_name="FrozenLake6x6-v0",
+                             env_kwargs={"is_slippery": is_slippery},
+                             custom_obs_space=None,
+                             custom_action_set=None,
+                             seed=seed)
+    return FrozenLakeGymEnvironment(gym_env, grid_size=6, slip_prob=slip_prob)
+
+
 def make_frozen_lake_8x8_env(slip_prob=0.0, seed=0):
     is_slippery = slip_prob > 0.0
     gym_env = GymEnvironment(env_name="FrozenLake8x8-v0",
@@ -27,7 +52,6 @@ def make_frozen_lake_8x8_env(slip_prob=0.0, seed=0):
                              custom_action_set=None,
                              seed=seed)
     return FrozenLakeGymEnvironment(gym_env, grid_size=8, slip_prob=slip_prob)
-
 
 
 class FrozenLakeGymEnvironment(IEnvironment):
@@ -68,13 +92,15 @@ class FrozenLakeGymEnvironment(IEnvironment):
                     (_, ns_1, r_1, done_1) = P_cell_raw[0]
                     (_, ns_2, r_2, done_2) = P_cell_raw[1]
                     (_, ns_3, r_3, done_3) = P_cell_raw[2]
-                    prob_non_desired = slip_prob/2
+                    prob_non_desired = slip_prob / 2
                     prob_desired = (1 - slip_prob)
                     P_cell_mut = []
                     if prob_non_desired != 0.0:
-                        P_cell_mut.append((prob_non_desired, ns_1, r_1, done_1))
+                        P_cell_mut.append(
+                            (prob_non_desired, ns_1, r_1, done_1))
                         P_cell_mut.append((prob_desired, ns_2, r_2, done_2))
-                        P_cell_mut.append((prob_non_desired, ns_3, r_3, done_3))
+                        P_cell_mut.append(
+                            (prob_non_desired, ns_3, r_3, done_3))
                     else:
                         P_cell_mut.append((prob_desired, ns_2, r_2, done_2))
                 else:
