@@ -11,6 +11,13 @@ from ..environment import EnvironmentResponse, IEnvironment
 from .gym_environment import GymEnvironment
 
 # result of calling generate_random_map in gym frozen_lake.py
+MAPS["5x5"] = \
+    ["SFFFF",
+     "HFHFF",
+     "FFFHF",
+     "HHFFF",
+     "FFHFG"]
+
 MAPS["6x6"] = \
     ["SFFFHH",
      "HHFFHF",
@@ -18,6 +25,10 @@ MAPS["6x6"] = \
      "FHFFFH",
      "FFFFHF",
      "FFFFFG"]
+
+register(id="FrozenLake5x5-v0",
+         entry_point="gym.envs.toy_text:FrozenLakeEnv",
+         kwargs={"map_name": "5x5"})
 
 register(id="FrozenLake6x6-v0",
          entry_point="gym.envs.toy_text:FrozenLakeEnv",
@@ -32,6 +43,16 @@ def make_frozen_lake_4x4_env(slip_prob=0.0, seed=0):
                              custom_action_set=None,
                              seed=seed)
     return FrozenLakeGymEnvironment(gym_env, grid_size=4, slip_prob=slip_prob)
+
+
+def make_frozen_lake_5x5_env(slip_prob=0.0, seed=0):
+    is_slippery = slip_prob > 0.0
+    gym_env = GymEnvironment(env_name="FrozenLake5x5-v0",
+                             env_kwargs={"is_slippery": is_slippery},
+                             custom_obs_space=None,
+                             custom_action_set=None,
+                             seed=seed)
+    return FrozenLakeGymEnvironment(gym_env, grid_size=5, slip_prob=slip_prob)
 
 
 def make_frozen_lake_6x6_env(slip_prob=0.0, seed=0):
