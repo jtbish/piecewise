@@ -2,13 +2,13 @@ import copy
 import logging
 from collections import namedtuple
 
+from piecewise.error.classifier_set_error import MemberNotFoundError
 from piecewise.lcs.hyperparams import get_hyperparam
 from piecewise.lcs.rng import get_rng
 
 from .operator.crossover import TwoPointCrossover
 from .operator.mutation import RuleReprMutation
 from .operator.selection import roulette_wheel_selection
-from piecewise.error.classifier_set_error import MemberNotFoundError
 
 GAOperators = namedtuple("GAOperators", ["selection", "crossover", "mutation"])
 ClassifierPair = namedtuple("ClassifierPair", ["first", "second"])
@@ -45,7 +45,7 @@ class XCSGeneticAlgorithm:
         """
         self._update_participant_time_stamps(action_set, time_step)
         parents, children = self._select_parents_and_init_children(action_set)
-        self._perform_crossover(children, parents)
+        self._perform_crossover(children, parents, situation)
         self._perform_mutation(children, situation)
         self._update_population(children, parents, population)
 
@@ -67,31 +67,42 @@ class XCSGeneticAlgorithm:
         children = ClassifierPair(child_one, child_two)
         return parents, children
 
-    def _perform_crossover(self, children, parents):
+    def _perform_crossover(self, children, parents, situation):
         should_do_crossover = get_rng().rand() < get_hyperparam("chi")
         if should_do_crossover:
             (child_one, child_two) = children
             logging.debug(f"Before crossover {child_one.condition}, "
-                f"{child_two.condition}")
+                          f"{child_two.condition}")
             self._rule_repr.crossover_conditions(child_one.condition,
                                                  child_two.condition,
                                                  self._crossover_strat)
             logging.debug(f"After crossover {child_one.condition}, "
-                f"{child_two.condition}")
-            self._update_children_params(children, parents)
+                          f"{child_two.condition}")
+            self._update_children_params(children, parents, situation)
 
-    def _update_children_params(self, children, parents):
+    def _update_children_params(self, children, parents, situation):
         (child_one, child_two) = children
         (parent_one, parent_two) = parents
-        child_one.prediction = \
-            (parent_one.prediction + parent_two.prediction)/2
-        child_one.error = \
-            0.25*(parent_one.error + parent_two.error)/2
-        child_one.fitness = \
-            0.1*(parent_one.fitness + parent_two.fitness)/2
-        child_two.prediction = child_one.prediction
-        child_two.error = child_one.error
-        child_two.fitness = child_one.fitness
+
+        child_prediction = (parent_one.get_prediction(situation),
+                            parent_two.get_prediction(situation)) / 2
+        self._try_update_children_prediction(child_one, child_two,
+                                             child_prediction)
+
+        child_error = 0.25 * (parent_one.error + parent_two.error) / 2
+        child_one.error = child_error
+        child_two.error = child_error
+
+        child_fitness = 0.1 * (parent_one.fitness + parent_two.fitness) / 2
+        child_one.fitness = child_fitness
+        child_two.fitness = child_fitness
+
+    def _try_update_children_prediction(self, children, child_prediction):
+        for child in children:
+            try:
+                child.set_prediction(child_prediction)
+            except AttributeError:
+                pass
 
     def _perform_mutation(self, children, situation):
         child_one, child_two = children

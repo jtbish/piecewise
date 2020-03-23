@@ -1,8 +1,10 @@
 import functools
+import abc
 import math
 
-from piecewise.error.classifier_error import AttrUpdateError
 from piecewise.constants import TIME_STEP_MIN
+from piecewise.error.classifier_error import AttrUpdateError
+from piecewise.lcs.hyperparams import get_hyperparam
 
 from .config import classifier_attr_rel_tol
 from .formatting import as_truncated_str
@@ -50,8 +52,10 @@ def _value_is_correct_type(value, expected_type):
         return isinstance(value, expected_type)
 
 
-class Classifier:
-    """A classifier contains a rule (mapping from condition to action), as well as
+class ClassifierABC(metaclass=abc.ABCMeta):
+    """ABC for classifiers.
+
+    A classifier contains a rule (mapping from condition to action), as well as
     other attributes relating to its usage in the system (see properties
     exposed below).
 
@@ -59,9 +63,8 @@ class Classifier:
     microclassifier, and if it has a numerosity > 1 it is considered to be a
     macroclassifier. See is_micro and is_macro properties.
     """
-    def __init__(self, rule, prediction, error, fitness, time_stamp):
+    def __init__(self, rule, error, fitness, time_stamp):
         self._rule = rule
-        self._prediction = prediction
         self._error = error
         self._fitness = fitness
         self._time_stamp = time_stamp
@@ -89,14 +92,6 @@ class Classifier:
     @action.setter
     def action(self, value):
         self._rule.action = value
-
-    @property
-    def prediction(self):
-        return self._prediction
-
-    @prediction.setter
-    def prediction(self, value):
-        self._prediction = value
 
     @property
     def error(self):
@@ -158,6 +153,38 @@ class Classifier:
     def is_macro(self):
         return self._numerosity > NUMEROSITY_MIN
 
+    @abc.abstractmethod
+    def get_prediction(self, situation=None):
+        """Return prediction of the classifier, which may or may not be
+        dependent on the situation."""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def __eq__(self, other):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def __repr__(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def __str__(self):
+        raise NotImplementedError
+
+
+class Classifier(ClassifierABC):
+    """'Normal' classifier as in canonical XCS - constant prediction."""
+    def __init__(self, rule, prediction, error, fitness, time_stamp):
+        super().__init__(rule, error, fitness, time_stamp)
+        self._prediction = prediction
+
+    def get_prediction(self, situation=None):
+        # ignore situation, not needed for constant prediction
+        return self._prediction
+
+    def set_prediction(self, value):
+        self._prediction = value
+
     def __eq__(self, other):
         return self._rule == other.rule and \
             math.isclose(self._prediction, other.prediction,
@@ -181,6 +208,72 @@ class Classifier:
     def __str__(self):
         return (f"( rule: {self._rule}, "
                 f"pred: {as_truncated_str(self._prediction)}, "
+                f"err: {as_truncated_str(self._error)}, "
+                f"fit: {as_truncated_str(self._fitness)}, "
+                f"ts: {self._time_stamp}, "
+                f"exp: {self._experience}, "
+                f"ass: {as_truncated_str(self._action_set_size)}, "
+                f"num: {self._numerosity} )")
+
+
+class LinearPredictionClassifier(ClassifierABC):
+    """Classifier that uses weight vector to compute linear prediction, for
+    use with XCSF."""
+    _INIT_WEIGHT_VAL = 0.0
+
+    def __init__(self, rule, error, fitness, time_stamp):
+        super().__init__(rule, error, fitness, time_stamp)
+        self._weight_vec = self._init_weight_vec(self._rule.num_features)
+        # cache x_0 so retrieval at test time not necessary
+        self._x_nought = get_hyperparam("x_nought")
+
+    def _init_weight_vec(self, num_features):
+        # weight vec stored as [w_0, w_1, ..., w_n] for n features
+        return [self._INIT_WEIGHT_VAL] * (num_features + 1)
+
+    @property
+    def weight_vec(self):
+        return self._weight_vec
+
+    def get_prediction(self, situation):
+        assert len(self._weight_vec) == (len(situation) + 1)
+        w_nought = self._weight_vec[0]
+        prediction = w_nought * self._x_nought
+        for i in range(0, len(situation)):
+            s_idx = i
+            w_idx = i + 1
+            prediction += self._weight_vec[w_idx] * situation[s_idx]
+        return prediction
+
+    def __eq__(self, other):
+        return self._rule == other.rule and \
+            self._weight_vec_is_close(other) and \
+            math.isclose(self._error, other.error,
+                         rel_tol=classifier_attr_rel_tol) and \
+            math.isclose(self._fitness, other.fitness,
+                         rel_tol=classifier_attr_rel_tol) and \
+            self._time_stamp == other.time_stamp and \
+            self._experience == other.experience and \
+            math.isclose(self._action_set_size, other.action_set_size,
+                         rel_tol=classifier_attr_rel_tol) and \
+            self._numerosity == other.numerosity
+
+    def _weight_vec_is_close(self, other):
+        for (my_elem, other_elem) in zip(self._weight_vec, other._weight_vec):
+            if not math.isclose(
+                    my_elem, other_elem, rel_tol=classifier_attr_rel_tol):
+                return False
+        return True
+
+    def __repr__(self):
+        return (f"{self.__class__.__name__}("
+                f"{self._rule!r}, "
+                f"{self._error!r}, {self._fitness!r}, "
+                f"{self._time_stamp!r})")
+
+    def __str__(self):
+        return (f"( rule: {self._rule}, "
+                f"weight: {self._weight_vec}), "
                 f"err: {as_truncated_str(self._error)}, "
                 f"fit: {as_truncated_str(self._fitness)}, "
                 f"ts: {self._time_stamp}, "

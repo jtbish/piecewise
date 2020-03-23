@@ -1,4 +1,4 @@
-from .classifier import Classifier
+from .classifier import Classifier, LinearPredictionClassifier
 from .genotype import Genotype
 from .classifier_set.classifier_set import ClassifierSet
 from .classifier_set.population import Population

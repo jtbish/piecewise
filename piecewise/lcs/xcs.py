@@ -13,8 +13,10 @@ from piecewise.util.classifier_set_stats import (calc_summary_stat,
 from .component import (FitnessWeightedAvgPrediction, FixedEpsilonGreedy,
                         RuleReprCovering, RuleReprMatching,
                         XCSAccuracyFitnessUpdate, XCSCreditAssignment,
+                        XCSFLinearPredictionCreditAssignment,
                         XCSRouletteWheelDeletion, XCSSubsumption,
-                        make_canonical_xcs_ga)
+                        make_canonical_xcs_ga, make_classifier,
+                        make_linear_prediction_classifier)
 from .component.action_selection import select_greedy_action
 from .hyperparams import get_hyperparam
 from .lcs import LCS, LCSTrainResponse
@@ -31,7 +33,9 @@ def make_canonical_xcs(env, rule_repr, hyperparams, seed):
     given environment and rule repr, i.e. XCS with components as described in
     'An Algorithmic Description of XCS' (Butz and Wilson, 2002)'."""
     matching = RuleReprMatching(rule_repr)
-    covering = RuleReprCovering(env.action_set, rule_repr)
+    covering = RuleReprCovering(env.action_set,
+                                rule_repr,
+                                classifier_factory=make_classifier)
     prediction = FitnessWeightedAvgPrediction(env.action_set)
     action_selection = FixedEpsilonGreedy()
     credit_assignment = XCSCreditAssignment()
@@ -76,7 +80,9 @@ def make_custom_xcs_from_canonical_base(env,
     if matching is None:
         matching = RuleReprMatching(rule_repr)
     if covering is None:
-        covering = RuleReprCovering(env.action_set, rule_repr)
+        covering = RuleReprCovering(env.action_set,
+                                    rule_repr,
+                                    classifier_factory=make_classifier)
     if prediction is None:
         prediction = FitnessWeightedAvgPrediction(env.action_set)
     if action_selection is None:
@@ -111,7 +117,7 @@ def _make_xcs(env_step_type, *args, **kwargs):
         raise InternalError(f"Invalid environment step type: {env_step_type}")
 
 
-class XCS(LCS):
+class XCSABC(LCS, metaclass=abc.ABCMeta):
     """Implementation of XCS, based on pseudocode given in 'An Algorithmic
     Description of XCS' (Butz and Wilson, 2002)."""
     def __init__(self, components, rule_repr, hyperparams, seed):
@@ -155,15 +161,14 @@ class XCS(LCS):
         self._match_set = self._gen_match_set(self._situation)
         self._perform_covering(self._match_set)
         self._prediction_array = \
-            self._gen_prediction_array(self._match_set)
+            self._gen_prediction_array(self._match_set, self._situation)
         action_select_response = \
             self._select_action(self._prediction_array, self._time_step)
         action = action_select_response.action
         self._action_set = self._gen_action_set(self._match_set, action)
         self._did_explore = action_select_response.did_explore
 
-        return LCSTrainResponse(action=action,
-                                did_explore=self._did_explore)
+        return LCSTrainResponse(action=action, did_explore=self._did_explore)
 
     def gen_match_set(self, situation):
         return self._matching_strat(self._population, situation)
@@ -190,8 +195,8 @@ class XCS(LCS):
     def _should_cover(self, match_set):
         return num_unique_actions(match_set) < get_hyperparam("theta_mna")
 
-    def gen_prediction_array(self, match_set):
-        return self._prediction_strat(match_set)
+    def gen_prediction_array(self, match_set, situation=None):
+        return self._prediction_strat(match_set, situation)
 
     def train_update(self, env_response):
         """Second half (line 8 onwards) of RUN EXPERIMENT function from
@@ -220,7 +225,7 @@ class XCS(LCS):
         resembles the UPDATE SET function from 'An Algorithmic Description of
         XCS' (Butz and Wilson, 2002), with the addition of running the rule
         discovery step last."""
-        self._do_credit_assignment(action_set, payoff)
+        self._do_credit_assignment(action_set, payoff, situation)
         self._update_fitness(action_set)
         if get_hyperparam("do_as_subsumption"):
             self._do_action_set_subsumption(action_set)
@@ -300,8 +305,8 @@ class XCS(LCS):
         logging.debug(f"{classifier}")
         return classifier
 
-    def _gen_prediction_array(self, match_set):
-        prediction_array = self.gen_prediction_array(match_set)
+    def _gen_prediction_array(self, match_set, situation):
+        prediction_array = self.gen_prediction_array(match_set, situation)
         logging.debug(f"Prediction array: {prediction_array}")
         return prediction_array
 
@@ -325,8 +330,8 @@ class XCS(LCS):
         self._deletion_strat(self._population)
 
     def _select_action(self, prediction_array, time_step):
-        action_select_res = self._action_selection_strat(prediction_array,
-                time_step)
+        action_select_res = self._action_selection_strat(
+            prediction_array, time_step)
         action = action_select_res.action
         if action_select_res.did_explore:
             logging.debug(f"Action selection: explored, {action}")
@@ -334,12 +339,12 @@ class XCS(LCS):
             logging.debug(f"Action selection: exploited, {action}")
         return action_select_res
 
-    def _do_credit_assignment(self, action_set, payoff):
+    def _do_credit_assignment(self, action_set, payoff, situation):
         logging.debug("Doing credit assignment.")
-        self._credit_assignment_strat(action_set, payoff)
+        self._credit_assignment_strat(action_set, payoff, situation)
 
 
-class SingleStepXCS(XCS):
+class SingleStepXCS(XCSABC):
     """XCS operating in single-step environments."""
     def _step_type_train_update(self, env_response):
         self._assert_prev_step_tracking_attrs_are_null()
@@ -353,7 +358,7 @@ class SingleStepXCS(XCS):
         assert self._prev_situation is None
 
 
-class MultiStepXCS(XCS):
+class MultiStepXCS(XCSABC):
     """XCS operating in multi-step environments."""
     def _step_type_train_update(self, env_response):
         self._try_update_prev_action_set()

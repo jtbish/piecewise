@@ -1,7 +1,8 @@
-from .action_selection import (FixedEpsilonGreedy,
-                               LinearDecayEpsilonGreedy)
-from .covering import RuleReprCovering
-from .credit_assignment import XCSCreditAssignment
+from .action_selection import FixedEpsilonGreedy, LinearDecayEpsilonGreedy
+from .covering import (RuleReprCovering, make_classifier,
+                       make_linear_prediction_classifier)
+from .credit_assignment import (XCSCreditAssignment,
+                                XCSFLinearPredictionCreditAssignment)
 from .deletion import XCSRouletteWheelDeletion
 from .fitness_update import XCSAccuracyFitnessUpdate
 from .matching import RuleReprMatching
