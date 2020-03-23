@@ -7,6 +7,7 @@ from piecewise.lcs.rng import get_rng
 ActionSelectResponse = namedtuple("ActionSelectResponse",
                                   ["action", "did_explore"])
 
+
 class FixedEpsilonGreedy:
     def __call__(self, prediction_array, time_step=None):
         """SELECT ACTION function from 'An Algorithmic
@@ -27,7 +28,8 @@ class LinearDecayEpsilonGreedy:
     def _decay_epsilon(self, time_step):
         decayed_val = self._epsilon_max - \
             get_hyperparam("e_greedy_decay_factor")*time_step
-        self._epsilon = max(decayed_val, get_hyperparam("e_greedy_min_epsilon"))
+        self._epsilon = max(decayed_val,
+                            get_hyperparam("e_greedy_min_epsilon"))
 
 
 def _epsilon_greedy(prediction_array, epsilon):

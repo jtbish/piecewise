@@ -106,6 +106,49 @@ def make_custom_xcs_from_canonical_base(env,
     return _make_xcs(env.step_type, components, rule_repr, hyperparams, seed)
 
 
+def make_custom_xcsf_from_canonical_base(env,
+                                         rule_repr,
+                                         hyperparams,
+                                         seed,
+                                         matching=None,
+                                         covering=None,
+                                         prediction=None,
+                                         action_selection=None,
+                                         credit_assignment=None,
+                                         fitness_update=None,
+                                         subsumption=None,
+                                         rule_discovery=None,
+                                         deletion=None):
+    if matching is None:
+        matching = RuleReprMatching(rule_repr)
+    if covering is None:
+        covering = RuleReprCovering(
+            env.action_set,
+            rule_repr,
+            classifier_factory=make_linear_prediction_classifier)
+    if prediction is None:
+        prediction = FitnessWeightedAvgPrediction(env.action_set)
+    if action_selection is None:
+        action_selection = FixedEpsilonGreedy()
+    if credit_assignment is None:
+        credit_assignment = XCSFLinearPredictionCreditAssignment()
+    if fitness_update is None:
+        fitness_update = XCSAccuracyFitnessUpdate()
+    if subsumption is None:
+        subsumption = XCSSubsumption(rule_repr)
+    if rule_discovery is None:
+        rule_discovery = make_canonical_xcs_ga(env.action_set, rule_repr,
+                                               subsumption)
+    if deletion is None:
+        deletion = XCSRouletteWheelDeletion()
+
+    components = XCSComponents(matching, covering, prediction,
+                               action_selection, credit_assignment,
+                               fitness_update, subsumption, rule_discovery,
+                               deletion)
+    return _make_xcs(env.step_type, components, rule_repr, hyperparams, seed)
+
+
 def _make_xcs(env_step_type, *args, **kwargs):
     """Private factory function to make suitable XCS instance given type of
     environment."""
