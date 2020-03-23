@@ -154,7 +154,8 @@ class XCS(LCS):
         self._time_step = time_step
         self._match_set = self._gen_match_set(self._situation)
         self._perform_covering(self._match_set)
-        self._prediction_array = self._gen_prediction_array(self._match_set)
+        self._prediction_array = \
+            self._gen_prediction_array(self._match_set)
         action_select_response = \
             self._select_action(self._prediction_array, self._time_step)
         action = action_select_response.action
@@ -324,7 +325,8 @@ class XCS(LCS):
         self._deletion_strat(self._population)
 
     def _select_action(self, prediction_array, time_step):
-        action_select_res = self._action_selection_strat(prediction_array, time_step)
+        action_select_res = self._action_selection_strat(prediction_array,
+                time_step)
         action = action_select_res.action
         if action_select_res.did_explore:
             logging.debug(f"Action selection: explored, {action}")

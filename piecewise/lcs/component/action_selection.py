@@ -7,12 +7,6 @@ from piecewise.lcs.rng import get_rng
 ActionSelectResponse = namedtuple("ActionSelectResponse",
                                   ["action", "did_explore"])
 
-class GreedyActionSelection:
-    def __call__(self, prediction_array, time_step=None):
-        action = select_greedy_action(prediction_array)
-        return ActionSelectResponse(action, did_explore=False)
-
-
 class FixedEpsilonGreedy:
     def __call__(self, prediction_array, time_step=None):
         """SELECT ACTION function from 'An Algorithmic
