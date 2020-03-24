@@ -109,7 +109,6 @@ class GymEnvironment(IEnvironment):
         assert action in self._action_set
         wrapped_obs, wrapped_reward, wrapped_done, wrapped_info = \
             self._wrapped_env.step(action)
-        print(wrapped_info)
         self._is_terminal = wrapped_done
         return EnvironmentResponse(
             obs=self._enforce_valid_obs(wrapped_obs),

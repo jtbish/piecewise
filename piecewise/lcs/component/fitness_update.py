@@ -2,7 +2,7 @@ from piecewise.lcs.hyperparams import get_hyperparam
 
 
 class XCSAccuracyFitnessUpdate:
-    _MAX_ACCURACY = 1
+    _MAX_ACCURACY = 1.0
 
     def __call__(self, action_set):
         """UPDATE FITNESS function from 'An Algorithmic Description of XCS'

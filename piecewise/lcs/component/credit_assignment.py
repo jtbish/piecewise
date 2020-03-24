@@ -1,4 +1,5 @@
 import numpy as np
+import logging
 import math
 
 from piecewise.lcs.hyperparams import get_hyperparam
@@ -54,18 +55,18 @@ class XCSFLinearPredictionCreditAssignment:
         for classifier in action_set:
             classifier.experience += 1
             payoff_diff = payoff - classifier.get_prediction(situation)
-            self._update_weight_vec(classifier, payoff_diff)
+            self._update_weight_vec(classifier, payoff_diff, situation)
             self._update_prediction_error(classifier, payoff_diff)
             _update_action_set_size(classifier, action_set)
 
-    def _update_weight_vec(self, classifier, situation, payoff_diff):
-        weight_deltas = self._calc_weight_deltas(situation, payoff_diff)
+    def _update_weight_vec(self, classifier, payoff_diff, situation):
+        weight_deltas = self._calc_weight_deltas(payoff_diff, situation)
         self._apply_weight_deltas(classifier, weight_deltas)
 
-    def _calc_weight_deltas(self, situation, payoff_diff):
+    def _calc_weight_deltas(self, payoff_diff, situation):
         augmented_situation = self._prepend_threshold_to_situation(situation)
-        situation_norm = math.sqrt(
-            sum([elem**2 for elem in augmented_situation]))  # L2 norm
+        situation_norm = \
+            sum([elem**2 for elem in augmented_situation])
         weight_deltas = []
         for elem in augmented_situation:
             delta = (get_hyperparam("eta") /

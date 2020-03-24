@@ -106,6 +106,30 @@ def make_custom_xcs_from_canonical_base(env,
     return _make_xcs(env.step_type, components, rule_repr, hyperparams, seed)
 
 
+def make_canonical_xcsf(env, rule_repr, hyperparams, seed):
+    """Public factory function to make instance of 'Canonical XCS' for the
+    given environment and rule repr, i.e. XCS with components as described in
+    'An Algorithmic Description of XCS' (Butz and Wilson, 2002)'."""
+    matching = RuleReprMatching(rule_repr)
+    covering = RuleReprCovering(env.action_set,
+                                rule_repr,
+                                classifier_factory=make_linear_prediction_classifier)
+    prediction = FitnessWeightedAvgPrediction(env.action_set)
+    action_selection = FixedEpsilonGreedy()
+    credit_assignment = XCSFLinearPredictionCreditAssignment()
+    fitness_update = XCSAccuracyFitnessUpdate()
+    subsumption = XCSSubsumption(rule_repr)
+    rule_discovery = make_canonical_xcs_ga(env.action_set, rule_repr,
+                                           subsumption)
+    deletion = XCSRouletteWheelDeletion()
+
+    components = XCSComponents(matching, covering, prediction,
+                               action_selection, credit_assignment,
+                               fitness_update, subsumption, rule_discovery,
+                               deletion)
+    return _make_xcs(env.step_type, components, rule_repr, hyperparams, seed)
+
+
 def make_custom_xcsf_from_canonical_base(env,
                                          rule_repr,
                                          hyperparams,

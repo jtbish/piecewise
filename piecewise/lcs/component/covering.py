@@ -13,7 +13,8 @@ def make_classifier(rule, time_step):
 
 def make_linear_prediction_classifier(rule, time_step):
     return LinearPredictionClassifier(rule, get_hyperparam("epsilon_I"),
-                                      get_hyperparam("fitness_I"), time_step)
+                                      get_hyperparam("fitness_I"), time_step,
+                                      get_hyperparam("x_nought"))
 
 
 class RuleReprCovering:

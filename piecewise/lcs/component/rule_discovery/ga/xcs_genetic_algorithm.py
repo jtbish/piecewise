@@ -84,9 +84,9 @@ class XCSGeneticAlgorithm:
         (child_one, child_two) = children
         (parent_one, parent_two) = parents
 
-        child_prediction = (parent_one.get_prediction(situation),
+        child_prediction = (parent_one.get_prediction(situation) +
                             parent_two.get_prediction(situation)) / 2
-        self._try_update_children_prediction(child_one, child_two,
+        self._try_update_children_prediction(children,
                                              child_prediction)
 
         child_error = 0.25 * (parent_one.error + parent_two.error) / 2

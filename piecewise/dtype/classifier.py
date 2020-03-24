@@ -4,7 +4,6 @@ import math
 
 from piecewise.constants import TIME_STEP_MIN
 from piecewise.error.classifier_error import AttrUpdateError
-from piecewise.lcs.hyperparams import get_hyperparam
 
 from .config import classifier_attr_rel_tol
 from .formatting import as_truncated_str
@@ -221,11 +220,10 @@ class LinearPredictionClassifier(ClassifierABC):
     use with XCSF."""
     _INIT_WEIGHT_VAL = 0.0
 
-    def __init__(self, rule, error, fitness, time_stamp):
+    def __init__(self, rule, error, fitness, time_stamp, x_nought):
         super().__init__(rule, error, fitness, time_stamp)
         self._weight_vec = self._init_weight_vec(self._rule.num_features)
-        # cache x_0 so retrieval at test time not necessary
-        self._x_nought = get_hyperparam("x_nought")
+        self._x_nought = x_nought
 
     def _init_weight_vec(self, num_features):
         # weight vec stored as [w_0, w_1, ..., w_n] for n features
