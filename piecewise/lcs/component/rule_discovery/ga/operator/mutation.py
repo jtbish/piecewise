@@ -19,10 +19,3 @@ class RuleReprMutation:
         First part (condition mutation) is delegated to the rule
         representation."""
         self._rule_repr.mutate_condition(classifier.condition, situation)
-        self._mutate_action(classifier)
-
-    def _mutate_action(self, classifier):
-        should_mutate_action = get_rng().rand() < get_hyperparam("mu")
-        if should_mutate_action:
-            possible_actions = self._env_action_set - {classifier.action}
-            classifier.action = get_rng().choice(tuple(possible_actions))
