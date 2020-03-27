@@ -32,7 +32,6 @@ def make_improved_xcs_ga(env_action_set, rule_repr, subsumption):
                                ga_operators)
 
 
-
 def make_custom_xcs_ga(env_action_set, rule_repr, subsumption, selection,
                        crossover, mutation):
     ga_operators = GAOperators(selection, crossover, mutation)
@@ -96,8 +95,7 @@ class XCSGeneticAlgorithm:
 
         child_prediction = (parent_one.get_prediction(situation) +
                             parent_two.get_prediction(situation)) / 2
-        self._try_update_children_prediction(children,
-                                             child_prediction)
+        self._try_update_children_prediction(children, child_prediction)
 
         child_error = 0.25 * (parent_one.error + parent_two.error) / 2
         child_one.error = child_error

@@ -1,5 +1,5 @@
-from piecewise.lcs.rng import get_rng
 from piecewise.lcs.hyperparams import get_hyperparam
+from piecewise.lcs.rng import get_rng
 
 
 def _swap_vec_elems(first_vec, second_vec, swap_idx):
@@ -29,7 +29,6 @@ class TwoPointCrossover:
     def _crossover_vecs(self, first_vec, second_vec, first_idx, second_idx):
         for swap_idx in range(first_idx, second_idx):
             _swap_vec_elems(first_vec, second_vec, swap_idx)
-
 
 
 class UniformCrossover:
