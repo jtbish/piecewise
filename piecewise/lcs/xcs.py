@@ -15,8 +15,8 @@ from .component import (FitnessWeightedAvgPrediction, FixedEpsilonGreedy,
                         XCSAccuracyFitnessUpdate, XCSCreditAssignment,
                         XCSFLinearPredictionCreditAssignment,
                         XCSRouletteWheelDeletion, XCSSubsumption,
-                        make_canonical_xcs_ga, make_classifier,
-                        make_linear_prediction_classifier)
+                        make_canonical_xcs_ga, make_improved_xcs_ga,
+                        make_classifier, make_linear_prediction_classifier)
 from .component.action_selection import select_greedy_action
 from .hyperparams import get_hyperparam
 from .lcs import LCS, LCSTrainResponse
@@ -95,7 +95,7 @@ def make_custom_xcs_from_canonical_base(env,
         subsumption = XCSSubsumption(rule_repr)
     if rule_discovery is None:
         rule_discovery = make_canonical_xcs_ga(env.action_set, rule_repr,
-                                               subsumption)
+                subsumption)
     if deletion is None:
         deletion = XCSRouletteWheelDeletion()
 

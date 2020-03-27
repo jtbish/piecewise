@@ -8,5 +8,6 @@ from .fitness_update import XCSAccuracyFitnessUpdate
 from .matching import RuleReprMatching
 from .prediction import FitnessWeightedAvgPrediction
 from .rule_discovery.ga.xcs_genetic_algorithm import (make_canonical_xcs_ga,
+                                                      make_improved_xcs_ga,
                                                       make_custom_xcs_ga)
 from .subsumption import XCSSubsumption

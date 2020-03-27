@@ -65,12 +65,9 @@ class XCSFLinearPredictionCreditAssignment:
 
     def _calc_weight_deltas(self, payoff_diff, situation):
         augmented_situation = self._prepend_threshold_to_situation(situation)
-        situation_norm = \
-            sum([elem**2 for elem in augmented_situation])
         weight_deltas = []
         for elem in augmented_situation:
-            delta = (get_hyperparam("eta") /
-                     situation_norm) * payoff_diff * elem
+            delta = get_hyperparam("eta") * payoff_diff * elem
             weight_deltas.append(delta)
         return weight_deltas
 

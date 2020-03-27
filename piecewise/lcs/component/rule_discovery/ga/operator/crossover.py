@@ -1,4 +1,10 @@
 from piecewise.lcs.rng import get_rng
+from piecewise.lcs.hyperparams import get_hyperparam
+
+
+def _swap_vec_elems(first_vec, second_vec, swap_idx):
+    first_vec[swap_idx], second_vec[swap_idx] = \
+            second_vec[swap_idx], first_vec[swap_idx]
 
 
 class TwoPointCrossover:
@@ -22,8 +28,14 @@ class TwoPointCrossover:
 
     def _crossover_vecs(self, first_vec, second_vec, first_idx, second_idx):
         for swap_idx in range(first_idx, second_idx):
-            self._swap_vec_elems(first_vec, second_vec, swap_idx)
+            _swap_vec_elems(first_vec, second_vec, swap_idx)
 
-    def _swap_vec_elems(self, first_vec, second_vec, swap_idx):
-        first_vec[swap_idx], second_vec[swap_idx] = \
-                second_vec[swap_idx], first_vec[swap_idx]
+
+
+class UniformCrossover:
+    def __call__(self, first_vec, second_vec):
+        assert len(first_vec) == len(second_vec)
+        for swap_idx in range(0, len(first_vec)):
+            should_swap = get_rng().rand() < get_hyperparam("upsilon")
+            if should_swap:
+                _swap_vec_elems(first_vec, second_vec, swap_idx)

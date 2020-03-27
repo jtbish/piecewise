@@ -6,21 +6,31 @@ from piecewise.error.classifier_set_error import MemberNotFoundError
 from piecewise.lcs.hyperparams import get_hyperparam
 from piecewise.lcs.rng import get_rng
 
-from .operator.crossover import TwoPointCrossover
+from .operator.crossover import TwoPointCrossover, UniformCrossover
 from .operator.mutation import RuleReprMutation
-from .operator.selection import roulette_wheel_selection
+from .operator.selection import RouletteWheelSelection, TournamentSelection
 
 GAOperators = namedtuple("GAOperators", ["selection", "crossover", "mutation"])
 ClassifierPair = namedtuple("ClassifierPair", ["first", "second"])
 
 
 def make_canonical_xcs_ga(env_action_set, rule_repr, subsumption):
-    selection = roulette_wheel_selection
+    selection = RouletteWheelSelection()
     crossover = TwoPointCrossover()
     mutation = RuleReprMutation(env_action_set, rule_repr)
     ga_operators = GAOperators(selection, crossover, mutation)
     return XCSGeneticAlgorithm(env_action_set, rule_repr, subsumption,
                                ga_operators)
+
+
+def make_improved_xcs_ga(env_action_set, rule_repr, subsumption):
+    selection = TournamentSelection()
+    crossover = UniformCrossover()
+    mutation = RuleReprMutation(env_action_set, rule_repr)
+    ga_operators = GAOperators(selection, crossover, mutation)
+    return XCSGeneticAlgorithm(env_action_set, rule_repr, subsumption,
+                               ga_operators)
+
 
 
 def make_custom_xcs_ga(env_action_set, rule_repr, subsumption, selection,
