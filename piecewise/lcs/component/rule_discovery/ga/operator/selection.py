@@ -20,7 +20,7 @@ class RouletteWheelSelection:
 
 class TournamentSelection:
     def __call__(self, operating_set):
-        tournament_size = math.floor(
+        tournament_size = math.ceil(
             get_hyperparam("tau") * operating_set.num_macros)
         assert 1 <= tournament_size <= operating_set.num_macros
         best_classifier = \
