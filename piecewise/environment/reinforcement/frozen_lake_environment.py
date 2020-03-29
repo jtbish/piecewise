@@ -10,11 +10,6 @@ from piecewise.dtype import DataSpaceBuilder, Dimension
 from ..environment import EnvironmentResponse, IEnvironment
 from .gym_environment import GymEnvironment
 
-MAPS["4x4-relaxed-start"] = \
-    ["SSSS",
-     "SHSH",
-     "SSSH",
-     "HSSG"]
 MAPS["8x8-relaxed-start"] = \
     ["SSSSSSSS",
      "SSSSSSSS",
@@ -25,23 +20,31 @@ MAPS["8x8-relaxed-start"] = \
      "SHSSHSHS",
      "SSSHSSSG"]    
 
-register(id="FrozenLake4x4-relaxed-start-v0",
-         entry_point="gym.envs.toy_text:FrozenLakeEnv",
-         kwargs={"map_name": "4x4-relaxed-start"})
+MAPS["16x16-relaxed-start"] = \
+    ["SSSSSSHSSSSSSSSS"
+     "SSSSHSHSSSHHHSSS"
+     "SSSHHHSSSSHSSSHS"
+     "SSSSSHHSSSHSSSSH"
+     "SHSHSHSSSSSSSHSS"
+     "SSSHSHSSSSSSSHSS"
+     "SSSSSSSSSSSSHSHH"
+     "SSSSSSSSSSSSSSSS"
+     "SSSSHSSSSHHSSSSS"
+     "SSSSSSHSHSSHSSSS"
+     "SSSSHSSSSSSSSSSS"
+     "SSSSSSSHSSSSSSHH"
+     "SSSHSHHSSSSSSHSS"
+     "SHSSSSHSSSSSHSSS"
+     "HSSSSHSSHHSSSSSS"
+     "SSHSSHSSSSSSSSSG"]
 
 register(id="FrozenLake8x8-relaxed-start-v0",
          entry_point="gym.envs.toy_text:FrozenLakeEnv",
          kwargs={"map_name": "8x8-relaxed-start"})
 
-
-def make_frozen_lake_4x4_env(slip_prob=0.0, seed=0):
-    is_slippery = slip_prob > 0.0
-    gym_env = GymEnvironment(env_name="FrozenLake4x4-relaxed-start-v0",
-                             env_kwargs={"is_slippery": is_slippery},
-                             custom_obs_space=None,
-                             custom_action_set=None,
-                             seed=seed)
-    return FrozenLakeGymEnvironment(gym_env, grid_size=4, slip_prob=slip_prob)
+register(id="FrozenLake16x16-relaxed-start-v0",
+         entry_point="gym.envs.toy_text:FrozenLakeEnv",
+         kwargs={"map_name": "16x16-relaxed-start"})
 
 
 def make_frozen_lake_8x8_env(slip_prob=0.0, seed=0):
@@ -52,6 +55,16 @@ def make_frozen_lake_8x8_env(slip_prob=0.0, seed=0):
                              custom_action_set=None,
                              seed=seed)
     return FrozenLakeGymEnvironment(gym_env, grid_size=8, slip_prob=slip_prob)
+
+
+def make_frozen_lake_16x16_env(slip_prob=0.0, seed=0):
+    is_slippery = slip_prob > 0.0
+    gym_env = GymEnvironment(env_name="FrozenLake16x16-relaxed-start-v0",
+                             env_kwargs={"is_slippery": is_slippery},
+                             custom_obs_space=None,
+                             custom_action_set=None,
+                             seed=seed)
+    return FrozenLakeGymEnvironment(gym_env, grid_size=16, slip_prob=slip_prob)
 
 
 class FrozenLakeGymEnvironment(IEnvironment):
