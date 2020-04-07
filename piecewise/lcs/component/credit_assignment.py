@@ -3,6 +3,7 @@ import logging
 import math
 
 from piecewise.lcs.hyperparams import get_hyperparam
+from piecewise.util.classifier_set_stats import calc_summary_stat
 
 
 def _update_action_set_size(classifier, action_set):
@@ -52,10 +53,12 @@ class XCSCreditAssignment:
 
 class XCSFLinearPredictionCreditAssignment:
     def __call__(self, action_set, payoff, situation):
+        niche_min_error = calc_summary_stat(action_set, "min", "error")
         for classifier in action_set:
             classifier.experience += 1
             payoff_diff = payoff - classifier.get_prediction(situation)
             self._update_weight_vec(classifier, payoff_diff, situation)
+            self._update_niche_min_error(classifier, niche_min_error)
             self._update_prediction_error(classifier, payoff_diff)
             _update_action_set_size(classifier, action_set)
 
@@ -82,6 +85,14 @@ class XCSFLinearPredictionCreditAssignment:
         for idx, delta in enumerate(weight_deltas):
             classifier.weight_vec[idx] += delta
 
+    def _update_niche_min_error(self, classifier, niche_min_error):
+        classifier.niche_min_error += \
+            get_hyperparam("beta_e")*(niche_min_error -
+                    classifier.niche_min_error)
+
     def _update_prediction_error(self, classifier, payoff_diff):
-        error_diff = abs(payoff_diff) - classifier.error
+        first_term = abs(payoff_diff) - classifier.niche_min_error
+        if first_term < 0:
+            first_term = get_hyperparam("epsilon_nought")
+        error_diff = first_term - classifier.error
         classifier.error += get_hyperparam("beta") * error_diff

@@ -65,6 +65,7 @@ class ClassifierABC(metaclass=abc.ABCMeta):
     def __init__(self, rule, error, fitness, time_stamp):
         self._rule = rule
         self._error = error
+        self._niche_min_error = error
         self._fitness = fitness
         self._time_stamp = time_stamp
 
@@ -99,6 +100,14 @@ class ClassifierABC(metaclass=abc.ABCMeta):
     @error.setter
     def error(self, value):
         self._error = value
+
+    @property
+    def niche_min_error(self):
+        return self._niche_min_error
+
+    @niche_min_error.setter
+    def niche_min_error(self, value):
+        self._niche_min_error = value
 
     @property
     def fitness(self):
@@ -270,9 +279,11 @@ class LinearPredictionClassifier(ClassifierABC):
                 f"{self._time_stamp!r})")
 
     def __str__(self):
+        weights = [as_truncated_str(weight) for weight in self._weight_vec]
         return (f"( rule: {self._rule}, "
-                f"weight: {self._weight_vec}), "
+                f"weights: {weights}), "
                 f"err: {as_truncated_str(self._error)}, "
+                f"nme: {as_truncated_str(self._niche_min_error)}, "
                 f"fit: {as_truncated_str(self._fitness)}, "
                 f"ts: {self._time_stamp}, "
                 f"exp: {self._experience}, "
