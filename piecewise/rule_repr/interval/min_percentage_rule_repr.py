@@ -198,8 +198,10 @@ class DiscereteMinSpanRuleRepr(MinSpanRuleReprABC):
     def gen_covering_condition(self, situation):
         alleles = []
         for (idx, situation_elem) in enumerate(situation):
-            # covering draws from [0, s_nought]
-            cover_choices = range(0, get_hyperparam("s_nought") + 1)
+            # covering draws from (0, r_nought)
+            r_nought = get_hyperparam("r_nought")
+            assert r_nought > 1
+            cover_choices = range(1, r_nought)
             lower = situation_elem - get_rng().choice(cover_choices)
             upper = situation_elem + get_rng().choice(cover_choices)
             dimension = self._situation_space[idx]
@@ -250,8 +252,10 @@ class DiscereteMinSpanRuleRepr(MinSpanRuleReprABC):
         for allele_idx in range(len(genotype)):
             should_mutate = get_rng().rand() < get_hyperparam("mu")
             if should_mutate:
-                # mutation draws from +-(0, m]
-                mut_choices = range(1, get_hyperparam("m") + 1)
+                # mutation draws from +-[0, m_nought)
+                m_nought = get_hyperparam("m_nought")
+                assert m_nought > 0
+                mut_choices = range(0, m_nought)
                 mutation_magnitude = get_rng().choice(mut_choices)
                 mutation_sign = get_rng().choice([1, -1])
                 mutation_amount = mutation_magnitude * mutation_sign
