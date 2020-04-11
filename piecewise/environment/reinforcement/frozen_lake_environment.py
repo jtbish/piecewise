@@ -20,10 +20,45 @@ MAPS["8x8-train"] = \
      "SHSSHSHS",
      "SSSHSSSG"]    
 
+MAPS["12x12-train"] = \
+    ["SSSSSSHSSSHS",
+     "SSSSSSSSSSSS",
+     "SSHSSSHSSHSS",
+     "SSSSHSSSSSSH",
+     "HHSSSHSHSSSH",
+     "SHSSHSSSSHSS",
+     "SSSSSSSSHSSS",
+     "SHSSHHSSHSSH",
+     "HSSSSSSHSSSH",
+     "SSSSSSSSSHSS",
+     "SSHSSSHSSSSS",
+     "HSHSSSSSHSSG"]
+
+MAPS["12x12-test"] = \
+    ["SFFFFFHFFFHF",
+     "FFFFFFFFFFFF",
+     "FFHFFFHFFHFF",
+     "FFFFHFFFFFFH",
+     "HHFFFHFHFFFH",
+     "FHFFHFFFFHFF",
+     "FFFFFFFFHFFF",
+     "FHFFHHFFHFFH",
+     "HFFFFFFHFFFH",
+     "FFFFFFFFFHFF",
+     "FFHFFFHFFFFF",
+     "HFHFFFFFHFFG"]
 
 register(id="FrozenLake8x8-train-v0",
          entry_point="gym.envs.toy_text:FrozenLakeEnv",
          kwargs={"map_name": "8x8-train"})
+
+register(id="FrozenLake12x12-train-v0",
+         entry_point="gym.envs.toy_text:FrozenLakeEnv",
+         kwargs={"map_name": "12x12-train"})
+
+register(id="FrozenLake12x12-test-v0",
+         entry_point="gym.envs.toy_text:FrozenLakeEnv",
+         kwargs={"map_name": "12x12-test"})
 
 
 def make_frozen_lake_8x8_train_env(slip_prob=0.0, seed=0):
@@ -44,6 +79,25 @@ def make_frozen_lake_8x8_test_env(slip_prob=0.0, seed=0):
                              custom_action_set=None,
                              seed=seed)
     return FrozenLakeGymEnvironment(gym_env, grid_size=8, slip_prob=slip_prob)
+
+def make_frozen_lake_12x12_train_env(slip_prob=0.0, seed=0):
+    is_slippery = slip_prob > 0.0
+    gym_env = GymEnvironment(env_name="FrozenLake12x12-train-v0",
+                             env_kwargs={"is_slippery": is_slippery},
+                             custom_obs_space=None,
+                             custom_action_set=None,
+                             seed=seed)
+    return FrozenLakeGymEnvironment(gym_env, grid_size=12, slip_prob=slip_prob)
+
+
+def make_frozen_lake_12x12_test_env(slip_prob=0.0, seed=0):
+    is_slippery = slip_prob > 0.0
+    gym_env = GymEnvironment(env_name="FrozenLake12x12-test-v0",
+                             env_kwargs={"is_slippery": is_slippery},
+                             custom_obs_space=None,
+                             custom_action_set=None,
+                             seed=seed)
+    return FrozenLakeGymEnvironment(gym_env, grid_size=12, slip_prob=slip_prob)
 
 
 class FrozenLakeGymEnvironment(IEnvironment):
