@@ -10,16 +10,12 @@ def _update_action_set_size(classifier, action_set):
     action_set_size_diff = action_set.num_micros \
             - classifier.action_set_size
 
-    if classifier.experience < _num_initial_adjust_steps():
+    if classifier.experience < (1 / get_hyperparam("beta")):
         classifier.action_set_size += action_set_size_diff / \
             classifier.experience
     else:
         classifier.action_set_size += \
             get_hyperparam("beta") * action_set_size_diff
-
-
-def _num_initial_adjust_steps():
-    return 1 / get_hyperparam("beta")
 
 
 class XCSCreditAssignment:
@@ -34,7 +30,7 @@ class XCSCreditAssignment:
             _update_action_set_size(classifier, action_set)
 
     def _update_prediction(self, classifier, payoff_diff):
-        if classifier.experience < _num_initial_adjust_steps():
+        if classifier.experience < (1 / get_hyperparam("beta")):
             updated_prediction = classifier.get_prediction() +  \
                 payoff_diff/classifier.experience
         else:
@@ -44,8 +40,7 @@ class XCSCreditAssignment:
 
     def _update_prediction_error(self, classifier, payoff_diff):
         error_diff = abs(payoff_diff) - classifier.error
-
-        if classifier.experience < _num_initial_adjust_steps():
+        if classifier.experience < (1 / get_hyperparam("beta")):
             classifier.error += error_diff / classifier.experience
         else:
             classifier.error += get_hyperparam("beta") * error_diff
@@ -86,13 +81,23 @@ class XCSFLinearPredictionCreditAssignment:
             classifier.weight_vec[idx] += delta
 
     def _update_niche_min_error(self, classifier, niche_min_error):
-        classifier.niche_min_error += \
-            get_hyperparam("beta_e")*(niche_min_error -
-                    classifier.niche_min_error)
+        # Use MAM for mu param
+        niche_min_error_diff = niche_min_error - classifier.niche_min_error
+        if classifier.experience < (1 / get_hyperparam("beta_e")):
+            classifier.niche_min_error += \
+                niche_min_error_diff / classifier.experience
+        else:
+            classifier.niche_min_error += \
+                get_hyperparam("beta_e") * niche_min_error_diff
 
     def _update_prediction_error(self, classifier, payoff_diff):
         first_term = abs(payoff_diff) - classifier.niche_min_error
         if first_term < 0:
             first_term = get_hyperparam("epsilon_nought")
         error_diff = first_term - classifier.error
-        classifier.error += get_hyperparam("beta") * error_diff
+
+        # Use MAM for error
+        if classifier.experience < (1 / get_hyperparam("beta")):
+            classifier.error += error_diff / classifier.experience
+        else:
+            classifier.error += get_hyperparam("beta") * error_diff

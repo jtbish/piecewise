@@ -356,7 +356,7 @@ class XCSABC(LCS, metaclass=abc.ABCMeta):
 
     def test_query(self, situation):
         match_set = self._gen_match_set(situation)
-        prediction_array = self._gen_prediction_array(match_set)
+        prediction_array = self._gen_prediction_array(match_set, situation)
         return select_greedy_action(prediction_array)
 
     # Private forwarding functions that do logging calls if needed

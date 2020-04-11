@@ -10,7 +10,7 @@ from piecewise.dtype import DataSpaceBuilder, Dimension
 from ..environment import EnvironmentResponse, IEnvironment
 from .gym_environment import GymEnvironment
 
-MAPS["8x8-relaxed-start"] = \
+MAPS["8x8-train"] = \
     ["SSSSSSSS",
      "SSSSSSSS",
      "SSSHSSSS",
@@ -20,36 +20,15 @@ MAPS["8x8-relaxed-start"] = \
      "SHSSHSHS",
      "SSSHSSSG"]    
 
-MAPS["16x16-relaxed-start"] = \
-    ["SSSSSSHSSSSSSSSS",
-     "SSSSHSHSSSHHHSSS",
-     "SSSHHHSSSSHSSSHS",
-     "SSSSSHHSSSHSSSSH",
-     "SHSHSHSSSSSSSHSS",
-     "SSSHSHSSSSSSSHSS",
-     "SSSSSSSSSSSSHSHH",
-     "SSSSSSSSSSSSSSSS",
-     "SSSSHSSSSHHSSSSS",
-     "SSSSSSHSHSSHSSSS",
-     "SSSSHSSSSSSSSSSS",
-     "SSSSSSSHSSSSSSHH",
-     "SSSHSHHSSSSSSHSS",
-     "SHSSSSHSSSSSHSSS",
-     "HSSSSHSSHHSSSSSS",
-     "SSHSSHSSSSSSSSSG"]
 
-register(id="FrozenLake8x8-relaxed-start-v0",
+register(id="FrozenLake8x8-train-v0",
          entry_point="gym.envs.toy_text:FrozenLakeEnv",
-         kwargs={"map_name": "8x8-relaxed-start"})
-
-register(id="FrozenLake16x16-relaxed-start-v0",
-         entry_point="gym.envs.toy_text:FrozenLakeEnv",
-         kwargs={"map_name": "16x16-relaxed-start"})
+         kwargs={"map_name": "8x8-train"})
 
 
-def make_frozen_lake_8x8_env(slip_prob=0.0, seed=0):
+def make_frozen_lake_8x8_train_env(slip_prob=0.0, seed=0):
     is_slippery = slip_prob > 0.0
-    gym_env = GymEnvironment(env_name="FrozenLake8x8-relaxed-start-v0",
+    gym_env = GymEnvironment(env_name="FrozenLake8x8-train-v0",
                              env_kwargs={"is_slippery": is_slippery},
                              custom_obs_space=None,
                              custom_action_set=None,
@@ -57,14 +36,14 @@ def make_frozen_lake_8x8_env(slip_prob=0.0, seed=0):
     return FrozenLakeGymEnvironment(gym_env, grid_size=8, slip_prob=slip_prob)
 
 
-def make_frozen_lake_16x16_env(slip_prob=0.0, seed=0):
+def make_frozen_lake_8x8_test_env(slip_prob=0.0, seed=0):
     is_slippery = slip_prob > 0.0
-    gym_env = GymEnvironment(env_name="FrozenLake16x16-relaxed-start-v0",
+    gym_env = GymEnvironment(env_name="FrozenLake8x8-v0",
                              env_kwargs={"is_slippery": is_slippery},
                              custom_obs_space=None,
                              custom_action_set=None,
                              seed=seed)
-    return FrozenLakeGymEnvironment(gym_env, grid_size=16, slip_prob=slip_prob)
+    return FrozenLakeGymEnvironment(gym_env, grid_size=8, slip_prob=slip_prob)
 
 
 class FrozenLakeGymEnvironment(IEnvironment):
