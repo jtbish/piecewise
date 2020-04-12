@@ -199,6 +199,8 @@ class Classifier(ClassifierABC):
                          rel_tol=classifier_attr_rel_tol) and \
             math.isclose(self._error, other.error,
                          rel_tol=classifier_attr_rel_tol) and \
+            math.isclose(self._niche_min_error, other.niche_min_error,
+                         rel_tol=classifier_attr_rel_tol) and \
             math.isclose(self._fitness, other.fitness,
                          rel_tol=classifier_attr_rel_tol) and \
             self._time_stamp == other.time_stamp and \
@@ -217,6 +219,7 @@ class Classifier(ClassifierABC):
         return (f"( rule: {self._rule}, "
                 f"pred: {as_truncated_str(self._prediction)}, "
                 f"err: {as_truncated_str(self._error)}, "
+                f"nme: {as_truncated_str(self._niche_min_error)}, "
                 f"fit: {as_truncated_str(self._fitness)}, "
                 f"ts: {self._time_stamp}, "
                 f"exp: {self._experience}, "
@@ -257,6 +260,8 @@ class LinearPredictionClassifier(ClassifierABC):
             self._weight_vec_is_close(other) and \
             math.isclose(self._error, other.error,
                          rel_tol=classifier_attr_rel_tol) and \
+            math.isclose(self._niche_min_error, other.niche_min_error,
+                         rel_tol=classifier_attr_rel_tol) and \
             math.isclose(self._fitness, other.fitness,
                          rel_tol=classifier_attr_rel_tol) and \
             self._time_stamp == other.time_stamp and \
@@ -276,7 +281,7 @@ class LinearPredictionClassifier(ClassifierABC):
         return (f"{self.__class__.__name__}("
                 f"{self._rule!r}, "
                 f"{self._error!r}, {self._fitness!r}, "
-                f"{self._time_stamp!r})")
+                f"{self._time_stamp!r}, {self._x_nought!r})")
 
     def __str__(self):
         weights = [as_truncated_str(weight) for weight in self._weight_vec]
