@@ -178,6 +178,14 @@ class FrozenLakeGymEnvironment(IEnvironment):
     def slip_prob(self):
         return self._slip_prob
 
+    @property
+    def terminal_states(self):
+        desc = self._raw_env._wrapped_env.desc.flatten()
+        terminal_states = [self._convert_raw_obs_to_x_y_coordinates([idx]) for
+            (idx, letter) in enumerate(desc) if letter == b'H' or letter ==
+            b'G']
+        return terminal_states
+
     def reset(self):
         raw_obs = self._raw_env.reset()
         return self._convert_raw_obs_to_x_y_coordinates(raw_obs)
