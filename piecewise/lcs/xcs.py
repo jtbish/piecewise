@@ -7,16 +7,15 @@ from piecewise.dtype import ClassifierSet
 from piecewise.environment import EnvironmentStepTypes
 from piecewise.error.classifier_set_error import MemberNotFoundError
 from piecewise.error.core_errors import InternalError
-from piecewise.util.classifier_set_stats import (calc_summary_stat,
-                                                 num_unique_actions)
+from piecewise.util.classifier_set_stats import calc_summary_stat
 
 from .component import (FitnessWeightedAvgPrediction, FixedEpsilonGreedy,
                         RuleReprCovering, RuleReprMatching,
                         XCSAccuracyFitnessUpdate, XCSCreditAssignment,
                         XCSFLinearPredictionCreditAssignment,
                         XCSRouletteWheelDeletion, XCSSubsumption,
-                        make_canonical_xcs_ga, make_improved_xcs_ga,
-                        make_classifier, make_linear_prediction_classifier)
+                        make_canonical_xcs_ga, make_classifier,
+                        make_linear_prediction_classifier)
 from .component.action_selection import select_greedy_action
 from .hyperparams import get_hyperparam
 from .lcs import LCS, LCSTrainResponse
@@ -95,7 +94,7 @@ def make_custom_xcs_from_canonical_base(env,
         subsumption = XCSSubsumption(rule_repr)
     if rule_discovery is None:
         rule_discovery = make_canonical_xcs_ga(env.action_set, rule_repr,
-                subsumption)
+                                               subsumption)
     if deletion is None:
         deletion = XCSRouletteWheelDeletion()
 
@@ -111,9 +110,10 @@ def make_canonical_xcsf(env, rule_repr, hyperparams, seed):
     given environment and rule repr, i.e. XCS with components as described in
     'An Algorithmic Description of XCS' (Butz and Wilson, 2002)'."""
     matching = RuleReprMatching(rule_repr)
-    covering = RuleReprCovering(env.action_set,
-                                rule_repr,
-                                classifier_factory=make_linear_prediction_classifier)
+    covering = RuleReprCovering(
+        env.action_set,
+        rule_repr,
+        classifier_factory=make_linear_prediction_classifier)
     prediction = FitnessWeightedAvgPrediction(env.action_set)
     action_selection = FixedEpsilonGreedy()
     credit_assignment = XCSFLinearPredictionCreditAssignment()
@@ -226,7 +226,8 @@ class XCSABC(LCS, metaclass=abc.ABCMeta):
         self._situation = situation
         self._time_step = time_step
         self._match_set = self._gen_match_set(self._situation)
-        self._perform_covering(self._match_set)
+        self._perform_covering(self._match_set, self._situation,
+                               self._time_step)
         self._prediction_array = \
             self._gen_prediction_array(self._match_set, self._situation)
         action_select_response = \
@@ -249,18 +250,8 @@ class XCSABC(LCS, metaclass=abc.ABCMeta):
                 action_set.add(classifier)
         return action_set
 
-    def _perform_covering(self, match_set):
-        """Second loop of GENERATE MATCH SET function from
-        'An Algorithmic Description of XCS' (Butz and Wilson, 2002)."""
-        while self._should_cover(match_set):
-            covering_classifier = self._gen_covering_classifier(
-                match_set, self._situation, self._time_step)
-            self._population.add(covering_classifier,
-                                 operation_label="covering")
-            match_set.add(covering_classifier)
-
-    def _should_cover(self, match_set):
-        return num_unique_actions(match_set) < get_hyperparam("theta_mna")
+    def _perform_covering(self, match_set, situation, time_step):
+        self._covering_strat(self._population, match_set, situation, time_step)
 
     def gen_prediction_array(self, match_set, situation=None):
         return self._prediction_strat(match_set, situation)

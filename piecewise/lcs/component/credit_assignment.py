@@ -1,12 +1,10 @@
 import numpy as np
-import logging
-import math
 
 from piecewise.lcs.hyperparams import get_hyperparam
 from piecewise.util.classifier_set_stats import calc_summary_stat
 
 
-def _update_action_set_size(classifier, action_set):
+def update_action_set_size(classifier, action_set):
     action_set_size_diff = action_set.num_micros \
             - classifier.action_set_size
 
@@ -27,7 +25,7 @@ class XCSCreditAssignment:
             payoff_diff = payoff - classifier.get_prediction()
             self._update_prediction(classifier, payoff_diff)
             self._update_prediction_error(classifier, payoff_diff)
-            _update_action_set_size(classifier, action_set)
+            update_action_set_size(classifier, action_set)
 
     def _update_prediction(self, classifier, payoff_diff):
         if classifier.experience < (1 / get_hyperparam("beta")):
@@ -55,7 +53,7 @@ class XCSFLinearPredictionCreditAssignment:
             self._update_weight_vec(classifier, payoff_diff, situation)
             self._update_niche_min_error(classifier, niche_min_error)
             self._update_prediction_error(classifier, payoff_diff)
-            _update_action_set_size(classifier, action_set)
+            update_action_set_size(classifier, action_set)
 
     def _update_weight_vec(self, classifier, payoff_diff, situation):
         weight_deltas = self._calc_weight_deltas(payoff_diff, situation)
@@ -91,10 +89,11 @@ class XCSFLinearPredictionCreditAssignment:
                 get_hyperparam("beta_e") * niche_min_error_diff
 
     def _update_prediction_error(self, classifier, payoff_diff):
-        first_term = abs(payoff_diff) - classifier.niche_min_error
-        if first_term < 0:
-            first_term = get_hyperparam("epsilon_nought")
-        error_diff = first_term - classifier.error
+#        first_term = abs(payoff_diff) - classifier.niche_min_error
+#        if first_term < 0:
+#            first_term = get_hyperparam("epsilon_nought")
+#        error_diff = first_term - classifier.error
+        error_diff = abs(payoff_diff) - classifier.error
 
         # Use MAM for error
         if classifier.experience < (1 / get_hyperparam("beta")):

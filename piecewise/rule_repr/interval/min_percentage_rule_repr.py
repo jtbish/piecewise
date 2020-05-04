@@ -6,7 +6,7 @@ from piecewise.lcs.rng import get_rng
 from piecewise.util import truncate_val
 
 from ..rule_repr import IRuleRepr
-from .interval import DiscreteInterval, ContinuousInterval
+from .interval import ContinuousInterval, DiscreteInterval
 
 
 def make_continuous_min_percentage_rule_repr(env):
@@ -23,7 +23,7 @@ class MinSpanRuleReprABC(IRuleRepr, metaclass=abc.ABCMeta):
         self._interval_cls = interval_cls
         self._wildcard_intervals = \
             self._create_wildcard_intervals(self._situation_space,
-                self._interval_cls)
+                                            self._interval_cls)
 
     def _create_wildcard_intervals(self, situation_space, interval_cls):
         return tuple([

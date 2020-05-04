@@ -102,7 +102,7 @@ class XCSGeneticAlgorithm:
         child_two.error = child_error
 
         child_niche_min_error = (parent_one.niche_min_error +
-                parent_two.niche_min_error) / 2
+                                 parent_two.niche_min_error) / 2
         child_one.niche_min_error = child_niche_min_error
         child_two.niche_min_error = child_niche_min_error
 

@@ -1,7 +1,10 @@
+import abc
+
 from piecewise.dtype import Classifier, LinearPredictionClassifier, Rule
 from piecewise.lcs.hyperparams import get_hyperparam
 from piecewise.lcs.rng import get_rng
-from piecewise.util.classifier_set_stats import get_unique_actions_set
+from piecewise.util.classifier_set_stats import (get_unique_actions_set,
+                                                 num_unique_actions)
 
 
 # Factories for specific classifier types
@@ -17,17 +20,35 @@ def make_linear_prediction_classifier(rule, time_step):
                                       get_hyperparam("x_nought"))
 
 
-class RuleReprCovering:
-    """Provides an implementation of rule representation dependent covering.
-
-    Generating the covering condition is delegated to the rule
-    representation."""
+class RuleReprCoveringABC(metaclass=abc.ABCMeta):
     def __init__(self, env_action_set, rule_repr, classifier_factory):
         self._env_action_set = env_action_set
         self._rule_repr = rule_repr
         self._classifier_factory = classifier_factory
 
-    def __call__(self, match_set, situation, time_step):
+    @abc.abstractmethod
+    def __call__(self, population, match_set, situation, time_step):
+        raise NotImplementedError
+
+
+class RuleReprCovering(RuleReprCoveringABC):
+    """Provides an implementation of rule representation dependent covering.
+
+    Generating the covering condition is delegated to the rule
+    representation."""
+    def __call__(self, population, match_set, situation, time_step):
+        """Second loop of GENERATE MATCH SET function from
+        'An Algorithmic Description of XCS' (Butz and Wilson, 2002)."""
+        while self._should_cover(match_set):
+            covering_classifier = self._gen_covering_classifier(
+                match_set, situation, time_step)
+            population.add(covering_classifier, operation_label="covering")
+            match_set.add(covering_classifier)
+
+    def _should_cover(self, match_set):
+        return num_unique_actions(match_set) < get_hyperparam("theta_mna")
+
+    def _gen_covering_classifier(self, match_set, situation, time_step):
         """Remaining part of GENERATE COVERING CLASSIFIER function from
         'An Algorithmic Description of XCS' (Butz and Wilson, 2002).
 

@@ -19,6 +19,7 @@ class Genotype:
         return True
 
     def _alleles_are_equal(self, my_allele, other_allele):
+        # TODO subclass?
         are_floats = isinstance(my_allele, np.floating) and \
                 isinstance(other_allele, np.floating)
         if are_floats:

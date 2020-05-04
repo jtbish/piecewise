@@ -1,5 +1,5 @@
-import functools
 import abc
+import functools
 import math
 
 from piecewise.constants import TIME_STEP_MIN
@@ -57,10 +57,6 @@ class ClassifierABC(metaclass=abc.ABCMeta):
     A classifier contains a rule (mapping from condition to action), as well as
     other attributes relating to its usage in the system (see properties
     exposed below).
-
-    If a classifier has a numerosity of 1, it is considered to be a
-    microclassifier, and if it has a numerosity > 1 it is considered to be a
-    macroclassifier. See is_micro and is_macro properties.
     """
     def __init__(self, rule, error, fitness, time_stamp):
         self._rule = rule
@@ -152,14 +148,6 @@ class ClassifierABC(metaclass=abc.ABCMeta):
     @check_attr_value(min_val=NUMEROSITY_MIN, expected_type=int)
     def numerosity(self, value):
         self._numerosity = value
-
-    @property
-    def is_micro(self):
-        return self._numerosity == NUMEROSITY_MIN
-
-    @property
-    def is_macro(self):
-        return self._numerosity > NUMEROSITY_MIN
 
     @abc.abstractmethod
     def get_prediction(self, situation=None):
