@@ -2,12 +2,10 @@ import numpy as np
 
 from piecewise.lcs.component.credit_assignment import update_action_set_size
 from piecewise.lcs.hyperparams import get_hyperparam
-from piecewise.util.classifier_set_stats import calc_summary_stat
 
 
 class FuzzyXCSFLinearPredictionCreditAssignment:
     def __call__(self, action_set, payoff, situation):
-        niche_min_error = calc_summary_stat(action_set, "min", "error")
         total_matching_degrees = sum(
             [classifier.matching_degree for classifier in action_set])
         for classifier in action_set:
@@ -17,11 +15,9 @@ class FuzzyXCSFLinearPredictionCreditAssignment:
             payoff_diff = payoff - classifier.get_prediction(situation)
             self._update_weight_vec(classifier, payoff_diff, situation,
                                     credit_weight)
-            self._update_niche_min_error(classifier, niche_min_error,
-                                         credit_weight)
             self._update_prediction_error(classifier, payoff_diff,
                                           credit_weight)
-            update_action_set_size(classifier, action_set)
+            self._update_action_set_size(classifier, action_set)
 
     def _update_experience(self, classifier, credit_weight):
         classifier.experience += credit_weight
@@ -51,30 +47,18 @@ class FuzzyXCSFLinearPredictionCreditAssignment:
         for idx, delta in enumerate(weight_deltas):
             classifier.weight_vec[idx] += delta
 
-    def _update_niche_min_error(self, classifier, niche_min_error,
-                                credit_weight):
-        # Use MAM for mu param
-        niche_min_error_diff = niche_min_error - classifier.niche_min_error
-        if classifier.experience < (1 / get_hyperparam("beta_e")):
-            # TODO credit weight here?
-            classifier.niche_min_error += \
-                niche_min_error_diff / classifier.experience
-        else:
-            classifier.niche_min_error += \
-                (credit_weight * get_hyperparam("beta_e") *
-                    niche_min_error_diff)
-
     def _update_prediction_error(self, classifier, payoff_diff, credit_weight):
-        #        first_term = abs(payoff_diff) - classifier.niche_min_error
-        #        if first_term < 0:
-        #            first_term = get_hyperparam("epsilon_nought")
-        #        error_diff = first_term - classifier.error
         error_diff = abs(payoff_diff) - classifier.error
-
         # Use MAM for error
-        if classifier.experience < (1 / get_hyperparam("beta")):
-            # TODO credit weight here?
-            classifier.error += error_diff / classifier.experience
-        else:
-            classifier.error += \
-                (credit_weight * get_hyperparam("beta") * error_diff)
+#        if classifier.experience < (1 / get_hyperparam("beta")):
+#            # TODO credit weight here?
+#            classifier.error += error_diff / classifier.experience
+#        else:
+        classifier.error += \
+            (credit_weight * get_hyperparam("beta") * error_diff)
+
+    def _update_action_set_size(self, classifier, action_set):
+        action_set_size_diff = action_set.num_micros \
+                - classifier.action_set_size
+        classifier.action_set_size += \
+            get_hyperparam("beta") * action_set_size_diff

@@ -32,6 +32,20 @@ class LinearDecayEpsilonGreedy:
                             get_hyperparam("e_greedy_min_epsilon"))
 
 
+class ExpDecayEpsilonGreedy:
+    def __init__(self):
+        self._epsilon_max = 1.0
+        self._epsilon = self._epsilon_max
+
+    def __call__(self, prediction_array, time_step):
+        self._decay_epsilon(time_step)
+        return _epsilon_greedy(prediction_array, self._epsilon)
+
+    def _decay_epsilon(self, time_step):
+        self._epsilon *= get_hyperparam("e_greedy_decay_factor")
+        assert self._epsilon >= 0.0
+
+
 def _epsilon_greedy(prediction_array, epsilon):
     logging.debug(f"Epsilon = {epsilon}")
     assert 0.0 <= epsilon <= 1.0

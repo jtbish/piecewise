@@ -101,11 +101,6 @@ class XCSGeneticAlgorithm:
         child_one.error = child_error
         child_two.error = child_error
 
-        child_niche_min_error = (parent_one.niche_min_error +
-                                 parent_two.niche_min_error) / 2
-        child_one.niche_min_error = child_niche_min_error
-        child_two.niche_min_error = child_niche_min_error
-
         child_fitness = 0.1 * (parent_one.fitness + parent_two.fitness) / 2
         child_one.fitness = child_fitness
         child_two.fitness = child_fitness

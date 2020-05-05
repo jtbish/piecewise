@@ -1,8 +1,7 @@
 import gym
-
 from piecewise.dtype import DataSpaceBuilder, Dimension
 
-from .gym_environment import GymEnvironment, NormalisedGymEnvironment
+from .gym_environment import GymEnvironment
 
 _ENV_NAME = "CartPole-v0"
 # These were found via the following procedure:
@@ -11,7 +10,7 @@ _ENV_NAME = "CartPole-v0"
 # Run 1 million trials on raw env only picking right action, recording all
 # observations
 # From both arrays of observations collected (left and right arrays), calc the
-# minimum and maximum values of the cart vel and pole val features.
+# minimum and maximum values of the cart vel and pole vel features.
 # Since ran experiment for so long, the min and max values were almost
 # symmetrical around zero.
 # Finally take these values and multiply them by a leniency factor of 1.1
@@ -21,15 +20,7 @@ _POLE_VEL_LOWER = -3.6696
 _POLE_VEL_UPPER = 3.6696
 
 
-def make_continuous_cartpole_env(normalise, seed=0):
-    raw_env = _make_raw_cartpole_env(seed)
-    if normalise:
-        return NormalisedGymEnvironment(raw_env)
-    else:
-        return raw_env
-
-
-def _make_raw_cartpole_env(seed):
+def make_cartpole_env(seed=0):
     custom_obs_space = _gen_custom_obs_space()
     return GymEnvironment(env_name=_ENV_NAME,
                           custom_obs_space=custom_obs_space,

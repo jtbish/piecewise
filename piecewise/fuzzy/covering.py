@@ -1,5 +1,18 @@
+import math
+
 from piecewise.dtype import Rule
+from piecewise.dtype.config import classifier_attr_rel_tol
 from piecewise.lcs.component.covering import RuleReprCoveringABC
+from piecewise.lcs.hyperparams import get_hyperparam
+
+from .classifier import FuzzyLinearPredictionClassifier
+
+
+def make_fuzzy_linear_prediction_classifier(rule, time_step):
+    return FuzzyLinearPredictionClassifier(rule, get_hyperparam("epsilon_I"),
+                                           get_hyperparam("fitness_I"),
+                                           time_step,
+                                           get_hyperparam("x_nought"))
 
 
 class FuzzyRuleReprCovering(RuleReprCoveringABC):
@@ -18,7 +31,9 @@ class FuzzyRuleReprCovering(RuleReprCoveringABC):
             self._rule_repr.calc_max_matching_degree(situation)
         return [
             classifier for classifier in match_set
-            if classifier.matching_degree == max_matching_degree
+            if math.isclose(classifier.matching_degree,
+                            max_matching_degree,
+                            rel_tol=classifier_attr_rel_tol)
         ]
 
     def _find_represented_actions(self, classifiers):

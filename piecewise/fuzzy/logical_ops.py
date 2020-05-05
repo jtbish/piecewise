@@ -4,8 +4,8 @@ import numpy as np
 
 
 def logical_or_max(seq):
-    return np.max(seq)
+    return float(max(seq))
 
 
 def logical_and_min(seq):
-    return np.min(seq)
+    return float(min(seq))

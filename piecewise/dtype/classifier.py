@@ -61,7 +61,6 @@ class ClassifierABC(metaclass=abc.ABCMeta):
     def __init__(self, rule, error, fitness, time_stamp):
         self._rule = rule
         self._error = error
-        self._niche_min_error = error
         self._fitness = fitness
         self._time_stamp = time_stamp
 
@@ -98,14 +97,6 @@ class ClassifierABC(metaclass=abc.ABCMeta):
         self._error = value
 
     @property
-    def niche_min_error(self):
-        return self._niche_min_error
-
-    @niche_min_error.setter
-    def niche_min_error(self, value):
-        self._niche_min_error = value
-
-    @property
     def fitness(self):
         return self._fitness
 
@@ -127,16 +118,16 @@ class ClassifierABC(metaclass=abc.ABCMeta):
         return self._experience
 
     @experience.setter
-    @check_attr_value(min_val=EXPERIENCE_MIN, expected_type=int)
+    @check_attr_value(min_val=EXPERIENCE_MIN)
     def experience(self, value):
-        self._experience = value
+        self._experience = int(value)
 
     @property
     def action_set_size(self):
         return self._action_set_size
 
     @action_set_size.setter
-    @check_attr_value(min_val=ACTION_SET_SIZE_MIN)
+    @check_attr_value(min_val=ACTION_SET_SIZE_MIN, expected_type=float)
     def action_set_size(self, value):
         self._action_set_size = value
 
@@ -187,8 +178,6 @@ class Classifier(ClassifierABC):
                          rel_tol=classifier_attr_rel_tol) and \
             math.isclose(self._error, other.error,
                          rel_tol=classifier_attr_rel_tol) and \
-            math.isclose(self._niche_min_error, other.niche_min_error,
-                         rel_tol=classifier_attr_rel_tol) and \
             math.isclose(self._fitness, other.fitness,
                          rel_tol=classifier_attr_rel_tol) and \
             self._time_stamp == other.time_stamp and \
@@ -207,7 +196,6 @@ class Classifier(ClassifierABC):
         return (f"( rule: {self._rule}, "
                 f"pred: {as_truncated_str(self._prediction)}, "
                 f"err: {as_truncated_str(self._error)}, "
-                f"nme: {as_truncated_str(self._niche_min_error)}, "
                 f"fit: {as_truncated_str(self._fitness)}, "
                 f"ts: {self._time_stamp}, "
                 f"exp: {self._experience}, "
@@ -248,8 +236,6 @@ class LinearPredictionClassifier(ClassifierABC):
             self._weight_vec_is_close(other) and \
             math.isclose(self._error, other.error,
                          rel_tol=classifier_attr_rel_tol) and \
-            math.isclose(self._niche_min_error, other.niche_min_error,
-                         rel_tol=classifier_attr_rel_tol) and \
             math.isclose(self._fitness, other.fitness,
                          rel_tol=classifier_attr_rel_tol) and \
             self._time_stamp == other.time_stamp and \
@@ -276,9 +262,19 @@ class LinearPredictionClassifier(ClassifierABC):
         return (f"( rule: {self._rule}, "
                 f"weights: {weights}), "
                 f"err: {as_truncated_str(self._error)}, "
-                f"nme: {as_truncated_str(self._niche_min_error)}, "
                 f"fit: {as_truncated_str(self._fitness)}, "
                 f"ts: {self._time_stamp}, "
                 f"exp: {self._experience}, "
                 f"ass: {as_truncated_str(self._action_set_size)}, "
                 f"num: {self._numerosity} )")
+
+
+class NiceMinErrorMixin:
+    # TODO make classes using this when necessary
+    @property
+    def niche_min_error(self):
+        return self._niche_min_error
+
+    @niche_min_error.setter
+    def niche_min_error(self, value):
+        self._niche_min_error = value
