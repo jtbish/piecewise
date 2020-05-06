@@ -4,8 +4,9 @@ from piecewise.lcs.component.prediction import PredictionArray
 
 
 class FuzzyMatchingFitnessWeightedAvgPrediction:
-    def __init__(self, env_action_set):
+    def __init__(self, env_action_set, rule_repr):
         self._env_action_set = env_action_set
+        self._rule_repr = rule_repr
 
     def __call__(self, match_set, situation):
         """GENERATE PREDICTION ARRAY function from 'An Algorithmic
@@ -43,9 +44,11 @@ class FuzzyMatchingFitnessWeightedAvgPrediction:
         for classifier in match_set:
             action = classifier.action
             prediction = classifier.get_prediction(situation)
+            matching_degree = classifier.calc_matching_degree(self._rule_repr,
+                    situation)
             prediction_array[action] += \
-                prediction * classifier.matching_degree * classifier.fitness
-            matching_degree_sum_array[action] += classifier.matching_degree
+                prediction * matching_degree * classifier.fitness
+            matching_degree_sum_array[action] += matching_degree
             fitness_sum_array[action] += classifier.fitness
 
     def _normalise_prediction_array(self, prediction_array,

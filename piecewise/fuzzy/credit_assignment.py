@@ -14,7 +14,7 @@ class FuzzyXCSFLinearPredictionCreditAssignment:
         ]
         total_matching_degrees = sum(matching_degrees)
         assert total_matching_degrees > 0.0
-        for (classifier, matching_degree) in zip(matching_degrees, action_set):
+        for (classifier, matching_degree) in zip(action_set, matching_degrees):
             credit_weight = (matching_degree / total_matching_degrees)
             self._update_experience(classifier, credit_weight)
             payoff_diff = payoff - classifier.get_prediction(situation)

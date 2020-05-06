@@ -12,7 +12,7 @@ class Line:
         else:
             self._is_vertical = False
             self._m = rise / run
-            self._c = (first_point.y - self._m * first_point.x)
+            self._c = first_point.y - self._m*first_point.x
 
     @property
     def is_vertical(self):

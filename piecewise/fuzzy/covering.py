@@ -29,12 +29,13 @@ class FuzzyRuleReprCovering(RuleReprCoveringABC):
     def _find_classifiers_with_max_matching_degree(self, match_set, situation):
         max_matching_degree = \
             self._rule_repr.calc_max_matching_degree(situation)
-        return [
-            classifier for classifier in match_set
-            if math.isclose(classifier.matching_degree,
-                            max_matching_degree,
-                            rel_tol=classifier_attr_rel_tol)
-        ]
+        clfrs_with_max_matching_degree = []
+        for classifier in match_set:
+            matching_degree = classifier.calc_matching_degree(self._rule_repr,
+                                                              situation)
+            if math.isclose(matching_degree, max_matching_degree):
+                clfrs_with_max_matching_degree.append(classifier)
+        return clfrs_with_max_matching_degree
 
     def _find_represented_actions(self, classifiers):
         represented_actions = set()

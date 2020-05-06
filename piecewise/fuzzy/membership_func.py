@@ -33,12 +33,11 @@ class PiecewiseLinearMembershipFunc(MembershipFuncABC):
     e.g. triangle or trapezoid."""
     def __init__(self, domain, points, name):
         super().__init__(domain, name)
-        self._points = points
-        self._lines = self._create_lines(self._points)
+        self._lines = self._create_lines(points)
 
     def _create_lines(self, points):
         lines = self._create_lines_from_points(points)
-        lines = self._remove_vertical_lines(lines)
+        lines = self._keep_non_vertical_lines(lines)
         return lines
 
     def _create_lines_from_points(self, points):
@@ -68,8 +67,8 @@ class PiecewiseLinearMembershipFunc(MembershipFuncABC):
         if flat_line_needed:
             lines.append(Line(last_point, Point(self._domain.max, RANGE_MIN)))
 
-    def _remove_vertical_lines(self, lines):
-        return [line for line in lines if line.is_vertical]
+    def _keep_non_vertical_lines(self, lines):
+        return [line for line in lines if not line.is_vertical]
 
     def fuzzify(self, input_scalar):
         assert self._domain.min <= input_scalar <= self._domain.max
