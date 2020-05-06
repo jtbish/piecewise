@@ -17,10 +17,9 @@ class FuzzyMixin:
         """Experience is now a float."""
         self._experience = float(value)
 
-    @property
-    def matching_degree(self):
-        """Conditions now have a cached matching degree."""
-        return self._rule.condition.matching_degree
+    def calc_matching_degree(self, rule_repr, situation):
+        """Calculates matching degree of condition."""
+        return rule_repr.eval_condition(self.condition, situation)
 
 
 class FuzzyLinearPredictionClassifier(FuzzyMixin, LinearPredictionClassifier):

@@ -2,13 +2,14 @@ import abc
 
 import numpy as np
 
-from piecewise.dtype import DataSpaceBuilder, Dimension, Genotype
+from piecewise.dtype import Condition, DataSpaceBuilder, Dimension, Genotype
 from piecewise.lcs.hyperparams import get_hyperparam
 from piecewise.lcs.rng import get_rng
 from piecewise.rule_repr import DiscereteMinSpanRuleRepr, IRuleRepr
 from piecewise.util import truncate_val
 
-from .condition import MIN_MATCHING_DEGREE, MAX_MATCHING_DEGREE, FuzzyCondition
+MIN_MATCHING_DEGREE = 0.0
+MAX_MATCHING_DEGREE = 1.0
 
 
 class FuzzyRuleReprABC(IRuleRepr, metaclass=abc.ABCMeta):
@@ -18,10 +19,13 @@ class FuzzyRuleReprABC(IRuleRepr, metaclass=abc.ABCMeta):
     def does_match(self, condition, situation):
         """Matching needs to compute the truth degree of the condition given
         the situation, then if truth degree is > 0.0 it matches."""
+        matching_degree = self.eval_condition(condition, situation)
+        return matching_degree > MIN_MATCHING_DEGREE
+
+    def eval_condition(self, condition, situation):
         matching_degree = self._eval_condition(condition, situation)
         assert MIN_MATCHING_DEGREE <= matching_degree <= MAX_MATCHING_DEGREE
-        condition.matching_degree = matching_degree
-        return matching_degree > MIN_MATCHING_DEGREE
+        return matching_degree
 
     @abc.abstractmethod
     def _eval_condition(self, condition, situation):
@@ -105,10 +109,9 @@ class FuzzyMinSpanRuleRepr(FuzzyRuleReprABC):
     def gen_covering_condition(self, situation):
         situation_for_wrapped = \
             self._create_covering_situation_for_wrapped(situation)
-        normal_condition = self._wrapped_msr.gen_covering_condition(
-            situation=situation_for_wrapped)
-        fuzzy_condition = FuzzyCondition(normal_condition.genotype)
-        return fuzzy_condition
+        return \
+            self._wrapped_msr.gen_covering_condition(
+                situation=situation_for_wrapped)
 
     def _create_covering_situation_for_wrapped(self, situation):
         result = []
@@ -177,7 +180,7 @@ class FuzzyConjunctiveRuleRepr(FuzzyRuleReprABC):
                 self._find_best_matching_member_func_idx(
                     ling_var, situation_elem))
         genotype = Genotype(alleles)
-        return FuzzyCondition(genotype)
+        return Condition(genotype)
 
     def crossover_conditions(self, first_condition, second_condition,
                              crossover_strat):

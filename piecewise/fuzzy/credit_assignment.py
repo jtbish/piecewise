@@ -1,16 +1,21 @@
 import numpy as np
 
-from piecewise.lcs.component.credit_assignment import update_action_set_size
 from piecewise.lcs.hyperparams import get_hyperparam
 
 
 class FuzzyXCSFLinearPredictionCreditAssignment:
+    def __init__(self, rule_repr):
+        self._rule_repr = rule_repr
+
     def __call__(self, action_set, payoff, situation):
-        total_matching_degrees = sum(
-            [classifier.matching_degree for classifier in action_set])
-        for classifier in action_set:
-            credit_weight = (classifier.matching_degree /
-                             total_matching_degrees)
+        matching_degrees = [
+            classifier.calc_matching_degree(self._rule_repr, situation)
+            for classifier in action_set
+        ]
+        total_matching_degrees = sum(matching_degrees)
+        assert total_matching_degrees > 0.0
+        for (classifier, matching_degree) in zip(matching_degrees, action_set):
+            credit_weight = (matching_degree / total_matching_degrees)
             self._update_experience(classifier, credit_weight)
             payoff_diff = payoff - classifier.get_prediction(situation)
             self._update_weight_vec(classifier, payoff_diff, situation,
@@ -50,10 +55,10 @@ class FuzzyXCSFLinearPredictionCreditAssignment:
     def _update_prediction_error(self, classifier, payoff_diff, credit_weight):
         error_diff = abs(payoff_diff) - classifier.error
         # Use MAM for error
-#        if classifier.experience < (1 / get_hyperparam("beta")):
-#            # TODO credit weight here?
-#            classifier.error += error_diff / classifier.experience
-#        else:
+        #        if classifier.experience < (1 / get_hyperparam("beta")):
+        #            # TODO credit weight here?
+        #            classifier.error += error_diff / classifier.experience
+        #        else:
         classifier.error += \
             (credit_weight * get_hyperparam("beta") * error_diff)
 

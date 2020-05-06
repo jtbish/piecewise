@@ -1,12 +1,12 @@
 import abc
+from collections import namedtuple
 
-from sympy import Line, Piecewise, Point, Polygon
-from sympy import oo as sympy_inf
-from sympy import solve
-from sympy.abc import x, y
+from .line import Line
 
 RANGE_MIN = 0.0
 RANGE_MAX = 1.0
+
+Point = namedtuple("Point", ["x", "y"])
 
 
 class MembershipFuncABC(metaclass=abc.ABCMeta):
@@ -34,14 +34,12 @@ class PiecewiseLinearMembershipFunc(MembershipFuncABC):
     def __init__(self, domain, points, name):
         super().__init__(domain, name)
         self._points = points
-        self._piecewise_func = self._create_piecewise_func(self._points)
-        self._polygon = Polygon(*points)
+        self._lines = self._create_lines(self._points)
 
-    def _create_piecewise_func(self, points):
+    def _create_lines(self, points):
         lines = self._create_lines_from_points(points)
         lines = self._remove_vertical_lines(lines)
-        pieces = self._create_pieces(lines)
-        return Piecewise(*pieces)
+        return lines
 
     def _create_lines_from_points(self, points):
         lines = []
@@ -71,27 +69,16 @@ class PiecewiseLinearMembershipFunc(MembershipFuncABC):
             lines.append(Line(last_point, Point(self._domain.max, RANGE_MIN)))
 
     def _remove_vertical_lines(self, lines):
-        return [line for line in lines if line.slope != sympy_inf]
-
-    def _create_pieces(self, lines):
-        pieces = []
-        for line in lines:
-            expr = line.equation(x, y)
-            sub_domain_max = line.p2.x
-            cond = x <= sub_domain_max
-            pieces.append((expr, cond))
-        return pieces
+        return [line for line in lines if line.is_vertical]
 
     def fuzzify(self, input_scalar):
         assert self._domain.min <= input_scalar <= self._domain.max
-
-        eqn_to_solve = self._piecewise_func.subs(x, input_scalar)
-        result = solve(eqn_to_solve, y)
-        result_is_scalar = isinstance(result, list) and len(result) == 1
-        assert result_is_scalar
-        result = float(result[0])
-
-        assert RANGE_MIN <= result <= RANGE_MAX
+        result = None
+        for line in self._lines:
+            if line.subdomain_min <= input_scalar <= line.subdomain_max:
+                result = line.eval(input_scalar)
+                break
+        assert result is not None and RANGE_MIN <= result <= RANGE_MAX
         return result
 
 
