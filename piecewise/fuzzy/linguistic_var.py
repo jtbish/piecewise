@@ -20,7 +20,7 @@ class LinguisticVar:
     def eval_membership_funcs(self, membership_func_idxs, input_scalar):
         result = []
         for idx in membership_func_idxs:
-            result.append(self._eval_membership_func(idx, input_scalar))
+            result.append(self.eval_membership_func(idx, input_scalar))
         return tuple(result)
 
     def eval_all_membership_funcs(self, input_scalar):

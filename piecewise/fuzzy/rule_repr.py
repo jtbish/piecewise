@@ -8,7 +8,7 @@ from piecewise.lcs.rng import get_rng
 from piecewise.rule_repr import DiscereteMinSpanRuleRepr, IRuleRepr
 from piecewise.util import truncate_val
 
-from .condition import MIN_MATCHING_DEGREE, FuzzyCondition
+from .condition import MIN_MATCHING_DEGREE, MAX_MATCHING_DEGREE, FuzzyCondition
 
 
 class FuzzyRuleReprABC(IRuleRepr, metaclass=abc.ABCMeta):
@@ -19,6 +19,7 @@ class FuzzyRuleReprABC(IRuleRepr, metaclass=abc.ABCMeta):
         """Matching needs to compute the truth degree of the condition given
         the situation, then if truth degree is > 0.0 it matches."""
         matching_degree = self._eval_condition(condition, situation)
+        assert MIN_MATCHING_DEGREE <= matching_degree <= MAX_MATCHING_DEGREE
         condition.matching_degree = matching_degree
         return matching_degree > MIN_MATCHING_DEGREE
 

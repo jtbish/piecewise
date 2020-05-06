@@ -5,8 +5,8 @@ from sympy import oo as sympy_inf
 from sympy import solve
 from sympy.abc import x, y
 
-RANGE_MIN = 0
-RANGE_MAX = 1
+RANGE_MIN = 0.0
+RANGE_MAX = 1.0
 
 
 class MembershipFuncABC(metaclass=abc.ABCMeta):
