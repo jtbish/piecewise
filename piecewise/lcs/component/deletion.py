@@ -6,7 +6,13 @@ from piecewise.util.classifier_set_stats import calc_summary_stat
 from piecewise.lcs.hyperparams import get_hyperparam
 
 
-class DeletionStrategyABC(metaclass=abc.ABCMeta):
+class IDeletionStrategy(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
+    def __call__(self, population):
+        raise NotImplementedError
+
+
+class XCSRouletteWheelDeletion(IDeletionStrategy):
     def __call__(self, population):
         """DELETE FROM POPULATION function from 'An Algorithmic Description of
         XCS' (Butz and Wilson, 2002)."""
@@ -23,20 +29,12 @@ class DeletionStrategyABC(metaclass=abc.ABCMeta):
             classifier_to_delete = self._select_for_deletion(population)
             population.delete(classifier_to_delete)
 
-    @abc.abstractmethod
-    def _select_for_deletion(self, population):
-        """Selects a single classifier to delete from the population.
-
-        This method should only ever be called if the population
-        is past its microclassifier capacity."""
-        raise NotImplementedError
-
-
-class XCSRouletteWheelDeletion(DeletionStrategyABC):
     def _select_for_deletion(self, population):
         """First loop (selecting classifier to delete) of
         DELETE FROM POPULATION function from 'An Algorithmic Description of
-        XCS' (Butz and Wilson, 2002)."""
+        XCS' (Butz and Wilson, 2002). 
+        This method should only ever be called if the population
+        is past its microclassifier capacity."""
         mean_fitness_in_pop = calc_summary_stat(population, "mean", "fitness")
         votes = [
             self._calc_deletion_vote(classifier, mean_fitness_in_pop)
@@ -65,3 +63,8 @@ class XCSRouletteWheelDeletion(DeletionStrategyABC):
             vote *= mean_fitness_in_pop / fitness_numerosity_ratio
 
         return vote
+
+
+class NullDeletion(IDeletionStrategy):
+    def __call__(self, population):
+        assert population.num_micros <= population.max_micros

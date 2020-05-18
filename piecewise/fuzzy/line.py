@@ -29,3 +29,12 @@ class Line:
     def eval(self, x):
         assert not self._is_vertical
         return self._m * x + self._c
+
+    def __repr__(self):
+        return (f"{self.__class__.__name__}("
+                f"{self._first_point!r}, "
+                f"{self._second_point!r})")
+
+    def __str__(self):
+        return (f"{self._first_point}, {self._second_point}: "
+               f"y = {self._m}*x + {self._c}")

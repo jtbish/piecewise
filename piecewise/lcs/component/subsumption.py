@@ -60,3 +60,14 @@ class XCSSubsumption(ISubsumptionStrategy):
         agnostic."""
         return self._rule_repr.check_condition_subsumption(
             subsumer.condition, subsumee.condition)
+
+
+class NullSubsumption(ISubsumptionStrategy):
+    def does_subsume(self, subsumer_classifier, subsumee_classifier):
+        pass
+
+    def could_subsume(self, classifier):
+        pass
+
+    def is_more_general(self, first_classifier, second_classifier):
+        pass

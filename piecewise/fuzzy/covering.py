@@ -4,6 +4,7 @@ from piecewise.dtype import Rule
 from piecewise.dtype.config import classifier_attr_rel_tol
 from piecewise.lcs.component.covering import RuleReprCoveringABC
 from piecewise.lcs.hyperparams import get_hyperparam
+from piecewise.lcs.rng import get_rng
 
 from .classifier import FuzzyLinearPredictionClassifier
 
@@ -12,7 +13,8 @@ def make_fuzzy_linear_prediction_classifier(rule, time_step):
     return FuzzyLinearPredictionClassifier(rule, get_hyperparam("epsilon_I"),
                                            get_hyperparam("fitness_I"),
                                            time_step,
-                                           get_hyperparam("x_nought"))
+                                           get_hyperparam("x_nought"),
+                                           get_rng())
 
 
 class FuzzyRuleReprCovering(RuleReprCoveringABC):

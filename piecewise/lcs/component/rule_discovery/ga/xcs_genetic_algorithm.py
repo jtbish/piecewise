@@ -9,6 +9,7 @@ from piecewise.lcs.rng import get_rng
 from .operator.crossover import TwoPointCrossover, UniformCrossover
 from .operator.mutation import RuleReprMutation
 from .operator.selection import RouletteWheelSelection, TournamentSelection
+from ..rule_discovery import IRuleDiscoveryStrategy
 
 GAOperators = namedtuple("GAOperators", ["selection", "crossover", "mutation"])
 ClassifierPair = namedtuple("ClassifierPair", ["first", "second"])
@@ -39,7 +40,7 @@ def make_custom_xcs_ga(env_action_set, rule_repr, subsumption, selection,
                                ga_operators)
 
 
-class XCSGeneticAlgorithm:
+class XCSGeneticAlgorithm(IRuleDiscoveryStrategy):
     def __init__(self, env_action_set, rule_repr, subsumption, ga_operators):
         self._env_action_set = env_action_set
         self._rule_repr = rule_repr

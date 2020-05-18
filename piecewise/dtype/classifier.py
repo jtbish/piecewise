@@ -1,9 +1,11 @@
 import abc
 import functools
 import math
+import numpy as np
 
 from piecewise.constants import TIME_STEP_MIN
 from piecewise.error.classifier_error import AttrUpdateError
+from piecewise.lcs.hyperparams import get_hyperparam
 
 from .config import classifier_attr_rel_tol
 from .formatting import as_truncated_str
@@ -206,20 +208,36 @@ class Classifier(ClassifierABC):
 class LinearPredictionClassifier(ClassifierABC):
     """Classifier that uses weight vector to compute linear prediction, for
     use with XCSF."""
-    _INIT_WEIGHT_VAL = 0.0
+    _MIN_WEIGHT_VAL = -1.0
+    _MAX_WEIGHT_VAL = 1.0
 
-    def __init__(self, rule, error, fitness, time_stamp, x_nought):
+    def __init__(self, rule, error, fitness, time_stamp, x_nought, rng):
         super().__init__(rule, error, fitness, time_stamp)
-        self._weight_vec = self._init_weight_vec(self._rule.num_features)
+        self._weight_vec = self._init_weight_vec(rng, self._rule.num_features)
         self._x_nought = x_nought
+        self._cov_mat = get_hyperparam("delta_rls") * \
+            np.identity(n=(self._rule.num_features+1))
 
-    def _init_weight_vec(self, num_features):
+    def _init_weight_vec(self, rng, num_features):
         # weight vec stored as [w_0, w_1, ..., w_n] for n features
-        return [self._INIT_WEIGHT_VAL] * (num_features + 1)
+        return list(rng.uniform(low=self._MIN_WEIGHT_VAL,
+            high=self._MAX_WEIGHT_VAL, size=(num_features+1)))
 
     @property
     def weight_vec(self):
         return self._weight_vec
+
+    @weight_vec.setter(self):
+    def weight_vec(self, value):
+        self._weight_vec = value
+
+    @property
+    def cov_mat(self):
+        return self._cov_mat
+
+    @cov_mat.setter
+    def cov_mat(self, value):
+        self._cov_mat = value
 
     def get_prediction(self, situation):
         assert len(self._weight_vec) == (len(situation) + 1)
@@ -234,6 +252,7 @@ class LinearPredictionClassifier(ClassifierABC):
     def __eq__(self, other):
         return self._rule == other.rule and \
             self._weight_vec_is_close(other) and \
+            self._cov_mat_is_close(other) and \
             math.isclose(self._error, other.error,
                          rel_tol=classifier_attr_rel_tol) and \
             math.isclose(self._fitness, other.fitness,
@@ -250,6 +269,9 @@ class LinearPredictionClassifier(ClassifierABC):
                     my_elem, other_elem, rel_tol=classifier_attr_rel_tol):
                 return False
         return True
+
+    def _cov_mat_is_close(self, other):
+        return np.all(np.isclose(self._cov_mat, other._cov_mat))
 
     def __repr__(self):
         return (f"{self.__class__.__name__}("

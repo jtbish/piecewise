@@ -119,6 +119,9 @@ class GymEnvironment(IEnvironment):
     def is_terminal(self):
         return self._is_terminal
 
+    def render(self):
+        self._wrapped_env.render()
+
 
 class NormalisedGymEnvironment(IEnvironment):
     """Decorator obj for GymEnvironment operating in continuous space to
@@ -164,7 +167,7 @@ class NormalisedGymEnvironment(IEnvironment):
         return np.asarray(normalised_obs)
 
     def step(self, action):
-        raw_response = self._raw_env.act(action)
+        raw_response = self._raw_env.step(action)
         return EnvironmentResponse(
             obs=self._normalise_raw_obs(raw_response.obs),
             reward=raw_response.reward,
@@ -173,3 +176,6 @@ class NormalisedGymEnvironment(IEnvironment):
 
     def is_terminal(self):
         return self._raw_env.is_terminal()
+
+    def render(self):
+        return self._raw_env.render()

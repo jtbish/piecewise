@@ -214,10 +214,10 @@ class FuzzyConjunctiveRuleRepr(FuzzyRuleReprABC):
             genotype[allele_idx] = allele
 
     def calc_generality(self, condition):
-        return 0
+        raise NotImplementedError  # should never get here
 
     def check_condition_subsumption(self, first_condition, second_condition):
-        return False
+        raise NotImplementedError  # should never get here
 
     def map_genotype_to_phenotype(self, genotype):
         return tuple([allele for allele in genotype])
