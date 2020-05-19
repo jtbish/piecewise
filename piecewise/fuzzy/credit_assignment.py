@@ -1,4 +1,5 @@
 import numpy as np
+import logging
 
 from piecewise.lcs.hyperparams import get_hyperparam
 
@@ -15,6 +16,7 @@ class FuzzyXCSFLinearPredictionCreditAssignment:
         total_matching_degrees = sum(matching_degrees)
         assert total_matching_degrees > 0.0
         for (classifier, matching_degree) in zip(action_set, matching_degrees):
+            logging.debug(f"{classifier}, matching degree {matching_degree:.4f}")
             credit_weight = (matching_degree / total_matching_degrees)
             assert credit_weight > 0.0
             self._update_experience(classifier, credit_weight)
@@ -33,38 +35,44 @@ class FuzzyXCSFLinearPredictionCreditAssignment:
         # Weighted recursive least squares
         enriched_situation = self._prepend_threshold_to_situation(situation)
 
-        # calc cov mat update rate - scalar
+        should_reset_cov_mat = \
+            (classifier.experience - classifier.cov_mat_reset_stamp) \
+                >= get_hyperparam("tau_rls")
+        if should_reset_cov_mat:
+            logging.debug("Resetting clfr cov mat")
+            classifier.reset_cov_mat(get_hyperparam("delta_rls"))
+
+        # calc cov mat update rate
         beta_rls = 1 + credit_weight* \
-            (np.dot(enriched_situation, classifier.cov_mat).dot(enriched_situation))
+            np.asscalar((np.dot(enriched_situation,
+                classifier.cov_mat)).dot(enriched_situation.transpose()))
 
         # update cov mat
         classifier.cov_mat -= (1/beta_rls)*credit_weight* \
-            (np.dot(classifier.cov_mat,
-                enriched_situation).dot(enriched_situation).dot(
-                    classifier.cov_mat))
+            (np.dot(classifier.cov_mat, enriched_situation.transpose())).dot(
+                (np.dot(enriched_situation, classifier.cov_mat)))
 
         # calc gain vector for weights
-        gain_vec = np.dot(classifier.cov_mat, enriched_situation)
+        gain_vec = np.dot(classifier.cov_mat, enriched_situation.transpose())
+        gain_vec = gain_vec.flatten()
 
         # update weights with gain vec and payoff diff (error)
         assert len(gain_vec) == len(classifier.weight_vec)
-        for idx, gain in enumerate(gain_vec)
+        for idx, gain in enumerate(gain_vec):
             classifier.weight_vec[idx] += gain*credit_weight*payoff_diff
 
     def _prepend_threshold_to_situation(self, situation):
-        return np.insert(situation, 0, get_hyperparam("x_nought"))
+        # return 1x(d+1) row vector
+        res = np.insert(situation, 0, get_hyperparam("x_nought"))
+        res = np.reshape(res, (1, len(res)))
+        return res
 
     def _update_prediction_error(self, classifier, payoff_diff, credit_weight):
         error_diff = abs(payoff_diff) - classifier.error
-        # Use MAM for error
-        #        if classifier.experience < (1 / get_hyperparam("beta")):
-        #            # TODO credit weight here?
-        #            classifier.error += error_diff / classifier.experience
-        #        else:
         classifier.error += \
             (credit_weight * get_hyperparam("beta") * error_diff)
 
     def _update_action_set_size(self, classifier, action_set):
         action_set_size_diff = action_set.num_micros \
-                - classifier.action_set_size
-        classifier.action_set_size += \ get_hyperparam("beta") * action_set_size_diff
+            - classifier.action_set_size
+        classifier.action_set_size += get_hyperparam("beta") * action_set_size_diff

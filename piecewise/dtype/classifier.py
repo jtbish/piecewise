@@ -5,7 +5,6 @@ import numpy as np
 
 from piecewise.constants import TIME_STEP_MIN
 from piecewise.error.classifier_error import AttrUpdateError
-from piecewise.lcs.hyperparams import get_hyperparam
 
 from .config import classifier_attr_rel_tol
 from .formatting import as_truncated_str
@@ -211,12 +210,14 @@ class LinearPredictionClassifier(ClassifierABC):
     _MIN_WEIGHT_VAL = -1.0
     _MAX_WEIGHT_VAL = 1.0
 
-    def __init__(self, rule, error, fitness, time_stamp, x_nought, rng):
+    def __init__(self, rule, error, fitness, time_stamp, x_nought, delta_rls, rng):
+        # TODO injected x_nought and delta_rls for now, but would be better if
+        # imported from global hyperparams module, i.e. move hyperparams module
+        # out of piecewise.lcs into just piecewise namespace
         super().__init__(rule, error, fitness, time_stamp)
         self._weight_vec = self._init_weight_vec(rng, self._rule.num_features)
         self._x_nought = x_nought
-        self._cov_mat = get_hyperparam("delta_rls") * \
-            np.identity(n=(self._rule.num_features+1))
+        self.reset_cov_mat(delta_rls)
 
     def _init_weight_vec(self, rng, num_features):
         # weight vec stored as [w_0, w_1, ..., w_n] for n features
@@ -227,10 +228,6 @@ class LinearPredictionClassifier(ClassifierABC):
     def weight_vec(self):
         return self._weight_vec
 
-    @weight_vec.setter(self):
-    def weight_vec(self, value):
-        self._weight_vec = value
-
     @property
     def cov_mat(self):
         return self._cov_mat
@@ -238,6 +235,15 @@ class LinearPredictionClassifier(ClassifierABC):
     @cov_mat.setter
     def cov_mat(self, value):
         self._cov_mat = value
+
+    @property
+    def cov_mat_reset_stamp(self):
+        return self._cov_mat_reset_stamp
+
+    def reset_cov_mat(self, delta_rls):
+        self._cov_mat = delta_rls * \
+            np.identity(n=(self._rule.num_features+1))
+        self._cov_mat_reset_stamp = self._experience
 
     def get_prediction(self, situation):
         assert len(self._weight_vec) == (len(situation) + 1)

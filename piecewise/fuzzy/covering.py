@@ -14,6 +14,7 @@ def make_fuzzy_linear_prediction_classifier(rule, time_step):
                                            get_hyperparam("fitness_I"),
                                            time_step,
                                            get_hyperparam("x_nought"),
+                                           get_hyperparam("delta_rls"),
                                            get_rng())
 
 
