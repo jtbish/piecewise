@@ -1,4 +1,5 @@
 import math
+import logging
 
 from piecewise.dtype import Rule
 from piecewise.dtype.config import classifier_attr_rel_tol
@@ -56,5 +57,6 @@ class FuzzyRuleReprCovering(RuleReprCoveringABC):
                         covering_action,
                         num_features=len(situation))
             classifier = self._classifier_factory(rule, time_step)
+            logging.debug(f"Generated covering classifier {classifier}")
             population.add(classifier, operation_label="covering")
             match_set.add(classifier)
