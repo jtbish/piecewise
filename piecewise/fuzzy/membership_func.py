@@ -2,6 +2,7 @@ import abc
 from collections import namedtuple
 
 from .line import Line
+from piecewise.dtype.config import float_bounds_tol
 
 RANGE_MIN = 0.0
 RANGE_MAX = 1.0
@@ -77,7 +78,9 @@ class PiecewiseLinearMembershipFunc(MembershipFuncABC):
             if line.subdomain_min <= input_scalar <= line.subdomain_max:
                 result = line.eval(input_scalar)
                 break
-        assert result is not None and RANGE_MIN <= result <= RANGE_MAX
+        assert result is not None
+        assert (RANGE_MIN - float_bounds_tol) <= result <= \
+            (RANGE_MAX + float_bounds_tol), f"{result}"
         return result
 
 

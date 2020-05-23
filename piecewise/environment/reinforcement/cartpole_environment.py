@@ -15,20 +15,19 @@ _ENV_NAME = "CartPole-v0"
 # Since ran experiment for so long, the min and max values were almost
 # symmetrical around zero.
 # Finally take these values and multiply them by a leniency factor of 1.05
-_MAX_CART_VEL = 2.3069
-_MAX_POLE_VEL = 3.5028
+_MAX_CART_VEL = 2.1975
+_MAX_POLE_VEL = 3.3365
 _CART_VEL_LOWER = -(_MAX_CART_VEL)
 _CART_VEL_UPPER = _MAX_CART_VEL
 _POLE_VEL_LOWER = -(_MAX_POLE_VEL)
 _POLE_VEL_UPPER = _MAX_POLE_VEL
 
-_LENIENCY_FACTOR = 1.0
 _MAX_CART_POS = 2.4  # from gym env source code
-_CART_POS_LOWER = -(_MAX_CART_POS*_LENIENCY_FACTOR)
-_CART_POS_UPPER = _MAX_CART_POS*_LENIENCY_FACTOR
+_CART_POS_LOWER = -_MAX_CART_POS
+_CART_POS_UPPER = _MAX_CART_POS
 _MAX_POLE_ANG_RADIANS = 12*(np.pi/180)  # from gym env source code
-_POLE_ANG_LOWER = -(_MAX_POLE_ANG_RADIANS*_LENIENCY_FACTOR)
-_POLE_ANG_UPPER = _MAX_POLE_ANG_RADIANS*_LENIENCY_FACTOR
+_POLE_ANG_LOWER = -(_MAX_POLE_ANG_RADIANS)
+_POLE_ANG_UPPER = _MAX_POLE_ANG_RADIANS
 
 
 def make_cartpole_train_env(seed=0, normalise=False):

@@ -3,6 +3,7 @@ import abc
 import numpy as np
 
 from piecewise.dtype import Condition, DataSpaceBuilder, Dimension, Genotype
+from piecewise.dtype.config import float_bounds_tol
 from piecewise.lcs.hyperparams import get_hyperparam
 from piecewise.lcs.rng import get_rng
 from piecewise.rule_repr import DiscereteMinSpanRuleRepr, IRuleRepr
@@ -24,7 +25,8 @@ class FuzzyRuleReprABC(IRuleRepr, metaclass=abc.ABCMeta):
 
     def eval_condition(self, condition, situation):
         matching_degree = self._eval_condition(condition, situation)
-        assert MIN_MATCHING_DEGREE <= matching_degree <= MAX_MATCHING_DEGREE
+        assert (MIN_MATCHING_DEGREE - float_bounds_tol) <= matching_degree \
+            <= (MAX_MATCHING_DEGREE + float_bounds_tol)
         return matching_degree
 
     @abc.abstractmethod
