@@ -10,6 +10,10 @@ class LinguisticVar:
         return self._membership_funcs
 
     @property
+    def num_membership_funcs(self):
+        return len(self._membership_funcs)
+
+    @property
     def name(self):
         return self._name
 

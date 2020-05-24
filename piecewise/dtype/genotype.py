@@ -12,6 +12,9 @@ class Genotype:
     def from_allele_args(cls, *alleles):
         return cls(alleles)
 
+    def count(self, value):
+        return self._alleles.count(value)
+
     def __eq__(self, other):
         for (my_allele, other_allele) in zip(self._alleles, other._alleles):
             if not self._alleles_are_equal(my_allele, other_allele):
@@ -32,8 +35,16 @@ class Genotype:
     def __setitem__(self, idx, value):
         self._alleles[idx] = value
 
-    def __getitem__(self, idx):
-        return self._alleles[idx]
+    def __getitem__(self, key):
+        if isinstance(key, slice):
+            # slicing, return tuple of contents
+            start, stop, step = key.indices(len(self))
+            return tuple([self[i] for i in range(start, stop, step)])
+        elif isinstance(key, int):
+            # normal indexing
+            return self._alleles[key]
+        else:
+            raise NotImplementedError
 
     def __len__(self):
         return len(self._alleles)
