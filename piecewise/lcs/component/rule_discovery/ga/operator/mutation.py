@@ -1,7 +1,3 @@
-from piecewise.lcs.rng import get_rng
-from piecewise.lcs.hyperparams import get_hyperparam
-
-
 class RuleReprMutation:
     """Provides an implementation of rule representation dependent mutation.
 

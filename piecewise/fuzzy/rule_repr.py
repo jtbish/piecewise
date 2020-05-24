@@ -311,6 +311,11 @@ class FuzzyCNFRuleRepr(FuzzyRuleReprABC):
         return tuple(ranges)
 
     def mutate_condition(self, condition, situation=None):
+        should_do_mutation = get_rng().rand() < get_hyperparam("mu")
+        if should_do_mutation:
+            self._mutate_condition(condition)
+
+    def _mutate_condition(self, condition):
         ling_var_genotype_ranges = self._get_ling_var_genotype_ranges()
         ling_var_idx_to_mut = get_rng().choice(range(len(self._ling_vars)))
         ling_var_genotype_range = ling_var_genotype_ranges[ling_var_idx_to_mut]
