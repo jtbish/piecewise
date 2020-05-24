@@ -12,8 +12,8 @@ class Genotype:
     def from_allele_args(cls, *alleles):
         return cls(alleles)
 
-    def count(self, value):
-        return self._alleles.count(value)
+    def count(self, allele_value):
+        return self._alleles.count(allele_value)
 
     def __eq__(self, other):
         for (my_allele, other_allele) in zip(self._alleles, other._alleles):
@@ -40,11 +40,10 @@ class Genotype:
             # slicing, return tuple of contents
             start, stop, step = key.indices(len(self))
             return tuple([self[i] for i in range(start, stop, step)])
-        elif isinstance(key, int):
+        else:
+            key = int(key)
             # normal indexing
             return self._alleles[key]
-        else:
-            raise NotImplementedError
 
     def __len__(self):
         return len(self._alleles)

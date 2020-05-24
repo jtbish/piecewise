@@ -1,4 +1,6 @@
 import abc
+import copy
+import logging
 
 import numpy as np
 
@@ -282,22 +284,34 @@ class FuzzyCNFRuleRepr(FuzzyRuleReprABC):
 
     def crossover_conditions(self, first_condition, second_condition,
                              crossover_strat):
-        # TODO cache the allele idxs of parents that are 1 here???
-        crossover_strat(first_condition.genotype, second_condition.genotype)
-        self._enforce_genotype_is_valid(first_condition.genotype)
-        self._enforce_genotype_is_valid(second_condition.genotype)
+        first_genotype_before_crossover = copy.deepcopy(first_condition.genotype)
+        second_genotype_before_crossover = copy.deepcopy(second_condition.genotype)
 
-    def _enforce_genotype_is_valid(self, genotype):
+        crossover_strat(first_condition.genotype, second_condition.genotype)
+
+        self._correct_crossover_res_if_necessary(first_genotype_before_crossover,
+                first_condition.genotype)
+        self._correct_crossover_res_if_necessary(second_genotype_before_crossover,
+                second_condition.genotype)
+
+        self._assert_genotype_is_valid(first_condition.genotype)
+        self._assert_genotype_is_valid(second_condition.genotype)
+
+    def _correct_crossover_res_if_necessary(self, genotype_before,
+            genotype_after):
         ling_var_genotype_ranges = self._get_ling_var_genotype_ranges()
         for (start_idx, num_alleles) in ling_var_genotype_ranges:
             end_idx_exclusive = (start_idx + num_alleles)
-            ling_var_alleles = genotype[start_idx:end_idx_exclusive]
-            has_no_ones = ling_var_alleles.count(1) == 0
-            if has_no_ones:
-                # pick random allele in ling var range to set to 1
-                idx_for_one = \
-                    get_rng().choice(range(start_idx, end_idx_exclusive))
-                genotype[idx_for_one] = 1
+            after_ling_var_alleles = genotype_after[start_idx:end_idx_exclusive]
+            has_no_ones_after = after_ling_var_alleles.count(1) == 0
+            if has_no_ones_after:
+                one_allele_idxs_before = [
+                    idx for idx in range(start_idx, end_idx_exclusive)
+                    if genotype_before[idx] == 1
+                ]
+                assert len(one_allele_idxs_before) >= 1
+                idx_for_one = get_rng().choice(one_allele_idxs_before)
+                genotype_after[idx_for_one] = 1
 
     def _get_ling_var_genotype_ranges(self):
         ranges = []
@@ -310,10 +324,19 @@ class FuzzyCNFRuleRepr(FuzzyRuleReprABC):
             [ling_var.num_membership_funcs for ling_var in self._ling_vars])
         return tuple(ranges)
 
+    def _assert_genotype_is_valid(self, genotype):
+        ling_var_genotype_ranges = self._get_ling_var_genotype_ranges()
+        for ling_var_genotype_range in ling_var_genotype_ranges:
+            ling_var_alleles = self._get_ling_var_alleles(genotype,
+                    ling_var_genotype_range)
+            has_ones = ling_var_alleles.count(1) >= 1
+            assert has_ones, f"{ling_var_alleles}"
+
     def mutate_condition(self, condition, situation=None):
         should_do_mutation = get_rng().rand() < get_hyperparam("mu")
         if should_do_mutation:
             self._mutate_condition(condition)
+            self._assert_genotype_is_valid(condition.genotype)
 
     def _mutate_condition(self, condition):
         ling_var_genotype_ranges = self._get_ling_var_genotype_ranges()
@@ -323,12 +346,12 @@ class FuzzyCNFRuleRepr(FuzzyRuleReprABC):
         mut_strat = self._choose_mut_strat_for_ling_var(
             condition.genotype, ling_var_genotype_range)
         if mut_strat == "expand":
-            self._mut_expand(self, condition.genotype, ling_var_genotype_range)
+            self._mut_expand(condition.genotype, ling_var_genotype_range)
         elif mut_strat == "contract":
-            self._mut_contract(self, condition.genotype,
+            self._mut_contract(condition.genotype,
                                ling_var_genotype_range)
         elif mut_strat == "shift":
-            self._mut_shift(self, condition.genotype, ling_var_genotype_range)
+            self._mut_shift(condition.genotype, ling_var_genotype_range)
         else:
             raise InternalError("Should not get here")
 
@@ -337,12 +360,16 @@ class FuzzyCNFRuleRepr(FuzzyRuleReprABC):
         ling_var_alleles = self._get_ling_var_alleles(genotype,
                                                       ling_var_genotype_range)
 
-        # can always shift because it preserves number of ones and there has
-        # to be at least a single one present
+        # can always shift because it ensures needs at least a single one
+        # allele present to operate and guarantees that at least a single one
+        # allele remains afterwards
         possible_strats = ["shift"]
+        # need at least a single zero allele to expand
         could_expand = ling_var_alleles.count(0) >= 1
         if could_expand:
             possible_strats.append("expand")
+        # need at least two one alleles to contract so at least a single one
+        # allele remains
         could_contract = ling_var_alleles.count(1) >= 2
         if could_contract:
             possible_strats.append("contract")
@@ -355,6 +382,7 @@ class FuzzyCNFRuleRepr(FuzzyRuleReprABC):
         return genotype[start_idx:(start_idx + num_alleles)]
 
     def _mut_expand(self, genotype, ling_var_genotype_range):
+        logging.debug("Mut expand")
         (start_idx, num_alleles) = ling_var_genotype_range
         end_idx_exclusive = (start_idx + num_alleles)
         # expansion flips a randomly chosen zero to a one
@@ -367,6 +395,7 @@ class FuzzyCNFRuleRepr(FuzzyRuleReprABC):
         genotype[idx_to_flip] = 1
 
     def _mut_contract(self, genotype, ling_var_genotype_range):
+        logging.debug("Mut contract")
         (start_idx, num_alleles) = ling_var_genotype_range
         end_idx_exclusive = (start_idx + num_alleles)
         # contraction flips a randomly chosen one to a zero
@@ -374,15 +403,16 @@ class FuzzyCNFRuleRepr(FuzzyRuleReprABC):
             idx for idx in range(start_idx, end_idx_exclusive)
             if genotype[idx] == 1
         ]
-        assert len(one_allele_idxs) >= 1
+        assert len(one_allele_idxs) >= 2
         idx_to_flip = get_rng().choice(one_allele_idxs)
         genotype[idx_to_flip] = 0
 
     def _mut_shift(self, genotype, ling_var_genotype_range):
+        logging.debug("Mut shift")
         (start_idx, num_alleles) = ling_var_genotype_range
         end_idx_exclusive = (start_idx + num_alleles)
         # shift flips a randomly chosen one to a zero then
-        # changes either the allele before or after to a one depending on what
+        # sets either the allele before or after to a one depending on what
         # is possible
         one_allele_idxs = [
             idx for idx in range(start_idx, end_idx_exclusive)
@@ -392,29 +422,26 @@ class FuzzyCNFRuleRepr(FuzzyRuleReprABC):
         idx_to_flip = get_rng().choice(one_allele_idxs)
         genotype[idx_to_flip] = 0
 
-        # get info about adjacent alleles
-        adjacent_alleles = {}
-        prev_idx = (idx_to_flip - 1)
-        try:
-            adjacent_alleles[prev_idx] = genotype[prev_idx]
-        except IndexError:
-            adjacent_alleles[prev_idx] = None
-        next_idx = (idx_to_flip + 1)
-        try:
-            adjacent_alleles[next_idx] = genotype[next_idx]
-        except IndexError:
-            adjacent_alleles[next_idx] = None
+        # get info about adjacent alleles of the ling var
+        prev_idx = max(start_idx, (idx_to_flip - 1))
+        end_idx_inclusive = (end_idx_exclusive - 1)
+        next_idx = min(end_idx_inclusive, (idx_to_flip + 1))
 
-        # determine which adjacent alleles could be flipped to one
-        flippable_alleles = {
-            k: v
-            for (k, v) in adjacent_alleles.items() if v == 0
-        }
-
-        # do a flip to one if possible
-        if len(flippable_alleles) > 0:
-            idx_to_flip = get_rng().choice(list(flippable_alleles.keys()))
-            genotype[idx_to_flip] = 1
+        # pick an adjacent allele to set to 1
+        if prev_idx == start_idx:
+            # edge case, allele flipped to zero originally is first one in seq.
+            # for ling var, so set the allele to the right of it to one
+            idx_for_one = next_idx
+        elif next_idx == end_idx_inclusive:
+            # edge case, allele flipped to zero originally is last one in seq.
+            # for ling var, so set the allele to the left of it to one
+            idx_for_one = prev_idx
+        else:
+            # nominal case, allele flipped to zero originally not at
+            # boundaries, pick either prev or next allele at random to set to
+            # one
+            idx_for_one = get_rng().choice([prev_idx, next_idx])
+        genotype[idx_for_one] = 1
 
     def calc_generality(self, condition):
         genotype = condition.genotype

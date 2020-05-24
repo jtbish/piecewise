@@ -8,4 +8,5 @@ from .membership_func import (make_trapezoidal_membership_func,
                               make_triangular_membership_func)
 from .prediction import (FuzzyMatchingFitnessWeightedAvgPrediction,
                          FuzzyMatchingWeightedAvgPrediction)
-from .rule_repr import FuzzyMinSpanRuleRepr, FuzzyConjunctiveRuleRepr
+from .rule_repr import (FuzzyMinSpanRuleRepr, FuzzyConjunctiveRuleRepr,
+                        FuzzyCNFRuleRepr)
