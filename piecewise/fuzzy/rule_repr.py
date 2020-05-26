@@ -148,9 +148,8 @@ class FuzzyMinSpanRuleRepr(FuzzyRuleReprABC):
     def calc_max_matching_degree(self, situation):
         ling_var_ress = []
         for (situation_elem, ling_var) in zip(situation, self._ling_vars):
-            ling_var_res = \
-                self._logical_or_strat(
-                        ling_var.eval_all_membership_funcs(situation_elem))
+            ling_var_res = max(
+                ling_var.eval_all_membership_funcs(situation_elem))
             ling_var_ress.append(ling_var_res)
         return self._logical_and_strat(ling_var_ress)
 

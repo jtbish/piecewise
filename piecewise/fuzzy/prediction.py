@@ -58,8 +58,8 @@ class FuzzyMatchingFitnessWeightedAvgPrediction:
         for action in possible_actions:
             denominator = \
                 matching_degree_sum_array[action]*fitness_sum_array[action]
-            if denominator != 0:
-                prediction_array[action] /= denominator
+            assert denominator != 0
+            prediction_array[action] /= denominator
 
 
 class FuzzyMatchingWeightedAvgPrediction:
