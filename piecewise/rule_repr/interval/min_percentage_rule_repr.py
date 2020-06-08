@@ -198,10 +198,10 @@ class DiscereteMinSpanRuleRepr(MinSpanRuleReprABC):
     def gen_covering_condition(self, situation):
         alleles = []
         for (idx, situation_elem) in enumerate(situation):
-            # covering draws from (0, r_nought)
+            # covering draws from [0, r_nought]
             r_nought = get_hyperparam("r_nought")
-            assert r_nought > 1
-            cover_choices = range(1, r_nought)
+            assert r_nought >= 0
+            cover_choices = range(0, (r_nought+1))
             lower = situation_elem - get_rng().choice(cover_choices)
             upper = situation_elem + get_rng().choice(cover_choices)
             dimension = self._situation_space[idx]
@@ -252,10 +252,10 @@ class DiscereteMinSpanRuleRepr(MinSpanRuleReprABC):
         for allele_idx in range(len(genotype)):
             should_mutate = get_rng().rand() < get_hyperparam("mu")
             if should_mutate:
-                # mutation draws from +-[0, m_nought)
+                # mutation draws from +-(0, m_nought]
                 m_nought = get_hyperparam("m_nought")
-                assert m_nought > 0
-                mut_choices = range(0, m_nought)
+                assert m_nought >= 1
+                mut_choices = range(1, (m_nought+1))
                 mutation_magnitude = get_rng().choice(mut_choices)
                 mutation_sign = get_rng().choice([1, -1])
                 mutation_amount = mutation_magnitude * mutation_sign
@@ -273,7 +273,7 @@ class DiscereteMinSpanRuleRepr(MinSpanRuleReprABC):
                 self._wildcard_intervals]
         generality = sum(phenotype_interval_coverages) / \
             sum(wildcard_interval_coverages)
-        assert 0.0 <= generality <= 1.0
+        assert 0.0 < generality <= 1.0
         return generality
 
     def map_genotype_to_phenotype(self, genotype):

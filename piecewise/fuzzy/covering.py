@@ -7,7 +7,13 @@ from piecewise.lcs.component.covering import RuleReprCoveringABC
 from piecewise.lcs.hyperparams import get_hyperparam
 from piecewise.lcs.rng import get_rng
 
-from .classifier import FuzzyLinearPredictionClassifier
+from .classifier import FuzzyClassifier, FuzzyLinearPredictionClassifier
+
+
+def make_fuzzy_classifier(rule, time_step):
+    return FuzzyClassifier(rule, get_hyperparam("prediction_I"),
+            get_hyperparam("epsilon_I"), get_hyperparam("fitness_I"),
+            time_step)
 
 
 def make_fuzzy_linear_prediction_classifier(rule, time_step):

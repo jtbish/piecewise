@@ -1,6 +1,8 @@
 from .covering import (FuzzyRuleReprCovering,
+                       make_fuzzy_classifier,
                        make_fuzzy_linear_prediction_classifier)
-from .credit_assignment import FuzzyXCSFLinearPredictionCreditAssignment
+from .credit_assignment import (FuzzyXCSCreditAssignment, 
+                                FuzzyXCSFLinearPredictionCreditAssignment)
 from .domain import Domain
 from .linguistic_var import LinguisticVar
 from .logical_ops import logical_and_min, logical_or_max

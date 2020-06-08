@@ -207,8 +207,8 @@ class Classifier(ClassifierABC):
 class LinearPredictionClassifier(ClassifierABC):
     """Classifier that uses weight vector to compute linear prediction, for
     use with XCSF."""
-    _MIN_WEIGHT_VAL = -1.0
-    _MAX_WEIGHT_VAL = 1.0
+    _MIN_WEIGHT_VAL = 0.0
+    _MAX_WEIGHT_VAL = 0.0
 
     def __init__(self, rule, error, fitness, time_stamp, x_nought, delta_rls, rng):
         # TODO injected x_nought and delta_rls for now, but would be better if
@@ -217,7 +217,8 @@ class LinearPredictionClassifier(ClassifierABC):
         super().__init__(rule, error, fitness, time_stamp)
         self._weight_vec = self._init_weight_vec(rng, self._rule.num_features)
         self._x_nought = x_nought
-        self.reset_cov_mat(delta_rls)
+        self._delta_rls = delta_rls
+        self._reset_cov_mat(self._delta_rls)
 
     def _init_weight_vec(self, rng, num_features):
         # weight vec stored as [w_0, w_1, ..., w_n] for n features
@@ -240,10 +241,17 @@ class LinearPredictionClassifier(ClassifierABC):
     def cov_mat_reset_stamp(self):
         return self._cov_mat_reset_stamp
 
-    def reset_cov_mat(self, delta_rls):
+    def _reset_cov_mat(self, delta_rls):
+        """Private, used once in init, explicit param to make temporal
+        dependency obvious."""
         self._cov_mat = delta_rls * \
             np.identity(n=(self._rule.num_features+1))
         self._cov_mat_reset_stamp = self._experience
+
+    def reset_cov_mat(self):
+        """Public, used after init, forwards to private implementation with
+        cached hyperparam val."""
+        self._reset_cov_mat(self._delta_rls)
 
     def get_prediction(self, situation):
         assert len(self._weight_vec) == (len(situation) + 1)
@@ -277,7 +285,8 @@ class LinearPredictionClassifier(ClassifierABC):
         return True
 
     def _cov_mat_is_close(self, other):
-        return np.all(np.isclose(self._cov_mat, other._cov_mat))
+        return np.all(np.isclose(self._cov_mat, other._cov_mat,
+            rtol=classifier_attr_rel_tol))
 
     def __repr__(self):
         return (f"{self.__class__.__name__}("

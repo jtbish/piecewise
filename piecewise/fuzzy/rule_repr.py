@@ -359,7 +359,7 @@ class FuzzyCNFRuleRepr(FuzzyRuleReprABC):
         ling_var_alleles = self._get_ling_var_alleles(genotype,
                                                       ling_var_genotype_range)
 
-        # can always shift because it ensures needs at least a single one
+        # can always shift because it needs at least a single one
         # allele present to operate and guarantees that at least a single one
         # allele remains afterwards
         possible_strats = ["shift"]

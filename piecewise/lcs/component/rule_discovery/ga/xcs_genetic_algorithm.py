@@ -106,6 +106,14 @@ class XCSGeneticAlgorithm(IRuleDiscoveryStrategy):
         child_one.fitness = child_fitness
         child_two.fitness = child_fitness
 
+        # TODO make this polymorphic, strategy pattern?
+        try:
+            child_one.reset_cov_mat()
+            child_two.reset_cov_mat()
+            logging.debug("Reset cov mat in children")
+        except AttributeError:
+            pass
+
     def _try_update_children_prediction(self, children, child_prediction):
         for child in children:
             try:
