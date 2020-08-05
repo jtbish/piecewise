@@ -1,4 +1,5 @@
 import math
+import logging
 
 from piecewise.dtype.classifier import (EXPERIENCE_MIN,
                                         Classifier,
@@ -21,7 +22,8 @@ class FuzzyMixin:
 
     def calc_matching_degree(self, rule_repr, situation):
         """Calculates matching degree of condition."""
-        return rule_repr.eval_condition(self.condition, situation)
+        matching_degree = rule_repr.eval_condition(self.condition, situation)
+        return matching_degree
 
 
 class FuzzyClassifier(FuzzyMixin, Classifier):

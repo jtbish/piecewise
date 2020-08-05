@@ -27,7 +27,7 @@ XCSComponents = namedtuple("XCSComponents", [
 ])
 
 
-def make_canonical_xcs(env, rule_repr, hyperparams, seed):
+def make_canonical_xcs(env, rule_repr, population=None):
     """Public factory function to make instance of 'Canonical XCS' for the
     given environment and rule repr, i.e. XCS with components as described in
     'An Algorithmic Description of XCS' (Butz and Wilson, 2002)'."""
@@ -48,25 +48,24 @@ def make_canonical_xcs(env, rule_repr, hyperparams, seed):
                                action_selection, credit_assignment,
                                fitness_update, subsumption, rule_discovery,
                                deletion)
-    return _make_xcs(env.step_type, components, rule_repr, hyperparams, seed)
+    return _make_xcs(env.step_type, components, rule_repr, population)
 
 
 def make_custom_xcs(env, matching, covering, prediction, action_selection,
                     credit_assignment, fitness_update, subsumption,
-                    rule_discovery, deletion, rule_repr, hyperparams, seed):
+                    rule_discovery, deletion, rule_repr, population=None):
     """Public factory function to make instance of XCS with custom
     components."""
     components = XCSComponents(matching, covering, prediction,
                                action_selection, credit_assignment,
                                fitness_update, subsumption, rule_discovery,
                                deletion)
-    return _make_xcs(env.step_type, components, rule_repr, hyperparams, seed)
+    return _make_xcs(env.step_type, components, rule_repr, population)
 
 
 def make_custom_xcs_from_canonical_base(env,
                                         rule_repr,
-                                        hyperparams,
-                                        seed,
+                                        population=None,
                                         matching=None,
                                         covering=None,
                                         prediction=None,
@@ -102,10 +101,10 @@ def make_custom_xcs_from_canonical_base(env,
                                action_selection, credit_assignment,
                                fitness_update, subsumption, rule_discovery,
                                deletion)
-    return _make_xcs(env.step_type, components, rule_repr, hyperparams, seed)
+    return _make_xcs(env.step_type, components, rule_repr, population)
 
 
-def make_canonical_xcsf(env, rule_repr, hyperparams, seed):
+def make_canonical_xcsf(env, rule_repr, population=None):
     """Public factory function to make instance of 'Canonical XCS' for the
     given environment and rule repr, i.e. XCS with components as described in
     'An Algorithmic Description of XCS' (Butz and Wilson, 2002)'."""
@@ -127,13 +126,12 @@ def make_canonical_xcsf(env, rule_repr, hyperparams, seed):
                                action_selection, credit_assignment,
                                fitness_update, subsumption, rule_discovery,
                                deletion)
-    return _make_xcs(env.step_type, components, rule_repr, hyperparams, seed)
+    return _make_xcs(env.step_type, components, rule_repr, population)
 
 
 def make_custom_xcsf_from_canonical_base(env,
                                          rule_repr,
-                                         hyperparams,
-                                         seed,
+                                         population=None,
                                          matching=None,
                                          covering=None,
                                          prediction=None,
@@ -170,7 +168,7 @@ def make_custom_xcsf_from_canonical_base(env,
                                action_selection, credit_assignment,
                                fitness_update, subsumption, rule_discovery,
                                deletion)
-    return _make_xcs(env.step_type, components, rule_repr, hyperparams, seed)
+    return _make_xcs(env.step_type, components, rule_repr, population)
 
 
 def _make_xcs(env_step_type, *args, **kwargs):
@@ -187,8 +185,8 @@ def _make_xcs(env_step_type, *args, **kwargs):
 class XCSABC(LCS, metaclass=abc.ABCMeta):
     """Implementation of XCS, based on pseudocode given in 'An Algorithmic
     Description of XCS' (Butz and Wilson, 2002)."""
-    def __init__(self, components, rule_repr, hyperparams, seed):
-        super().__init__(rule_repr, hyperparams, seed)
+    def __init__(self, components, rule_repr, population=None):
+        super().__init__(rule_repr, population)
         self._init_component_strats(components)
         self._init_prev_step_tracking_attrs()
         self._init_curr_step_tracking_attrs()

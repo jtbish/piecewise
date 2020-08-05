@@ -9,13 +9,22 @@ from .rng import seed_rng
 LCSTrainResponse = namedtuple("LCSTrainResponse", ["action", "did_explore"])
 
 
+def setup_meta_params(hyperparams, seed):
+    register_hyperparams(hyperparams)
+    seed_rng(seed)
+
+
 class LCS(metaclass=abc.ABCMeta):
     """ABC for an LCS."""
-    def __init__(self, rule_repr, hyperparams, seed):
+    def __init__(self, rule_repr, population=None):
         self._rule_repr = rule_repr
-        register_hyperparams(hyperparams)
-        seed_rng(seed)
-        self._population = Population(max_micros=get_hyperparam("N"))
+        self._population = self._init_population(population)
+
+    def _init_population(self, population):
+        if population is None:
+            return Population(max_micros=get_hyperparam("N"))
+        else:
+            return population
 
     @abc.abstractmethod
     def train_query(self, situation, time_step):

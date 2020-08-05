@@ -21,7 +21,13 @@ def make_linear_prediction_classifier(rule, time_step):
                                       get_hyperparam("delta_rls"), get_rng())
 
 
-class RuleReprCoveringABC(metaclass=abc.ABCMeta):
+class ICoveringStrategy(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
+    def __call__(self, population, match_set, situation, time_step):
+        raise NotImplementedError
+
+
+class RuleReprCoveringABC(ICoveringStrategy, metaclass=abc.ABCMeta):
     def __init__(self, env_action_set, rule_repr, classifier_factory):
         self._env_action_set = env_action_set
         self._rule_repr = rule_repr
@@ -68,3 +74,9 @@ class RuleReprCovering(RuleReprCoveringABC):
             tuple(self._env_action_set - get_unique_actions_set(match_set))
         assert len(possible_covering_actions) > 0
         return get_rng().choice(possible_covering_actions)
+
+
+class NullCovering(ICoveringStrategy):
+    def __call__(self, population, match_set, situation, time_step):
+        # covering supposedly not needed so sanity check this
+        assert match_set.num_macros > 0

@@ -1,7 +1,8 @@
 from .action_selection import (ExpDecayEpsilonGreedy, FixedEpsilonGreedy,
                                LinearDecayEpsilonGreedy)
 from .covering import (RuleReprCovering, make_classifier,
-                       make_linear_prediction_classifier)
+                       make_linear_prediction_classifier,
+                       NullCovering)
 from .credit_assignment import (XCSCreditAssignment,
                                 XCSFLinearPredictionCreditAssignment)
 from .deletion import XCSRouletteWheelDeletion, NullDeletion

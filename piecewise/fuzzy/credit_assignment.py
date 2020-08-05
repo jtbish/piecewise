@@ -16,7 +16,6 @@ class FuzzyXCSCreditAssignment:
         total_matching_degrees = sum(matching_degrees)
         assert total_matching_degrees > 0.0
         for (classifier, matching_degree) in zip(action_set, matching_degrees):
-            logging.debug(f"{classifier}, matching degree {matching_degree:.4f}")
             credit_weight = (matching_degree / total_matching_degrees)
             assert credit_weight > 0.0
             self._update_experience(classifier, credit_weight)
@@ -87,12 +86,7 @@ class FuzzyXCSFLinearPredictionCreditAssignment:
         # Weighted recursive least squares
         enriched_situation = self._prepend_threshold_to_situation(situation)
 
-        should_reset_cov_mat = \
-            (classifier.experience - classifier.cov_mat_reset_stamp) \
-                >= get_hyperparam("tau_rls")
-        if should_reset_cov_mat:
-            logging.debug("Resetting clfr cov mat")
-            classifier.reset_cov_mat()
+        self._try_reset_classifier_cov_mat(classifier)
 
         # calc cov mat update rate
         beta_rls = 1 + credit_weight* \
@@ -118,6 +112,16 @@ class FuzzyXCSFLinearPredictionCreditAssignment:
         res = np.insert(situation, 0, get_hyperparam("x_nought"))
         res = np.reshape(res, (1, len(res)))
         return res
+
+    def _try_reset_classifier_cov_mat(self, classifier):
+        cov_mat_resets_allowed = get_hyperparam("do_classifier_cov_mat_resets")
+        if cov_mat_resets_allowed:
+            should_reset_cov_mat = \
+                (classifier.experience - classifier.cov_mat_reset_stamp) \
+                    >= get_hyperparam("tau_rls")
+            if should_reset_cov_mat:
+                logging.debug("Resetting clfr cov mat")
+                classifier.reset_cov_mat()
 
     def _update_prediction_error(self, classifier, payoff_diff, credit_weight):
         error_diff = abs(payoff_diff) - classifier.error

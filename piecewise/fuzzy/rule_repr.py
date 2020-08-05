@@ -1,16 +1,19 @@
 import abc
 import copy
 import logging
+import itertools
 
 import numpy as np
 
-from piecewise.dtype import Condition, DataSpaceBuilder, Dimension, Genotype
+from piecewise.dtype import (Condition, DataSpaceBuilder, Dimension, Genotype,
+                            Population, Rule)
 from piecewise.dtype.config import float_bounds_tol
 from piecewise.error.core_errors import InternalError
 from piecewise.lcs.hyperparams import get_hyperparam
 from piecewise.lcs.rng import get_rng
 from piecewise.rule_repr import DiscereteMinSpanRuleRepr, IRuleRepr
 from piecewise.util import truncate_val
+from piecewise.constants import TIME_STEP_MIN
 
 MIN_MATCHING_DEGREE = 0.0
 MAX_MATCHING_DEGREE = 1.0
@@ -69,6 +72,10 @@ class FuzzyRuleReprABC(IRuleRepr, metaclass=abc.ABCMeta):
         membership_func_ress = \
             ling_var.eval_all_membership_funcs(situation_elem)
         return np.argmax(membership_func_ress)
+
+    @abc.abstractmethod
+    def gen_complete_population(self, env_action_set, classifier_factory):
+        raise NotImplementedError
 
 
 class FuzzyMinSpanRuleRepr(FuzzyRuleReprABC):
@@ -153,6 +160,9 @@ class FuzzyMinSpanRuleRepr(FuzzyRuleReprABC):
             ling_var_ress.append(ling_var_res)
         return self._logical_and_strat(ling_var_ress)
 
+    def gen_complete_population(self, env_action_set, classifier_factory):
+        raise NotImplementedError
+
 
 class FuzzyConjunctiveRuleRepr(FuzzyRuleReprABC):
     def __init__(self, ling_vars, logical_and_strat):
@@ -233,6 +243,32 @@ class FuzzyConjunctiveRuleRepr(FuzzyRuleReprABC):
                 ling_var.eval_all_membership_funcs(situation_elem))
             ling_var_ress.append(ling_var_res)
         return self._logical_and_strat(ling_var_ress)
+
+    def gen_complete_population(self, env_action_set, classifier_factory):
+        # construct all possible rules with time step = 0
+
+        possible_dim_alleles = []
+        for ling_var in self._ling_vars:
+            possible_dim_alleles.append(list(
+                range(0, ling_var.num_membership_funcs)))
+        condition_alleles = list(itertools.product(*possible_dim_alleles))
+
+        max_pop_micros = np.product([ling_var.num_membership_funcs for
+            ling_var in self._ling_vars])*len(env_action_set)
+        population = Population(max_micros=max_pop_micros)
+
+        for alleles in condition_alleles:
+            for action in env_action_set:
+                genotype = Genotype(alleles)
+                condition = Condition(genotype)
+                rule = Rule(condition, action,
+                        num_features=len(self._ling_vars))
+                classifier = classifier_factory(rule, time_step=TIME_STEP_MIN)
+                population.add(classifier)
+
+        assert population.num_micros == max_pop_micros
+        assert population.num_micros == population.num_macros
+        return population
 
 
 class FuzzyCNFRuleRepr(FuzzyRuleReprABC):
@@ -481,3 +517,6 @@ class FuzzyCNFRuleRepr(FuzzyRuleReprABC):
                 ling_var.eval_all_membership_funcs(situation_elem))
             ling_var_ress.append(ling_var_res)
         return self._logical_and_strat(ling_var_ress)
+
+    def gen_complete_population(self, env_action_set, classifier_factory):
+        raise NotImplementedError
