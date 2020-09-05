@@ -1,7 +1,14 @@
+import abc
 from piecewise.lcs.hyperparams import get_hyperparam
 
 
-class XCSAccuracyFitnessUpdate:
+class IFitnessUpdateStrategy(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
+    def __call__(self, action_set):
+        raise NotImplementedError
+
+
+class XCSAccuracyFitnessUpdate(IFitnessUpdateStrategy):
     _MAX_ACCURACY = 1.0
 
     def __call__(self, action_set):
@@ -37,3 +44,8 @@ class XCSAccuracyFitnessUpdate:
                 ((accuracy*classifier.numerosity/accuracy_sum) -
                  classifier.fitness)
             classifier.fitness += get_hyperparam("beta") * adjustment
+
+
+class NullFitnessUpdate(IFitnessUpdateStrategy):
+    def __call__(self, action_set):
+        pass

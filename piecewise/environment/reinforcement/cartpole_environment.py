@@ -84,13 +84,3 @@ class CartpoleEnvironment(GymEnvironment):
             obs.append(self._rng.uniform(low=dimension.lower,
                 high=dimension.upper))
         return np.asarray(obs)
-
-    def step(self, action):
-        res = super().step(action)
-        if res.reward == 1.0:
-            reward = 0.01
-        else:
-            reward = res.reward
-        return EnvironmentResponse(obs=res.obs, reward=reward,
-                was_correct_action=res.was_correct_action,
-                is_terminal=res.is_terminal)

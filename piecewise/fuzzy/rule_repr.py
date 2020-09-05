@@ -15,6 +15,7 @@ from piecewise.rule_repr import DiscereteMinSpanRuleRepr, IRuleRepr
 from piecewise.util import truncate_val
 from piecewise.constants import TIME_STEP_MIN
 
+
 MIN_MATCHING_DEGREE = 0.0
 MAX_MATCHING_DEGREE = 1.0
 
@@ -171,7 +172,7 @@ class FuzzyConjunctiveRuleRepr(FuzzyRuleReprABC):
 
     def _eval_condition(self, condition, situation):
         assert len(situation) == len(self._ling_vars)
-        phenotype = self.map_genotype_to_phenotype(condition.genotype)
+        phenotype = condition.genotype
         ling_var_ress = []
         for (situation_elem, phenotype_elem, ling_var) in \
                 zip(situation, phenotype, self._ling_vars):

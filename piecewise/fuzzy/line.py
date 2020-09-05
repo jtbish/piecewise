@@ -1,9 +1,13 @@
+from .constants import RANGE_MIN, RANGE_MAX
+
+
 class Line:
     def __init__(self, first_point, second_point):
         self._first_point = first_point
         self._second_point = second_point
         rise = (second_point.y - first_point.y)
         run = (second_point.x - first_point.x)
+
         if run == 0.0:
             assert second_point.x == first_point.x
             self._is_vertical = True
@@ -14,9 +18,22 @@ class Line:
             self._m = rise / run
             self._c = first_point.y - self._m*first_point.x
 
+        self._is_always_min = \
+            (first_point.y == RANGE_MIN and second_point.y == RANGE_MIN)
+        self._is_always_max = \
+            (first_point.y == RANGE_MAX and second_point.y == RANGE_MAX)
+
     @property
     def is_vertical(self):
         return self._is_vertical
+
+    @property
+    def is_always_min(self):
+        return self._is_always_min
+
+    @property
+    def is_always_max(self):
+        return self._is_always_max
 
     @property
     def subdomain_min(self):

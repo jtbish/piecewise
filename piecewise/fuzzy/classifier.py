@@ -22,8 +22,7 @@ class FuzzyMixin:
 
     def calc_matching_degree(self, rule_repr, situation):
         """Calculates matching degree of condition."""
-        matching_degree = rule_repr.eval_condition(self.condition, situation)
-        return matching_degree
+        return rule_repr.eval_condition(self.condition, situation)
 
 
 class FuzzyClassifier(FuzzyMixin, Classifier):

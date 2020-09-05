@@ -1,0 +1,2 @@
+RANGE_MIN = 0.0
+RANGE_MAX = 1.0

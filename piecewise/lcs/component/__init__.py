@@ -6,7 +6,7 @@ from .covering import (RuleReprCovering, make_classifier,
 from .credit_assignment import (XCSCreditAssignment,
                                 XCSFLinearPredictionCreditAssignment)
 from .deletion import XCSRouletteWheelDeletion, NullDeletion
-from .fitness_update import XCSAccuracyFitnessUpdate
+from .fitness_update import XCSAccuracyFitnessUpdate, NullFitnessUpdate
 from .matching import RuleReprMatching
 from .prediction import FitnessWeightedAvgPrediction
 from .rule_discovery.rule_discovery import NullRuleDiscovery
