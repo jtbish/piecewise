@@ -15,16 +15,21 @@ _RIGHT_ACTION = 2
 _CUSTOM_ACTION_SET = {_LEFT_ACTION, _RIGHT_ACTION}
 
 
-def make_mountain_car_train_env(seed=0, normalise=False):
-    return _make_mountain_car_env(seed, normalise, modify_init_obss=True)
+def make_mountain_car_train_env(seed=0, normalise=False,
+                                use_default_action_set=False):
+    return _make_mountain_car_env(seed, normalise, use_default_action_set,
+                                  modify_init_obss=True)
 
 
-def make_mountain_car_test_env(seed=0, normalise=False):
-    return _make_mountain_car_env(seed, normalise, modify_init_obss=False)
+def make_mountain_car_test_env(seed=0, normalise=False,
+                               use_default_action_set=False):
+    return _make_mountain_car_env(seed, normalise, use_default_action_set,
+                                  modify_init_obss=False)
 
 
-def _make_mountain_car_env(seed=0, normalise=False, modify_init_obss=False):
-    env = MountainCarEnvironment(seed, modify_init_obss)
+def _make_mountain_car_env(seed=0, normalise=False,
+                           use_default_action_set=False, modify_init_obss=False):
+    env = MountainCarEnvironment(seed, use_default_action_set, modify_init_obss)
     if normalise:
         return NormalisedGymEnvironment(env)
     else:
@@ -32,11 +37,14 @@ def _make_mountain_car_env(seed=0, normalise=False, modify_init_obss=False):
 
 
 class MountainCarEnvironment(GymEnvironment):
-    def __init__(self, seed=0, modify_init_obss=False):
+    def __init__(self, seed=0, use_default_action_set=False,
+                 modify_init_obss=False):
         custom_obs_space = self._gen_custom_obs_space()
+        custom_action_set = \
+            self._gen_custom_action_set(use_default_action_set)
         super().__init__(env_name=_ENV_NAME,
                          custom_obs_space=custom_obs_space,
-                         custom_action_set=_CUSTOM_ACTION_SET,
+                         custom_action_set=custom_action_set,
                          seed=seed)
         self._rng = np.random.RandomState(seed)
         self._modify_init_obss = modify_init_obss
@@ -47,6 +55,12 @@ class MountainCarEnvironment(GymEnvironment):
         obs_space_builder.add_dim(Dimension(_POS_LOWER, _POS_UPPER))
         obs_space_builder.add_dim(Dimension(_VEL_LOWER, _VEL_UPPER))
         return obs_space_builder.create_space()
+
+    def _gen_custom_action_set(self, use_default_action_set):
+        if use_default_action_set:
+            return None
+        else:
+            return _CUSTOM_ACTION_SET
 
     def reset(self):
         # call orig reset to let gym reset everything properly in its internals
