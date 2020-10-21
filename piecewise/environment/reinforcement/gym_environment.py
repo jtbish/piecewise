@@ -106,7 +106,7 @@ class GymEnvironment(IEnvironment):
 
     @check_terminal
     def step(self, action):
-        assert action in self._action_set
+        assert action in self._action_set,f"{action}, {self._action_set}"
         wrapped_obs, wrapped_reward, wrapped_done, wrapped_info = \
             self._wrapped_env.step(action)
         self._is_terminal = wrapped_done
