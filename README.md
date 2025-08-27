@@ -2,8 +2,10 @@
 
 ## What is Piecewise?
 A Michigan-style Learning Classifier System (LCS) library for Reinforcement Learning, written in Python.
+For more about LCSs, see https://en.wikipedia.org/wiki/Learning_classifier_system
+In a nutshell, they are rule-based ML algorithms that decompose a feature space into a set of overlapping _IF condition THEN action_ rules, thus falling under the umbrella of explainable AI (XAI).
 
-It makes heavy use of object-oriented language features to provide a modular,
+Piecewise makes heavy use of object-oriented language features to provide a modular,
 extensible framework on which to build and test RL LCS algorithms.
 
 The currently implemented algorithms are:
@@ -15,3 +17,8 @@ The primary use case of Piecewise is for LCS researchers who are interested in:
 1. Investigating modifications or extensions to existing LCS algorithms.
 2. Running experiments with LCS algorithms on common environments, through a
    standardised and easy-to-use interface.
+
+## History
+I wrote this library as part of my PhD research project. It probably isn't usable/explainable without at least some background in LCSs :)
+
+However, writing it involved making heavy use of OOP principles in Python to create a clean and extensible framework. This was important given that the LCS paradigm inherently supports may different types of rules and inference strategies.
